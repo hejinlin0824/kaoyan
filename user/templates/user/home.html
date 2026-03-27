@@ -35,17 +35,25 @@
     {% endif %}
 
     {% if is_vip %}
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-        <a href="{% url 'zu_juan:exam_create' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
-            <span style="font-size: 28px;">📝</span>
-            <div><div style="font-weight: 600; font-size: 15px;">智能组卷</div><div style="font-size: 12px; opacity: 0.85;">随机抽题 · 在线作答 · 自动阅卷</div></div>
-        </a>
-        <a href="{% url 'zu_juan:wrong_book' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
-            <span style="font-size: 28px;">📖</span>
-            <div><div style="font-weight: 600; font-size: 15px;">错题本</div><div style="font-size: 12px; opacity: 0.85;">查漏补缺 · 错误次数统计</div></div>
-        </a>
-    </div>
-    {% endif %}
+     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+         <a href="{% url 'zu_juan:exam_create' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+             <span style="font-size: 28px;">📝</span>
+             <div><div style="font-weight: 600; font-size: 15px;">真题组卷</div><div style="font-size: 12px; opacity: 0.85;">随机抽题 · 在线作答 · 自动阅卷</div></div>
+         </a>
+         <a href="{% url 'zu_juan:wrong_book' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+             <span style="font-size: 28px;">📖</span>
+             <div><div style="font-weight: 600; font-size: 15px;">错题本</div><div style="font-size: 12px; opacity: 0.85;">查漏补缺 · 错误次数统计</div></div>
+         </a>
+         <a href="{% url 'ai_test:ai_exam_create' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+             <span style="font-size: 28px;">🤖</span>
+             <div><div style="font-weight: 600; font-size: 15px;">AI 变式出题</div><div style="font-size: 12px; opacity: 0.85;">同义改写 · 考法变式 · 思维拓展</div></div>
+         </a>
+         <a href="{% url 'ai_test:ai_exam_list' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #f2994a, #f2c94c); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+             <span style="font-size: 28px;">📂</span>
+             <div><div style="font-weight: 600; font-size: 15px;">我的 AI 试卷</div><div style="font-size: 12px; opacity: 0.85;">任务进度 · 历史纯净练习</div></div>
+         </a>
+     </div>
+     {% endif %}
 
     <div class="features">
         <div class="feature-item">

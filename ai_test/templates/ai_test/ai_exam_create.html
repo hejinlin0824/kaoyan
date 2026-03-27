@@ -1,0 +1,165 @@
+{% extends "user/base.html" %}
+
+{% block title %}AI智能辅助出题 - 考研平台{% endblock %}
+
+{% block content %}
+<style>
+    .create-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .warning-banner {
+        background: #fffbe6;
+        border: 1px solid #ffe58f;
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .warning-icon {
+        font-size: 24px;
+        color: #faad14;
+        margin-top: -2px;
+    }
+    .warning-text {
+        font-size: 14px;
+        color: #d46b08;
+        line-height: 1.6;
+    }
+    .type-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .type-row:last-child { border-bottom: none; }
+    .type-label {
+        width: 80px;
+        font-weight: 600;
+        font-size: 15px;
+        color: #333;
+    }
+    .type-limit {
+        flex: 1;
+        font-size: 13px;
+        color: #999;
+    }
+    .type-input {
+        width: 80px;
+        text-align: center;
+    }
+    .type-input .form-input {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        height: 42px;
+    }
+    .summary-bar {
+        background: #f6f8ff;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .summary-total { font-size: 16px; font-weight: 600; color: #667eea; }
+</style>
+
+<div class="create-card">
+    <h1 class="page-title" style="margin-bottom: 20px;">🤖 AI 智能出题</h1>
+
+    <div class="warning-banner">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+            <strong>免责声明：本功能为测试阶段，功能仍在持续优化完善。</strong><br>
+            1. AI 提取题库真题进行同义改写与变式，仅供拓展解题思路使用。<br>
+            2. 当前暂不支持对带有插图的题目进行改写。<br>
+            3. AI 生成的试卷不配置标准答案，系统不进行打分评判，需用户自主练习比对。
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="form-errors-all">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'ai_test:ai_exam_create' %}">
+        {% csrf_token %}
+
+        <div class="type-row">
+            <div class="type-label">选择题</div>
+            <div class="type-limit">0 ~ 10 道</div>
+            <div class="type-input">{{ form.choice_count }}{% if form.choice_count.errors %}<div class="form-error">{{ form.choice_count.errors }}</div>{% endif %}</div>
+        </div>
+        <div class="type-row">
+            <div class="type-label">填空题</div>
+            <div class="type-limit">0 ~ 10 道</div>
+            <div class="type-input">{{ form.fill_count }}{% if form.fill_count.errors %}<div class="form-error">{{ form.fill_count.errors }}</div>{% endif %}</div>
+        </div>
+        <div class="type-row">
+            <div class="type-label">判断题</div>
+            <div class="type-limit">0 ~ 10 道</div>
+            <div class="type-input">{{ form.judge_count }}{% if form.judge_count.errors %}<div class="form-error">{{ form.judge_count.errors }}</div>{% endif %}</div>
+        </div>
+        <div class="type-row">
+            <div class="type-label">简答题</div>
+            <div class="type-limit">0 ~ 10 道</div>
+            <div class="type-input">{{ form.short_count }}{% if form.short_count.errors %}<div class="form-error">{{ form.short_count.errors }}</div>{% endif %}</div>
+        </div>
+        <div class="type-row">
+            <div class="type-label">计算题</div>
+            <div class="type-limit">0 ~ 5 道</div>
+            <div class="type-input">{{ form.calc_count }}{% if form.calc_count.errors %}<div class="form-error">{{ form.calc_count.errors }}</div>{% endif %}</div>
+        </div>
+        <div class="type-row">
+            <div class="type-label">画图题</div>
+            <div class="type-limit">0 ~ 2 道</div>
+            <div class="type-input">{{ form.draw_count }}{% if form.draw_count.errors %}<div class="form-error">{{ form.draw_count.errors }}</div>{% endif %}</div>
+        </div>
+
+        <div class="summary-bar">
+            <span class="summary-total">共计 <span id="total-count">0</span> 道题将交由大模型生成</span>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 48px; font-size: 16px;" onclick="return confirmSubmit()">🚀 下发 AI 生成任务</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function updateSummary() {
+    const c = +document.getElementById('id_choice_count').value || 0;
+    const f = +document.getElementById('id_fill_count').value || 0;
+    const j = +document.getElementById('id_judge_count').value || 0;
+    const s = +document.getElementById('id_short_count').value || 0;
+    const a = +document.getElementById('id_calc_count').value || 0;
+    const d = +document.getElementById('id_draw_count').value || 0;
+    document.getElementById('total-count').textContent = c + f + j + s + a + d;
+}
+
+['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+        el.addEventListener('input', updateSummary);
+    }
+});
+updateSummary();
+
+function confirmSubmit() {
+    const total = parseInt(document.getElementById('total-count').textContent);
+    if (total === 0) {
+        alert("至少需要选择 1 道题目交由 AI 生成。");
+        return false;
+    }
+    return confirm("大模型处理可能需要较长时间（预计几十秒），确定要下发任务吗？下发后将跳转至任务列表等待。");
+}
+</script>
+{% endblock %}

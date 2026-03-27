@@ -1,1 +1,10 @@
 source /home/ubuntu/home/ENVS/kaoyan/bin/activate && cd /home/ubuntu/home/vibe-coding/kaoyan && python manage.py runserver 0.0.0.0:8080
+
+
+
+./start.sh          # 启动 Django + Celery（默认）
+./start.sh start    # 同上
+./start.sh stop     # 停止所有服务
+./start.sh restart  # 重启所有服务
+./start.sh status   # 查看运行状态
+./start.sh log      # 查看最近日志

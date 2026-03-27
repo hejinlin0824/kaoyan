@@ -167,6 +167,9 @@
     <nav class="navbar">
         <a href="{% url 'user:home' %}" class="logo">📚 考研平台</a>
         <div class="nav-links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'ai_test:ai_exam_list' %}">AI变式</a>
+            {% endif %}
             <a href="{% url 'kaoyan:question_list' %}">题库</a>
             {% if user.is_authenticated and user.is_staff %}
                 <a href="{% url 'kaoyan:question_add' %}">录入题目</a>

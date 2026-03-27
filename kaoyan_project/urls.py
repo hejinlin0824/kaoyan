@@ -8,6 +8,7 @@ urlpatterns = [
     path("", include("user.urls")),
     path("", include("kaoyan_app.urls")),
     path("exam/", include("zu_juan.urls")),
+    path("ai-test/", include("ai_test.urls")),
 ]
 
 if settings.DEBUG:

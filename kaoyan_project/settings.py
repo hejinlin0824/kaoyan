@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-i2!($#7kx6g)ugfyr193@v!3l6*d(95v+yj38w0l$8&ycw$yga
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["49.234.26.95", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'kaoyan_app',
     'zu_juan',
     'user',
+    'ai_test',  # 新增 AI 出题模块
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # 自定义用户模型
 AUTH_USER_MODEL = 'user.User'
+
+
+APPLICATION_IDENTITY = "sk-e1a059c5a2e2471ab11ee30f2d0a19f1"
+LLM_API_URL = "https://api.deepseek.com/chat/completions"  # 官方标准API地址
+LLM_MODEL_NAME = "deepseek-chat"
+
+# ==========================================
+# Celery & Redis 异步任务配置
+# ==========================================
+# 消息代理（Broker），Celery 靠它来接收和发送任务
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/3'
+
+# 接受的内容类型
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE

@@ -1,0 +1,329 @@
+{% extends "user/base.html" %}
+
+{% block title %}AI 变式练习 - 考研平台{% endblock %}
+
+{% block content %}
+<style>
+    .exam-header { 
+        background: #fff; 
+        border-radius: 12px; 
+        padding: 16px 24px; 
+        margin-bottom: 20px; 
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        position: sticky; 
+        top: 64px; 
+        z-index: 10; 
+    }
+    .timer { 
+        font-size: 20px; 
+        font-weight: 700; 
+        color: #667eea; 
+        font-variant-numeric: tabular-nums; 
+    }
+    .warning-banner {
+        background: #e6f7ff;
+        border: 1px solid #91d5ff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .warning-text {
+        font-size: 14px;
+        color: #096dd9;
+        line-height: 1.6;
+    }
+    .q-section { margin-bottom: 24px; }
+    .q-section-title { 
+        font-size: 16px; 
+        font-weight: 600; 
+        color: #667eea; 
+        margin-bottom: 12px; 
+        padding-left: 12px; 
+        border-left: 3px solid #667eea; 
+    }
+    .q-item { 
+        background: #fff; 
+        border-radius: 10px; 
+        padding: 16px 20px; 
+        margin-bottom: 10px; 
+        box-shadow: 0 1px 6px rgba(0,0,0,0.04); 
+    }
+    .q-num { font-weight: 600; color: #667eea; margin-right: 8px; }
+    .q-content { font-size: 15px; line-height: 1.8; }
+    .q-meta { 
+        font-size: 12px; 
+        color: #bbb; 
+        margin-top: 12px; 
+        padding-top: 8px;
+        border-top: 1px dashed #f0f0f0;
+    }
+    .q-content h1,.q-content h2,.q-content h3 { margin: 8px 0 4px; }
+    .q-content p { margin: 4px 0; }
+    .q-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+    
+    /* 作答区 UI 交互样式 */
+    .answer-area { 
+        margin-top: 12px; 
+        padding: 12px 16px; 
+        background: #fafbff; 
+        border-radius: 8px; 
+        border: 1px solid #e8e8f0; 
+    }
+    .choice-options { display: flex; flex-direction: column; gap: 8px; }
+    .choice-opt { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        padding: 8px 14px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        transition: background 0.15s; 
+        border: 1px solid transparent; 
+    }
+    .choice-opt:hover { background: #f0f0ff; }
+    .choice-opt.selected { background: #eef0ff; border-color: #667eea; }
+    .choice-opt input[type="radio"] { accent-color: #667eea; width: 18px; height: 18px; }
+    .choice-opt .opt-label { font-size: 15px; }
+    
+    .judge-options { display: flex; gap: 16px; }
+    .judge-opt { 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        padding: 8px 24px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        border: 1px solid transparent; 
+        transition: background 0.15s; 
+    }
+    .judge-opt:hover { background: #f0f0ff; }
+    .judge-opt.selected { background: #eef0ff; border-color: #667eea; }
+    .judge-opt input[type="radio"] { accent-color: #667eea; width: 18px; height: 18px; }
+    
+    .fill-input { 
+        width: 100%; 
+        padding: 10px 14px; 
+        border: 1px solid #d9d9d9; 
+        border-radius: 8px; 
+        font-size: 15px; 
+        transition: border-color 0.2s; 
+        box-sizing: border-box; 
+    }
+    .fill-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.15); }
+    
+    .subjective-area {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d9d9d9;
+        border-radius: 8px;
+        font-size: 15px;
+        min-height: 80px;
+        font-family: inherit;
+        resize: vertical;
+    }
+    .subjective-area:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.15); }
+    
+    .submit-bar { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        right: 0; 
+        background: #fff; 
+        padding: 12px 0; 
+        box-shadow: 0 -2px 12px rgba(0,0,0,0.08); 
+        text-align: center; 
+        z-index: 20; 
+    }
+    .submit-bar .btn { padding: 10px 48px; font-size: 16px; }
+    
+    .answer-toggle {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 6px 16px;
+        background: #f6ffed;
+        border: 1px solid #b7eb8f;
+        color: #389e0d;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .answer-toggle:hover { background: #d9f7be; }
+    .answer-reveal {
+        display: none;
+        margin-top: 8px;
+        padding: 10px 14px;
+        background: #f0fff0;
+        border: 1px solid #d9f7be;
+        border-radius: 8px;
+        font-size: 15px;
+        color: #237804;
+        font-weight: 600;
+    }
+    .answer-reveal.show { display: block; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="exam-header">
+    <div class="timer" id="timer">00:00</div>
+    <div style="font-size:14px; color:#999;">共 {{ exam_questions|length }} 道变式题</div>
+</div>
+
+<div class="warning-banner">
+    <div style="font-size: 20px;">💡</div>
+    <div class="warning-text">
+        <strong>AI 变式练习：</strong> 选择题、判断题、填空题提供"查看答案"按钮，建议先独立完成再对照。简答/计算/画图题为主观题，请结合原真题考点自评。
+    </div>
+</div>
+
+{% regroup exam_questions by question.question_type.name as sections %}
+{% for section in sections %}
+<div class="q-section">
+    <div class="q-section-title">{{ section.grouper }}题（共 {{ section.list|length }} 道）</div>
+    {% for eq in section.list %}
+    <div class="q-item">
+        <div class="q-content">
+            <span class="q-num">{{ forloop.counter }}.</span>
+            <span data-raw="{{ eq.question.content|escape }}"></span>
+        </div>
+
+        <div class="answer-area">
+            {% if section.grouper == "选择" %}
+            <div class="choice-options">
+                {% if eq.question.options %}
+                    {% for key, val in eq.question.options.items %}
+                    <label class="choice-opt" onclick="selectChoice(this)">
+                        <input type="radio" name="answer_{{ eq.id }}" value="{{ key }}">
+                        <span class="opt-label" data-raw="{{ key }}. {{ val|escape }}"></span>
+                    </label>
+                    {% endfor %}
+                {% else %}
+                    <span style="color:#999; font-size: 13px;">(大模型未返回选项格式，请直接在纸上推演)</span>
+                {% endif %}
+            </div>
+            
+            {% elif section.grouper == "判断" %}
+            <div class="judge-options">
+                <label class="judge-opt" onclick="selectJudge(this)">
+                    <input type="radio" name="answer_{{ eq.id }}" value="对">
+                    <span>✅ 对</span>
+                </label>
+                <label class="judge-opt" onclick="selectJudge(this)">
+                    <input type="radio" name="answer_{{ eq.id }}" value="错">
+                    <span>❌ 错</span>
+                </label>
+            </div>
+            
+            {% elif section.grouper == "填空" %}
+            <input type="text" class="fill-input" placeholder="请输入答案用于草稿演算（多空用分号;分隔）">
+            
+            {% else %}
+            <textarea class="subjective-area" placeholder="请在此处输入解答思路或过程..."></textarea>
+            {% endif %}
+        </div>
+        
+        {% if eq.question.correct_answer and section.grouper == "选择" or eq.question.correct_answer and section.grouper == "判断" or eq.question.correct_answer and section.grouper == "填空" %}
+        <span class="answer-toggle" onclick="toggleAnswer(this)">📋 查看答案</span>
+        <div class="answer-reveal">✅ 正确答案：{{ eq.question.correct_answer }}</div>
+        {% endif %}
+        
+        <div class="q-meta">
+            🔍 变式溯源：由 {{ eq.question.year }}年 {{ eq.question.school.name }} 真题 [{{ eq.question.knowledge_point }}] 改写生成。
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="submit-bar">
+    <a href="{% url 'ai_test:ai_exam_list' %}" class="btn btn-primary" onclick="return confirm('确定要结束本次 AI 变式练习吗？')">🏁 结束练习</a>
+</div>
+
+<div style="height: 80px;"></div>
+
+<script>
+// DOMPurify 配置：允许 KaTeX/MathML 标签
+const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+
+// 自动包裹裸 LaTeX 公式：将未被 $...$ 包裹的 LaTeX 命令加上 $...$
+function wrapLatex(t){
+    if(!t) return t;
+    // 匹配未被 $ 包裹的 LaTeX 反斜杠命令序列（如 \delta''(t) + 3\delta(t) + t^2 e^{-2t}）
+    // 排除已被 $ 包裹的区域
+    const parts = t.split(/(\$[^$]+?\$|\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/);
+    return parts.map((part,idx)=>{
+        if(idx%2===1) return part; // 已有定界符的部分不动
+        // 对裸文本中的 LaTeX 命令片段用 $ 包裹
+        // 匹配连续的 LaTeX 命令序列（含 ^_{} 括号等）
+        return part.replace(/(\\[a-zA-Z]+(?:\s*\^{[^}]*}|\s*_{[^}]*}|\s*\^{[^{][^}]*}|\s*_{[^{][^}]*}|\s*\^{.\s}|\s*_{.\s}|\s*\([^)]*\))*)+/g, '$$$1$$');
+    }).join('');
+}
+
+function renderMd(t){
+    if(!t) return '';
+    t = wrapLatex(t);
+    const m=[];
+    let i=0;
+    function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}
+    
+    t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));
+    t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));
+    t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));
+    t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));
+    
+    let html=marked.parse(t);
+    
+    m.forEach(x=>{
+        try{
+            html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));
+        }catch(e){
+            html=html.split(x.p).join(x.c);
+        }
+    });
+    return DOMPurify.sanitize(html,PURIFY_CFG);
+}
+
+// 执行渲染
+document.querySelectorAll('[data-raw]').forEach(el=>{
+    const r=el.getAttribute('data-raw');
+    if(r) el.innerHTML=renderMd(r);
+});
+
+// 前端 UI 交互高亮（无后端强逻辑关联）
+function selectChoice(label){
+    label.closest('.choice-options').querySelectorAll('.choice-opt').forEach(l=>l.classList.remove('selected'));
+    label.classList.add('selected');
+}
+function selectJudge(label){
+    label.closest('.judge-options').querySelectorAll('.judge-opt').forEach(l=>l.classList.remove('selected'));
+    label.classList.add('selected');
+}
+
+// 查看答案切换
+function toggleAnswer(btn){
+    const reveal = btn.nextElementSibling;
+    reveal.classList.toggle('show');
+    btn.textContent = reveal.classList.contains('show') ? '🔒 隐藏答案' : '📋 查看答案';
+}
+
+// 沉浸式计时器
+let seconds = 0;
+const timerEl = document.getElementById('timer');
+setInterval(()=>{
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    timerEl.textContent = m + ':' + s;
+},1000);
+</script>
+{% endblock %}

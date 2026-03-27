@@ -1,0 +1,89 @@
+{% extends "user/base.html" %}
+
+{% block title %}错题本{% endblock %}
+
+{% block content %}
+<style>
+    .wrong-header { background: #fff; border-radius: 12px; padding: 16px 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .wrong-count { font-size: 14px; color: #999; }
+    .wrong-count span { color: #ff4d4f; font-weight: 700; font-size: 18px; }
+    .q-item { background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); border-left: 4px solid #ff4d4f; }
+    .q-num { font-weight: 600; color: #667eea; margin-right: 8px; }
+    .q-content { font-size: 15px; line-height: 1.8; }
+    .q-meta { font-size: 12px; color: #bbb; margin-top: 8px; display: flex; gap: 12px; align-items: center; }
+    .error-badge { background: #fff1f0; color: #ff4d4f; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .img-box { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+    .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .q-content h1,.q-content h2,.q-content h3 { margin: 8px 0 4px; }
+    .q-content p { margin: 4px 0; }
+    .q-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+    .answer-correct { margin-top: 10px; padding: 10px 14px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; font-size: 14px; line-height: 1.7; }
+    .answer-label { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+    .answer-analysis { margin-top: 8px; padding: 10px 14px; background: #f0f5ff; border: 1px solid #d6e4ff; border-radius: 8px; font-size: 14px; line-height: 1.7; }
+    .empty-state { text-align: center; padding: 80px 20px; color: #bbb; }
+    .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="wrong-header">
+    <h1 class="page-title" style="margin:0;">📖 错题本</h1>
+    <div class="wrong-count">共 <span>{{ wrong_questions|length }}</span> 道错题</div>
+</div>
+
+{% if wrong_questions %}
+{% for wq in wrong_questions %}
+<div class="q-item">
+    <div class="q-content">
+        <span class="q-num">{{ forloop.counter }}.</span>
+        <span data-raw="{{ wq.question.content|escape }}"></span>
+    </div>
+    {% if wq.question.options and wq.question.question_type.name == "选择" %}
+    <div style="margin: 6px 0 0 24px;">
+        {% for key, val in wq.question.options.items %}
+        <div style="padding:2px 0; color:#555; font-size:14px;" data-raw="{{ key }}. {{ val|escape }}"></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if wq.question.image %}
+    <div class="img-box"><img src="{{ wq.question.image.url }}" alt="插图"></div>
+    {% endif %}
+    {% if wq.question.correct_answer %}
+    <div class="answer-correct">
+        <div class="answer-label">正确答案：</div>
+        <div data-raw="{{ wq.question.correct_answer|escape }}"></div>
+    </div>
+    {% endif %}
+    {% if wq.question.answer %}
+    <div class="answer-analysis">
+        <div class="answer-label" style="color:#667eea;">解析：</div>
+        <div data-raw="{{ wq.question.answer|escape }}"></div>
+    </div>
+    {% endif %}
+    <div class="q-meta">
+        <span>{{ wq.question.year }} · {{ wq.question.school.name }} · {{ wq.question.knowledge_point }}</span>
+        <span class="error-badge">错 {{ wq.error_count }} 次</span>
+    </div>
+</div>
+{% endfor %}
+
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{% url 'zu_juan:exam_create' %}" class="btn btn-primary">📝 去组卷</a>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">🎉</div>
+    <p style="font-size:16px; margin-bottom: 8px;">暂无错题，继续保持！</p>
+    <a href="{% url 'zu_juan:exam_create' %}" class="btn btn-primary" style="margin-top: 16px;">📝 去组卷练习</a>
+</div>
+{% endif %}
+
+<script>
+const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function renderMd(t){if(!t)return '';const m=[];let i=0;function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(x=>{try{html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));}catch(e){html=html.split(x.p).join(x.c);}});return DOMPurify.sanitize(html,PURIFY_CFG);}
+document.querySelectorAll('[data-raw]').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
+</script>
+{% endblock %}

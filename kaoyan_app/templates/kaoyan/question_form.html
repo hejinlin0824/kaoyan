@@ -1,0 +1,308 @@
+{% extends "user/base.html" %}
+
+{% block title %}{{ question|yesno:"编辑题目,录入题目" }} - 题库管理{% endblock %}
+
+{% block content %}
+<style>
+    .form-layout { display: flex; gap: 24px; align-items: flex-start; }
+    .form-panel { flex: 1; min-width: 0; }
+    .preview-panel { flex: 1; min-width: 0; position: sticky; top: 80px; }
+    .preview-box {
+        background: #fafafa;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 20px;
+        min-height: 300px;
+        font-size: 15px;
+        line-height: 1.8;
+    }
+    .preview-box h1, .preview-box h2, .preview-box h3 { margin: 12px 0 8px; }
+    .preview-box p { margin: 8px 0; }
+    .preview-box code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+    .preview-box pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    .preview-box img { max-width: 100%; border-radius: 6px; }
+    .img-preview-box {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+    .img-preview-box img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .preview-box .option-item { padding: 6px 0; border-bottom: 1px dashed #eee; }
+    .preview-box .option-item:last-child { border-bottom: none; }
+    .preview-label { font-size: 13px; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .section-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+    @media (max-width: 768px) { .form-layout { flex-direction: column; } .preview-panel { position: static; } }
+</style>
+
+<!-- Markdown + LaTeX 渲染库 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="card">
+    <h1 class="page-title">{{ question|yesno:"编辑题目,📝 录入题目" }}</h1>
+
+    {% if form.errors %}
+    <div class="form-errors-all">请检查表单中的错误：{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-layout">
+        <!-- 左侧：表单 -->
+        <div class="form-panel">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="section-title">基本信息</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>{{ form.year.label }} *</label>
+                        {{ form.year }}
+                        {% if form.year.errors %}<div class="form-error">{{ form.year.errors }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>{{ form.school.label }} *</label>
+                        {{ form.school }}
+                    </div>
+                    <div class="form-group">
+                        <label>{{ form.question_type.label }} *</label>
+                        {{ form.question_type }}
+                    </div>
+                    <div class="form-group">
+                        <label>{{ form.difficulty.label }} *</label>
+                        {{ form.difficulty }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form.knowledge_point.label }} *</label>
+                    {{ form.knowledge_point }}
+                    {% if form.knowledge_point.errors %}<div class="form-error">{{ form.knowledge_point.errors }}</div>{% endif %}
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">题目内容</div>
+
+                <div class="form-group">
+                    <label>{{ form.content.label }} *</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}<div class="form-error">{{ form.content.errors }}</div>{% endif %}
+                </div>
+
+                <div id="options-group">
+                    <label style="display:block; font-size:14px; font-weight:500; color:#555; margin-bottom:8px;">
+                        选项 <span id="options-required-hint" style="color: #ff4d4f;">*（选择题必填，至少 2 个）</span>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>{{ form.option_a.label }}</label>
+                            {{ form.option_a }}
+                            {% if form.option_a.errors %}<div class="form-error">{{ form.option_a.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>{{ form.option_b.label }}</label>
+                            {{ form.option_b }}
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>{{ form.option_c.label }}</label>
+                            {{ form.option_c }}
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>{{ form.option_d.label }}</label>
+                            {{ form.option_d }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="correct-answer-group">
+                    <label>{{ form.correct_answer.label }}（用于机器阅卷）</label>
+                    {{ form.correct_answer }}
+                    {% if form.correct_answer.errors %}<div class="form-error">{{ form.correct_answer.errors }}</div>{% endif %}
+                    <!-- 选择题快捷按钮 -->
+                    <div id="choice-shortcuts" style="display:none; margin-top:8px; gap:8px; display:none;">
+                        <span style="font-size:13px; color:#999;">快捷选择：</span>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('A')">A</button>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('B')">B</button>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('C')">C</button>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('D')">D</button>
+                    </div>
+                    <!-- 判断题快捷按钮 -->
+                    <div id="judge-shortcuts" style="display:none; margin-top:8px; gap:8px;">
+                        <span style="font-size:13px; color:#999;">快捷选择：</span>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('对')">对</button>
+                        <button type="button" class="btn btn-outline" style="padding:2px 14px; font-size:13px;" onclick="setCorrectAnswer('错')">错</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form.answer.label }} *</label>
+                    {{ form.answer }}
+                    {% if form.answer.errors %}<div class="form-error">{{ form.answer.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form.image.label }}（选填）</label>
+                    {{ form.image }}
+                    {% if form.image.errors %}<div class="form-error">{{ form.image.errors }}</div>{% endif %}
+                    {% if question and question.image %}
+                    <div id="image-preview-box" style="margin-top:8px;">
+                        <img src="{{ question.image.url }}" id="image-preview-existing" style="max-width:240px; max-height:160px; border-radius:6px; border:1px solid #eee; object-fit:contain;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary">{{ question|yesno:"保存修改,提交题目" }}</button>
+                    <a href="{% url 'kaoyan:question_list' %}" class="btn btn-outline">返回题库</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- 右侧：实时预览 -->
+        <div class="preview-panel">
+            <div class="preview-label">实时预览</div>
+            <div class="preview-box" id="preview-area">
+                <p style="color: #bbb;">在左侧输入内容，这里会实时显示渲染效果...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// DOMPurify 配置：允许 KaTeX/MathML 标签
+const PURIFY_CFG = {
+    ADD_TAGS: ['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],
+    ADD_ATTR: ['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']
+};
+
+// 预保护 LaTeX → 占位符 → Markdown 解析 → KaTeX 渲染回填
+function renderMd(text) {
+    if (!text) return '';
+    const map = [];
+    let idx = 0;
+    function hold(content, display) {
+        const ph = `\x00LATEX${idx}\x00`;
+        map.push({ ph, content: content.trim(), display });
+        idx++;
+        return ph;
+    }
+    // 1) 块级 $$...$$
+    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, c) => hold(c, true));
+    // 2) 块级 \[...\]
+    text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, c) => hold(c, true));
+    // 3) 行内 \(...\)
+    text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, c) => hold(c, false));
+    // 4) 行内 $...$（此时 $$ 已被替换，不会误匹配）
+    text = text.replace(/\$([^\$\n]+?)\$/g, (_, c) => hold(c, false));
+
+    // 5) Markdown 解析
+    let html = marked.parse(text);
+
+    // 6) 回填 KaTeX 渲染结果
+    map.forEach(item => {
+        try {
+            const rendered = katex.renderToString(item.content, { displayMode: item.display, throwOnError: false });
+            html = html.split(item.ph).join(rendered);
+        } catch(e) {
+            html = html.split(item.ph).join(item.content);
+        }
+    });
+    return DOMPurify.sanitize(html, PURIFY_CFG);
+}
+
+const choiceTypeId = {{ choice_type_id|default:"null" }};
+const judgeTypeId = {{ judge_type_id|default:"null" }};
+const questionTypeSelect = document.getElementById('id_question_type');
+const optionsGroup = document.getElementById('options-group');
+const choiceShortcuts = document.getElementById('choice-shortcuts');
+const judgeShortcuts = document.getElementById('judge-shortcuts');
+
+function setCorrectAnswer(val) {
+    document.getElementById('id_correct_answer').value = val;
+    updatePreview();
+}
+
+function toggleOptions() {
+    if (!questionTypeSelect) return;
+    const typeId = parseInt(questionTypeSelect.value);
+    const isChoice = typeId === choiceTypeId;
+    const isJudge = typeId === judgeTypeId;
+    optionsGroup.style.display = isChoice ? 'block' : 'none';
+    choiceShortcuts.style.display = isChoice ? 'inline-flex' : 'none';
+    judgeShortcuts.style.display = isJudge ? 'inline-flex' : 'none';
+}
+toggleOptions();
+if (questionTypeSelect) questionTypeSelect.addEventListener('change', toggleOptions);
+
+function updatePreview() {
+    const content = document.getElementById('id_content').value;
+    const answer = document.getElementById('id_answer').value;
+    const isChoice = parseInt(questionTypeSelect.value) === choiceTypeId;
+
+    let html = '';
+    if (content) {
+        html += '<div style="margin-bottom: 16px;"><strong style="color:#667eea;">【题干】</strong></div>';
+        html += '<div>' + renderMd(content) + '</div>';
+    }
+    if (isChoice) {
+        const opts = [
+            { letter: 'A', val: document.getElementById('id_option_a').value },
+            { letter: 'B', val: document.getElementById('id_option_b').value },
+            { letter: 'C', val: document.getElementById('id_option_c').value },
+            { letter: 'D', val: document.getElementById('id_option_d').value },
+        ].filter(o => o.val.trim());
+        if (opts.length > 0) {
+            html += '<div style="margin: 12px 0 16px;"><strong style="color:#667eea;">【选项】</strong></div>';
+            const correctVal = document.getElementById('id_correct_answer').value.trim();
+            opts.forEach(o => {
+                const isCorrect = o.letter === correctVal;
+                const style = isCorrect ? 'color: #52c41a; font-weight: 600;' : '';
+                html += '<div class="option-item" style="' + style + '">' + renderMd(o.letter + '. ' + o.val.trim()) + (isCorrect ? ' ✓' : '') + '</div>';
+            });
+        }
+    }
+    // 正确答案（所有题型）
+    const correctVal = document.getElementById('id_correct_answer').value.trim();
+    if (correctVal) {
+        html += '<div style="margin-top: 16px;"><strong style="color:#52c41a;">【正确答案】</strong></div>';
+        html += '<div style="color:#52c41a; font-weight:600;">' + correctVal + '</div>';
+    }
+    // 上传图片预览
+    const imgPreview = document.getElementById('image-preview-existing');
+    const imgInput = document.getElementById('id_image');
+    if (imgInput && imgInput.files && imgInput.files[0]) {
+        const url = URL.createObjectURL(imgInput.files[0]);
+        html += '<div style="margin-top:16px;"><strong style="color:#667eea;">【插图】</strong></div>';
+        html += '<div class="img-preview-box"><img src="' + url + '"></div>';
+    } else if (imgPreview) {
+        html += '<div style="margin-top:16px;"><strong style="color:#667eea;">【插图】</strong></div>';
+        html += '<div class="img-preview-box"><img src="' + imgPreview.src + '"></div>';
+    }
+    if (answer) {
+        html += '<div style="margin-top: 12px;"><strong style="color:#667eea;">【解析】</strong></div>';
+        html += '<div>' + renderMd(answer) + '</div>';
+    }
+
+    document.getElementById('preview-area').innerHTML = html || '<p style="color: #bbb;">在左侧输入内容，这里会实时显示渲染效果...</p>';
+}
+
+['id_content', 'id_answer', 'id_correct_answer', 'id_option_a', 'id_option_b', 'id_option_c', 'id_option_d'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updatePreview);
+});
+// 图片选择时也更新预览
+const imgInput = document.getElementById('id_image');
+if (imgInput) imgInput.addEventListener('change', updatePreview);
+</script>
+{% endblock %}

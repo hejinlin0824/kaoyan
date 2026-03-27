@@ -1,0 +1,31 @@
+{% extends "user/base.html" %}
+
+{% block title %}开通VIP - 考研平台{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 40px auto;">
+    <div style="text-align: center;">
+        <h1 class="page-title" style="background: linear-gradient(135deg, #f5af19, #f12711); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px;">
+            👑 开通 VIP 会员
+        </h1>
+        <p style="color: #888; font-size: 16px; margin-bottom: 30px;">解锁全部专属权益，助力考研上岸</p>
+
+        <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); border-radius: 12px; padding: 20px 24px; margin-bottom: 30px; text-align: left;">
+            <h3 style="color: #d48806; font-size: 16px; margin-bottom: 12px;">📱 开通方式</h3>
+            <p style="color: #555; font-size: 15px; line-height: 1.8;">
+                请添加<strong>客服学长微信</strong>，发送您的<strong>用户名</strong>和想要开通的<strong>时长</strong>，学长会为您手动开通。
+            </p>
+            <p style="color: #888; font-size: 13px; margin-top: 8px;">
+                可选时长：7天 / 30天 / 60天 / 90天 / 180天 / 365天
+            </p>
+        </div>
+
+        <div style="background: #f6f8fa; border-radius: 12px; padding: 30px 20px; margin-bottom: 24px;">
+            <p style="color: #333; font-size: 15px; font-weight: 500; margin-bottom: 16px;">扫一扫添加客服学长微信</p>
+            <img src="{{ wechat_qrcode_url }}" alt="客服学长微信二维码" style="width: 220px; height: 220px; border-radius: 8px; border: 2px solid #e8e8e8;">
+        </div>
+
+        <a href="{% url 'user:home' %}" class="btn btn-outline" style="margin-top: 10px;">返回首页</a>
+    </div>
+</div>
+{% endblock %}

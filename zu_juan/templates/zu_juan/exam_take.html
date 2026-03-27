@@ -1,0 +1,140 @@
+{% extends "user/base.html" %}
+
+{% block title %}在线作答{% endblock %}
+
+{% block content %}
+<style>
+    .exam-header { background: #fff; border-radius: 12px; padding: 16px 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 64px; z-index: 10; }
+    .timer { font-size: 20px; font-weight: 700; color: #667eea; font-variant-numeric: tabular-nums; }
+    .q-section { margin-bottom: 24px; }
+    .q-section-title { font-size: 16px; font-weight: 600; color: #667eea; margin-bottom: 12px; padding-left: 12px; border-left: 3px solid #667eea; }
+    .q-item { background: #fff; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+    .q-num { font-weight: 600; color: #667eea; margin-right: 8px; }
+    .q-content { font-size: 15px; line-height: 1.8; }
+    .q-options { margin: 8px 0 0 24px; }
+    .q-options .opt { padding: 4px 0; color: #555; }
+    .q-meta { font-size: 12px; color: #bbb; margin-top: 8px; }
+    .img-box { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+    .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .q-content h1,.q-content h2,.q-content h3 { margin: 8px 0 4px; }
+    .q-content p { margin: 4px 0; }
+    .q-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+    /* 作答区 */
+    .answer-area { margin-top: 12px; padding: 12px 16px; background: #fafbff; border-radius: 8px; border: 1px solid #e8e8f0; }
+    .choice-options { display: flex; flex-direction: column; gap: 8px; }
+    .choice-opt { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s; border: 1px solid transparent; }
+    .choice-opt:hover { background: #f0f0ff; }
+    .choice-opt.selected { background: #eef0ff; border-color: #667eea; }
+    .choice-opt input[type="radio"] { accent-color: #667eea; width: 18px; height: 18px; }
+    .choice-opt .opt-label { font-size: 15px; }
+    .judge-options { display: flex; gap: 16px; }
+    .judge-opt { display: flex; align-items: center; gap: 8px; padding: 8px 24px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: background 0.15s; }
+    .judge-opt:hover { background: #f0f0ff; }
+    .judge-opt.selected { background: #eef0ff; border-color: #667eea; }
+    .judge-opt input[type="radio"] { accent-color: #667eea; width: 18px; height: 18px; }
+    .fill-input { width: 100%; padding: 10px 14px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 15px; transition: border-color 0.2s; box-sizing: border-box; }
+    .fill-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.15); }
+    .subjective-hint { color: #999; font-size: 13px; font-style: italic; margin-top: 8px; }
+    .submit-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 12px 0; box-shadow: 0 -2px 12px rgba(0,0,0,0.08); text-align: center; z-index: 20; }
+    .submit-bar .btn { padding: 10px 48px; font-size: 16px; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="exam-header">
+    <div class="timer" id="timer">00:00</div>
+    <div style="font-size:14px; color:#999;">共 {{ exam_questions|length }} 道题</div>
+</div>
+
+<form method="post" action="{% url 'zu_juan:exam_submit' exam.id %}" id="exam-form">
+    {% csrf_token %}
+    <input type="hidden" name="duration_seconds" id="duration-hidden">
+
+{% regroup exam_questions by question.question_type.name as sections %}
+{% for section in sections %}
+<div class="q-section">
+    <div class="q-section-title">{{ section.grouper }}题（共 {{ section.list|length }} 道）</div>
+    {% for eq in section.list %}
+    <div class="q-item">
+        <div class="q-content"><span class="q-num">{{ forloop.counter }}.</span><span data-raw="{{ eq.question.content|escape }}"></span></div>
+        {% if eq.question.options and section.grouper == "选择" %}
+        <div class="q-options" style="display:none;">
+            {% for key, val in eq.question.options.items %}
+            <div class="opt" data-raw="{{ key }}. {{ val|escape }}" data-key="{{ key }}"></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if eq.question.image %}
+        <div class="img-box"><img src="{{ eq.question.image.url }}" alt="插图"></div>
+        {% endif %}
+
+        <div class="answer-area">
+            {% if section.grouper == "选择" %}
+            <div class="choice-options" data-eq-id="{{ eq.id }}">
+                {% for key, val in eq.question.options.items %}
+                <label class="choice-opt" onclick="selectChoice(this)">
+                    <input type="radio" name="answer_{{ eq.id }}" value="{{ key }}">
+                    <span class="opt-label" data-raw="{{ key }}. {{ val|escape }}"></span>
+                </label>
+                {% endfor %}
+            </div>
+            {% elif section.grouper == "填空" %}
+            <input type="text" class="fill-input" name="answer_{{ eq.id }}" placeholder="请输入答案（多空用分号;分隔）">
+            {% elif section.grouper == "判断" %}
+            <div class="judge-options">
+                <label class="judge-opt" onclick="selectJudge(this)">
+                    <input type="radio" name="answer_{{ eq.id }}" value="对">
+                    <span>✅ 对</span>
+                </label>
+                <label class="judge-opt" onclick="selectJudge(this)">
+                    <input type="radio" name="answer_{{ eq.id }}" value="错">
+                    <span>❌ 错</span>
+                </label>
+            </div>
+            {% else %}
+            <div class="subjective-hint">📝 主观题，请在纸上作答后对照答案自评</div>
+            {% endif %}
+        </div>
+        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+</form>
+
+<div class="submit-bar">
+    <button type="button" class="btn btn-primary" onclick="confirmSubmit()">📋 提交试卷</button>
+</div>
+
+<div style="height: 80px;"></div>
+
+<script>
+const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function renderMd(t){if(!t)return '';const m=[];let i=0;function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(x=>{try{html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));}catch(e){html=html.split(x.p).join(x.c);}});return DOMPurify.sanitize(html,PURIFY_CFG);}
+document.querySelectorAll('[data-raw]').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
+
+// 选择/判断高亮
+function selectChoice(label){label.closest('.choice-options').querySelectorAll('.choice-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');}
+function selectJudge(label){label.closest('.judge-options').querySelectorAll('.judge-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');}
+
+// 计时器
+let seconds = 0;
+const timerEl = document.getElementById('timer');
+setInterval(()=>{
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    timerEl.textContent = m+':'+s;
+},1000);
+
+// 提交确认
+function confirmSubmit(){
+    if(!confirm('确定要提交试卷吗？提交后不可修改。')) return;
+    document.getElementById('duration-hidden').value = seconds;
+    document.getElementById('exam-form').submit();
+}
+</script>
+{% endblock %}

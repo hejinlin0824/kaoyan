@@ -1,0 +1,83 @@
+{% extends "user/base.html" %}
+
+{% block title %}首页 - 考研平台{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="hero">
+        <h1>欢迎来到考研平台</h1>
+        <p>助你高效备考，一战成硕</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'user:register' %}" class="btn btn-primary">立即注册</a>
+            <a href="{% url 'user:login' %}" class="btn btn-outline" style="margin-left: 12px;">已有账号，去登录</a>
+        {% endif %}
+    </div>
+
+    {% if user.is_authenticated %}
+        {% if is_vip %}
+        <div class="vip-card">
+            <div class="vip-info">
+                <h3>👑 {{ vip_label }}</h3>
+                <p>开通时间：{{ user.vip_start_date|date:"Y年m月d日 H:i" }}</p>
+                <p>到期时间：{{ user.vip_expire_date|date:"Y年m月d日 H:i" }}</p>
+            </div>
+            <a href="{% url 'user:vip' %}" class="btn" style="background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4);">续费VIP</a>
+        </div>
+        {% else %}
+        <div class="vip-card" style="background: linear-gradient(135deg, #a8a8a8 0%, #7a7a7a 100%);">
+            <div class="vip-info">
+                <h3>普通用户</h3>
+                <p>升级 VIP 解锁更多专属权益</p>
+            </div>
+            <a href="{% url 'user:vip' %}" class="btn" style="background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4);">充值开通VIP</a>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    {% if is_vip %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+        <a href="{% url 'zu_juan:exam_create' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+            <span style="font-size: 28px;">📝</span>
+            <div><div style="font-weight: 600; font-size: 15px;">智能组卷</div><div style="font-size: 12px; opacity: 0.85;">随机抽题 · 在线作答 · 自动阅卷</div></div>
+        </a>
+        <a href="{% url 'zu_juan:wrong_book' %}" style="display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: #fff; padding: 18px 20px; border-radius: 12px; text-decoration: none; transition: transform 0.2s;">
+            <span style="font-size: 28px;">📖</span>
+            <div><div style="font-weight: 600; font-size: 15px;">错题本</div><div style="font-size: 12px; opacity: 0.85;">查漏补缺 · 错误次数统计</div></div>
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon">📖</div>
+            <h3>考研资料</h3>
+            <p>海量考研真题与解析</p>
+        </div>
+        <div class="feature-item {% if not is_vip %}feature-lock{% endif %}">
+            <div class="feature-icon">🎬</div>
+            <h3>视频课程</h3>
+            <p>{% if is_vip %}名师精讲，系统学习{% else %}VIP 专属权益{% endif %}</p>
+        </div>
+        <div class="feature-item {% if not is_vip %}feature-lock{% endif %}" {% if is_vip %}onclick="location.href='{% url 'zu_juan:exam_create' %}'" style="cursor:pointer;"{% endif %}>
+            <div class="feature-icon">📝</div>
+            <h3>智能组卷</h3>
+            <p>{% if is_vip %}随机抽题，在线答题{% else %}VIP 专属权益{% endif %}</p>
+        </div>
+        <div class="feature-item" onclick="location.href='{% url 'kaoyan:question_list' %}'" style="cursor:pointer;">
+            <div class="feature-icon">📖</div>
+            <h3>题库浏览</h3>
+            <p>按年份学校筛选题目</p>
+        </div>
+        <div class="feature-item {% if not is_vip %}feature-lock{% endif %}">
+            <div class="feature-icon">💬</div>
+            <h3>答疑社区</h3>
+            <p>{% if is_vip %}名师在线答疑{% else %}VIP 专属权益{% endif %}</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">📅</div>
+            <h3>倒计时</h3>
+            <p>考研日期提醒</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

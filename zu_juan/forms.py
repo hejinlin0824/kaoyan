@@ -1,5 +1,7 @@
 from django import forms
 
+from kaoyan_app.models import Subject
+
 LIMITS = {
     "choice": (0, 10, "选择题"),
     "fill": (0, 10, "填空题"),
@@ -12,6 +14,13 @@ LIMITS = {
 
 class ExamCreateForm(forms.Form):
     """组卷表单"""
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.all(),
+        required=True,
+        empty_label="请选择专业课",
+        widget=forms.Select(attrs={"class": "form-input"}),
+        label="专业课",
+    )
     choice_count = forms.IntegerField(min_value=0, max_value=10, initial=5,
                                      label="选择题", widget=forms.NumberInput(attrs={
                                          "class": "form-input", "min": 0, "max": 10}))

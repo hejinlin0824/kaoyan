@@ -1,6 +1,6 @@
 {% extends "user/base.html" %}
 
-{% block title %}阅卷结果 - 考研平台{% endblock %}
+{% block title %}阅卷结果 - AI题库组卷{% endblock %}
 
 {% block extra_style %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -18,8 +18,6 @@
     .q-num{font-weight:600;color:var(--blue-600);margin-right:8px;}
     .q-content{font-size:15px;line-height:1.8;}
     .q-meta{font-size:12px;color:var(--gray-400);margin-top:8px;}
-    .img-box{width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;margin-top:10px;}
-    .img-box img{max-width:100%;max-height:100%;object-fit:contain;}
     .q-content h1,.q-content h2,.q-content h3{margin:8px 0 4px;}
     .q-content p{margin:4px 0;}
     .q-content code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:13px;}
@@ -79,9 +77,6 @@
             {% endfor %}
         </div>
         {% endif %}
-        {% if eq.question.image %}
-        <div class="img-box"><img src="{{ eq.question.image.url }}" alt="插图"></div>
-        {% endif %}
 
         {% if eq.user_answer %}
         <div class="answer-box answer-user">
@@ -95,21 +90,21 @@
             <div data-raw="{{ eq.question.correct_answer|escape }}"></div>
         </div>
         {% endif %}
-        {% if eq.question.answer %}
+        {% if eq.question.explanation %}
         <div class="answer-analysis">
             <div class="answer-label" style="color:var(--blue-700);">解析：</div>
-            <div data-raw="{{ eq.question.answer|escape }}"></div>
+            <div data-raw="{{ eq.question.explanation|escape }}"></div>
         </div>
         {% endif %}
-        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }}</div>
+        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }} · {{ eq.question.difficulty }}</div>
     </div>
     {% endfor %}
 </div>
 {% endfor %}
 
 <div style="text-align:center;margin:32px 0;display:flex;justify-content:center;gap:12px;">
-    <a href="{% url 'zu_juan:exam_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 再组一套</a>
-    <a href="{% url 'zu_juan:wrong_book' %}" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> 错题本</a>
+    <a href="{% url 'ai_test:ai_practice_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 再组一套</a>
+    <a href="{% url 'ai_test:ai_wrong_book' %}" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> AI错题本</a>
 </div>
 
 <script>

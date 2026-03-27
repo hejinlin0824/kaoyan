@@ -1,0 +1,62 @@
+{% extends "user/base.html" %}
+
+{% block title %}试卷预览 - AI题库组卷{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+    .q-section{margin-bottom:24px;}
+    .q-section-title{font-size:16px;font-weight:600;color:var(--blue-700);margin-bottom:12px;padding-left:12px;border-left:3px solid var(--blue-500);}
+    .q-item{padding:20px 24px;margin-bottom:10px;}
+    .q-num{font-weight:600;color:var(--blue-600);margin-right:8px;}
+    .q-content{font-size:15px;line-height:1.8;}
+    .q-options{margin:8px 0 0 24px;}
+    .q-options .opt{padding:4px 0;color:var(--gray-600);}
+    .q-meta{font-size:12px;color:var(--gray-400);margin-top:8px;}
+    .q-content h1,.q-content h2,.q-content h3{margin:8px 0 4px;}
+    .q-content p{margin:4px 0;}
+    .q-content code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:13px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-eye"></i> 试卷预览</h1>
+    <p class="page-subtitle">共 {{ exam_questions|length }} 道题，确认后开始作答</p>
+</div>
+
+{% regroup exam_questions by question.question_type.name as sections %}
+{% for section in sections %}
+<div class="q-section">
+    <div class="q-section-title">{{ section.grouper }}题（共 {{ section.list|length }} 道）</div>
+    {% for eq in section.list %}
+    <div class="card q-item">
+        <div class="q-content"><span class="q-num">{{ forloop.counter }}.</span><span data-raw="{{ eq.question.content|escape }}"></span></div>
+        {% if eq.question.options and section.grouper == "选择" %}
+        <div class="q-options">
+            {% for key, val in eq.question.options.items %}
+            <div class="opt" data-raw="{{ key }}. {{ val|escape }}"></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }} · {{ eq.question.difficulty }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div style="text-align:center;margin:32px 0;">
+    <a href="{% url 'ai_test:ai_practice_take' exam.id %}" class="btn btn-primary btn-lg"><i class="fa-solid fa-pen"></i> 开始作答</a>
+    <a href="{% url 'ai_test:ai_practice_create' %}" class="btn btn-outline" style="margin-left:12px;"><i class="fa-solid fa-arrow-left"></i> 重新组卷</a>
+</div>
+
+<script>
+const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function renderMd(t){if(!t)return '';const m=[];let i=0;function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(x=>{try{html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));}catch(e){html=html.split(x.p).join(x.c);}});return DOMPurify.sanitize(html,PURIFY_CFG);}
+document.querySelectorAll('[data-raw]').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
+</script>
+{% endblock %}

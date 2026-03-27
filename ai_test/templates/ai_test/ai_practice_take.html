@@ -1,6 +1,6 @@
 {% extends "user/base.html" %}
 
-{% block title %}在线作答 - 考研平台{% endblock %}
+{% block title %}在线作答 - AI题库组卷{% endblock %}
 
 {% block extra_style %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -15,8 +15,6 @@
     .q-options{margin:8px 0 0 24px;}
     .q-options .opt{padding:4px 0;color:var(--gray-600);}
     .q-meta{font-size:12px;color:var(--gray-400);margin-top:8px;}
-    .img-box{width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;margin-top:10px;}
-    .img-box img{max-width:100%;max-height:100%;object-fit:contain;}
     .q-content h1,.q-content h2,.q-content h3{margin:8px 0 4px;}
     .q-content p{margin:4px 0;}
     .q-content code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:13px;}
@@ -49,7 +47,7 @@
     <div style="font-size:14px;color:var(--gray-500);">共 {{ exam_questions|length }} 道题</div>
 </div>
 
-<form method="post" action="{% url 'zu_juan:exam_submit' exam.id %}" id="exam-form">
+<form method="post" action="{% url 'ai_test:ai_practice_submit' exam.id %}" id="exam-form">
     {% csrf_token %}
     <input type="hidden" name="duration_seconds" id="duration-hidden">
 
@@ -66,9 +64,6 @@
             <div class="opt" data-raw="{{ key }}. {{ val|escape }}" data-key="{{ key }}"></div>
             {% endfor %}
         </div>
-        {% endif %}
-        {% if eq.question.image %}
-        <div class="img-box"><img src="{{ eq.question.image.url }}" alt="插图"></div>
         {% endif %}
 
         <div class="answer-area">
@@ -98,7 +93,7 @@
             <div class="subjective-hint"><i class="fa-solid fa-pen-nib" style="margin-right:4px;"></i>主观题，请在纸上作答后对照答案自评</div>
             {% endif %}
         </div>
-        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }}</div>
+        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.difficulty }}</div>
     </div>
     {% endfor %}
 </div>

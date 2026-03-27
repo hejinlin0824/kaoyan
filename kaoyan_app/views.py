@@ -13,14 +13,17 @@ def is_admin(user):
 def question_list(request):
     """公开题目查询"""
     form = QuestionSearchForm(request.GET or None)
-    questions = Question.objects.select_related("school", "question_type").all()
+    questions = Question.objects.select_related("subject", "school", "question_type").all()
 
     if form.is_valid():
+        subject = form.cleaned_data.get("subject")
         year = form.cleaned_data.get("year")
         school = form.cleaned_data.get("school")
         question_type = form.cleaned_data.get("question_type")
         difficulty = form.cleaned_data.get("difficulty")
 
+        if subject:
+            questions = questions.filter(subject=subject)
         if year:
             questions = questions.filter(year=year)
         if school:

@@ -5,6 +5,7 @@ from .forms import LoginForm, RegisterForm
 
 
 def home(request):
+    from kaoyan_app.models import Question, School, QuestionType
     user = request.user
     is_vip = user.is_vip() if user.is_authenticated else False
     vip_label = dict(user.VIP_CHOICES).get(user.vip_level, "") if user.is_authenticated else ""
@@ -12,6 +13,9 @@ def home(request):
         "user": user,
         "is_vip": is_vip,
         "vip_label": vip_label,
+        "total_questions": Question.objects.count(),
+        "total_schools": School.objects.count(),
+        "total_types": QuestionType.objects.count(),
     })
 
 

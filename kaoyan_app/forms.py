@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Question, QuestionType, School
+from .models import Question, QuestionType, School, Subject
 
 
 class QuestionForm(forms.ModelForm):
@@ -27,8 +27,9 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        fields = ["year", "school", "question_type", "difficulty", "knowledge_point", "content", "correct_answer", "answer", "image"]
+        fields = ["subject", "year", "school", "question_type", "difficulty", "knowledge_point", "content", "correct_answer", "answer", "image"]
         widgets = {
+            "subject": forms.Select(attrs={"class": "form-input"}),
             "year": forms.NumberInput(attrs={
                 "class": "form-input",
                 "placeholder": "例如：2025",
@@ -110,6 +111,12 @@ class QuestionForm(forms.ModelForm):
 
 class QuestionSearchForm(forms.Form):
     """题目查询表单"""
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.all(),
+        required=False,
+        empty_label="全部专业课",
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
     year = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={
         "class": "form-input", "placeholder": "年份",
     }))

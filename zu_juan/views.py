@@ -43,14 +43,15 @@ def exam_create(request):
     if request.method == "POST":
         form = ExamCreateForm(request.POST)
         if form.is_valid():
+            subject = form.cleaned_data["subject"]
             counts = {k: form.cleaned_data[k] for k in TYPE_FIELD_MAP.values()}
             # 检查题库是否足够
             for type_name, field in TYPE_FIELD_MAP.items():
                 needed = counts[field]
                 if needed > 0:
-                    available = Question.objects.filter(question_type__name=type_name).count()
+                    available = Question.objects.filter(subject=subject, question_type__name=type_name).count()
                     if available < needed:
-                        form.add_error(field, f"题库中{type_name}题仅 {available} 道，不够 {needed} 道")
+                        form.add_error(field, f"该专业课{type_name}题仅 {available} 道，不够 {needed} 道")
             if form.errors:
                 return render(request, "zu_juan/exam_create.html", {"form": form})
 
@@ -61,7 +62,7 @@ def exam_create(request):
                     needed = counts[field]
                     if needed > 0:
                         qs = list(Question.objects.filter(
-                            question_type__name=type_name
+                            subject=subject, question_type__name=type_name
                         ).select_related("school", "question_type").order_by("?")[:needed])
                         for q in qs:
                             ExamQuestion.objects.create(exam=exam, question=q, order=order)

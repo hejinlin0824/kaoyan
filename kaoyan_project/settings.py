@@ -80,6 +80,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 30,
+        }
     }
 }
 
@@ -114,6 +117,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# Session & CSRF Cookie — 避免同一域名下多个 Django 项目 cookie 冲突
+SESSION_COOKIE_NAME = "kaoyan_sessionid"
+CSRF_COOKIE_NAME = "kaoyan_csrftoken"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

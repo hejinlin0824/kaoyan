@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import AIGeneratedQuestion, AIExam, AIExamQuestion
+from .models import (
+    AIGeneratedQuestion, AIExam, AIExamQuestion,
+    AIPracticeExam, AIPracticeExamQuestion, AIWrongQuestion,
+)
 
 @admin.register(AIGeneratedQuestion)
 class AIGeneratedQuestionAdmin(admin.ModelAdmin):
@@ -69,3 +72,58 @@ class AIExamQuestionAdmin(admin.ModelAdmin):
     search_fields = ("exam__id", "question__content")
     raw_id_fields = ("exam", "question")
     list_filter = ("exam__status",)
+
+
+# ─── AI题库组卷 Admin ───
+
+class AIPracticeExamQuestionInline(admin.TabularInline):
+    """AI练习卷内联题目"""
+    model = AIPracticeExamQuestion
+    extra = 0
+    raw_id_fields = ("question",)
+    readonly_fields = ("order", "user_answer", "is_correct", "score")
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(AIPracticeExam)
+class AIPracticeExamAdmin(admin.ModelAdmin):
+    """AI题库练习卷后台管理"""
+    list_display = ("id", "user", "status", "score", "total_objective_score", "created_at", "duration_seconds")
+    list_filter = ("status", "created_at")
+    search_fields = ("user__username",)
+    readonly_fields = ("created_at", "score", "total_objective_score", "duration_seconds")
+    raw_id_fields = ("user",)
+    inlines = [AIPracticeExamQuestionInline]
+
+    fieldsets = (
+        ("基本信息", {
+            "fields": ("user", "status", "created_at")
+        }),
+        ("成绩信息", {
+            "fields": ("score", "total_objective_score", "duration_seconds")
+        }),
+        ("组卷配置快照", {
+            "fields": ("choice_count", "fill_count", "judge_count", "short_count", "calc_count", "draw_count")
+        }),
+    )
+
+
+@admin.register(AIPracticeExamQuestion)
+class AIPracticeExamQuestionAdmin(admin.ModelAdmin):
+    """AI练习卷题目明细后台管理"""
+    list_display = ("id", "exam", "question", "order", "is_correct", "score")
+    search_fields = ("exam__id", "question__content")
+    raw_id_fields = ("exam", "question")
+    list_filter = ("exam__status",)
+
+
+@admin.register(AIWrongQuestion)
+class AIWrongQuestionAdmin(admin.ModelAdmin):
+    """AI错题本后台管理"""
+    list_display = ("id", "user", "question", "error_count", "last_wrong_at")
+    list_filter = ("last_wrong_at",)
+    search_fields = ("user__username", "question__knowledge_point", "question__content")
+    raw_id_fields = ("user", "question")

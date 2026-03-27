@@ -1,24 +1,21 @@
 {% extends "user/base.html" %}
 
-{% block title %}错题本 - 考研平台{% endblock %}
+{% block title %}AI错题本{% endblock %}
 
 {% block extra_style %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
-    .wrong-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
-    .wrong-count{font-size:14px;color:var(--gray-500);}
-    .wrong-count span{color:#dc2626;font-weight:700;font-size:18px;}
-    .q-item{padding:20px 24px;margin-bottom:12px;border-left:4px solid #dc2626;}
+    .wrong-item{padding:20px 24px;margin-bottom:10px;}
+    .wrong-item:hover{background:#fef2f2;}
     .q-num{font-weight:600;color:var(--blue-600);margin-right:8px;}
     .q-content{font-size:15px;line-height:1.8;}
     .q-meta{font-size:12px;color:var(--gray-400);margin-top:8px;display:flex;gap:12px;align-items:center;}
-    .error-badge{background:#fef2f2;color:#dc2626;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;}
-    .img-box{width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;margin-top:10px;}
-    .img-box img{max-width:100%;max-height:100%;object-fit:contain;}
+    .error-badge{display:inline-block;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;}
     .q-content h1,.q-content h2,.q-content h3{margin:8px 0 4px;}
     .q-content p{margin:4px 0;}
     .q-content code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:13px;}
-    .answer-correct{margin-top:10px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:14px;line-height:1.7;}
+    .answer-box{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:14px;line-height:1.7;}
+    .answer-correct{background:#f0fdf4;border:1px solid #bbf7d0;}
     .answer-label{font-weight:600;font-size:13px;margin-bottom:4px;}
     .answer-analysis{margin-top:8px;padding:10px 14px;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:8px;font-size:14px;line-height:1.7;}
 </style>
@@ -29,17 +26,19 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
-<div class="wrong-header">
-    <h1 class="page-title" style="margin:0;"><i class="fa-solid fa-rotate-left"></i> 错题本</h1>
-    <div class="wrong-count">共 <span>{{ wrong_questions|length }}</span> 道错题</div>
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-rotate-left" style="color:#dc2626;"></i> AI错题本</h1>
+    <p class="page-subtitle">AI题库练习中的错题记录</p>
 </div>
 
 {% if wrong_questions %}
+<div>共 {{ wrong_questions|length }} 道错题</div>
 {% for wq in wrong_questions %}
-<div class="card q-item">
+<div class="card wrong-item">
     <div class="q-content">
         <span class="q-num">{{ forloop.counter }}.</span>
         <span data-raw="{{ wq.question.content|escape }}"></span>
+        <span class="error-badge"><i class="fa-solid fa-xmark" style="margin-right:2px;"></i>错 {{ wq.error_count }} 次</span>
     </div>
     {% if wq.question.options and wq.question.question_type.name == "选择" %}
     <div style="margin:6px 0 0 24px;">
@@ -48,40 +47,40 @@
         {% endfor %}
     </div>
     {% endif %}
-    {% if wq.question.image %}
-    <div class="img-box"><img src="{{ wq.question.image.url }}" alt="插图"></div>
-    {% endif %}
     {% if wq.question.correct_answer %}
-    <div class="answer-correct">
+    <div class="answer-box answer-correct">
         <div class="answer-label">正确答案：</div>
         <div data-raw="{{ wq.question.correct_answer|escape }}"></div>
     </div>
     {% endif %}
-    {% if wq.question.answer %}
+    {% if wq.question.explanation %}
     <div class="answer-analysis">
         <div class="answer-label" style="color:var(--blue-700);">解析：</div>
-        <div data-raw="{{ wq.question.answer|escape }}"></div>
+        <div data-raw="{{ wq.question.explanation|escape }}"></div>
     </div>
     {% endif %}
     <div class="q-meta">
-        <span>{{ wq.question.year }} · {{ wq.question.school.name }} · {{ wq.question.knowledge_point }}</span>
-        <span class="error-badge"><i class="fa-solid fa-xmark" style="margin-right:2px;"></i>错 {{ wq.error_count }} 次</span>
+        <span>{{ wq.question.question_type.name }}题</span>
+        <span>{{ wq.question.year }} · {{ wq.question.school.name }}</span>
+        <span>{{ wq.question.knowledge_point }}</span>
+        <span>{{ wq.question.difficulty }}</span>
+        <span style="margin-left:auto;">最近错误：{{ wq.last_wrong_at|date:"Y-m-d H:i" }}</span>
     </div>
 </div>
 {% endfor %}
-
-<div style="text-align:center;margin:32px 0;">
-    <a href="{% url 'zu_juan:exam_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 去组卷</a>
-</div>
 {% else %}
 <div class="empty-state">
-    <i class="fa-solid fa-face-smile" style="color:var(--blue-400);"></i>
-    <p>暂无错题，继续保持</p>
+    <i class="fa-solid fa-check-circle" style="color:#16a34a;"></i>
+    <p>暂无错题，继续保持！</p>
     <div style="margin-top:20px;">
-        <a href="{% url 'zu_juan:exam_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 去组卷练习</a>
+        <a href="{% url 'ai_test:ai_practice_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 去练习</a>
     </div>
 </div>
 {% endif %}
+
+<div style="text-align:center;margin:32px 0;">
+    <a href="{% url 'ai_test:ai_practice_list' %}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> 返回练习列表</a>
+</div>
 
 <script>
 const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};

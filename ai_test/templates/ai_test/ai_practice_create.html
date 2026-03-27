@@ -1,0 +1,59 @@
+{% extends "user/base.html" %}
+
+{% block title %}AI题库组卷{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-shuffle"></i> AI题库组卷</h1>
+    <p class="page-subtitle">从AI生成的题库中随机抽题，自动阅卷，错题自动记录</p>
+</div>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-errors-all">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+            <div class="form-group">
+                <label for="id_choice_count">选择题数量</label>
+                {{ form.choice_count }}
+                {% if form.choice_count.errors %}<div class="form-error">{{ form.choice_count.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_fill_count">填空题数量</label>
+                {{ form.fill_count }}
+                {% if form.fill_count.errors %}<div class="form-error">{{ form.fill_count.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_judge_count">判断题数量</label>
+                {{ form.judge_count }}
+                {% if form.judge_count.errors %}<div class="form-error">{{ form.judge_count.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_short_count">简答题数量</label>
+                {{ form.short_count }}
+                {% if form.short_count.errors %}<div class="form-error">{{ form.short_count.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_calc_count">计算题数量</label>
+                {{ form.calc_count }}
+                {% if form.calc_count.errors %}<div class="form-error">{{ form.calc_count.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_draw_count">画图题数量</label>
+                {{ form.draw_count }}
+                {% if form.draw_count.errors %}<div class="form-error">{{ form.draw_count.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+        <div style="text-align:center; margin-top:24px;">
+            <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-shuffle"></i> 开始组卷</button>
+        </div>
+    </form>
+</div>
+
+<div style="text-align:center; margin-top:20px;">
+    <a href="{% url 'ai_test:ai_practice_list' %}" class="btn btn-outline"><i class="fa-solid fa-list"></i> 查看练习记录</a>
+    <a href="{% url 'ai_test:ai_question_list' %}" class="btn btn-outline" style="margin-left:12px;"><i class="fa-solid fa-database"></i> 浏览AI题库</a>
+</div>
+{% endblock %}

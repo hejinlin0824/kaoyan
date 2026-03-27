@@ -1,6 +1,19 @@
 from django.db import models
 
 
+class Subject(models.Model):
+    """专业课"""
+    name = models.CharField(max_length=100, unique=True, verbose_name="专业课名称")
+
+    class Meta:
+        verbose_name = "专业课"
+        verbose_name_plural = "专业课"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class School(models.Model):
     """学校"""
     name = models.CharField(max_length=100, unique=True, verbose_name="学校名称")
@@ -35,6 +48,7 @@ class Question(models.Model):
         ("难", "难"),
     ]
 
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, verbose_name="专业课")
     year = models.IntegerField(verbose_name="年份")
     school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name="学校")
     question_type = models.ForeignKey(QuestionType, on_delete=models.CASCADE, verbose_name="题型")
@@ -64,6 +78,7 @@ class Question(models.Model):
         """序列化为字典，用于 JSON 备份"""
         return {
             "id": self.id,
+            "subject": self.subject.name,
             "year": self.year,
             "school": self.school.name,
             "question_type": self.question_type.name,

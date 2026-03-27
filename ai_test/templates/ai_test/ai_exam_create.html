@@ -2,82 +2,30 @@
 
 {% block title %}AI智能辅助出题 - 考研平台{% endblock %}
 
-{% block content %}
+{% block extra_style %}
 <style>
-    .create-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 600px;
-        margin: 0 auto;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    }
-    .warning-banner {
-        background: #fffbe6;
-        border: 1px solid #ffe58f;
-        padding: 16px 20px;
-        border-radius: 8px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .warning-icon {
-        font-size: 24px;
-        color: #faad14;
-        margin-top: -2px;
-    }
-    .warning-text {
-        font-size: 14px;
-        color: #d46b08;
-        line-height: 1.6;
-    }
-    .type-row {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 12px 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .type-row:last-child { border-bottom: none; }
-    .type-label {
-        width: 80px;
-        font-weight: 600;
-        font-size: 15px;
-        color: #333;
-    }
-    .type-limit {
-        flex: 1;
-        font-size: 13px;
-        color: #999;
-    }
-    .type-input {
-        width: 80px;
-        text-align: center;
-    }
-    .type-input .form-input {
-        text-align: center;
-        font-size: 18px;
-        font-weight: 600;
-        height: 42px;
-    }
-    .summary-bar {
-        background: #f6f8ff;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .summary-total { font-size: 16px; font-weight: 600; color: #667eea; }
+    .type-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--gray-100);}
+    .type-row:last-child{border-bottom:none;}
+    .type-label{width:80px;font-weight:600;font-size:15px;color:var(--gray-800);}
+    .type-limit{flex:1;font-size:13px;color:var(--gray-400);}
+    .type-input{width:80px;text-align:center;}
+    .type-input .form-input{text-align:center;font-size:18px;font-weight:600;height:42px;}
+    .summary-bar{background:var(--blue-50);border:1px solid var(--blue-200);border-radius:8px;padding:16px 20px;margin-top:20px;display:flex;justify-content:center;align-items:center;}
+    .summary-total{font-size:16px;font-weight:600;color:var(--blue-700);}
+    .warning-banner{background:#fffbeb;border:1px solid #fde68a;padding:16px 20px;border-radius:8px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;}
+    .warning-text{font-size:14px;color:#92400e;line-height:1.7;}
 </style>
+{% endblock %}
 
-<div class="create-card">
-    <h1 class="page-title" style="margin-bottom: 20px;">🤖 AI 智能出题</h1>
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 智能出题</h1>
+    <p class="page-subtitle">基于题库真题进行同义改写与变式生成</p>
+</div>
 
+<div class="card" style="max-width:640px; margin:0 auto;">
     <div class="warning-banner">
-        <div class="warning-icon">⚠️</div>
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:20px;color:#d97706;margin-top:2px;"></i>
         <div class="warning-text">
             <strong>免责声明：本功能为测试阶段，功能仍在持续优化完善。</strong><br>
             1. AI 提取题库真题进行同义改写与变式，仅供拓展解题思路使用。<br>
@@ -92,6 +40,12 @@
 
     <form method="post" action="{% url 'ai_test:ai_exam_create' %}">
         {% csrf_token %}
+
+        <div class="form-group" style="margin-bottom:20px;">
+            <label>{{ form.subject.label }} *</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<div class="form-error">{{ form.subject.errors }}</div>{% endif %}
+        </div>
 
         <div class="type-row">
             <div class="type-label">选择题</div>
@@ -125,41 +79,19 @@
         </div>
 
         <div class="summary-bar">
-            <span class="summary-total">共计 <span id="total-count">0</span> 道题将交由大模型生成</span>
+            <span class="summary-total"><i class="fa-solid fa-calculator" style="margin-right:6px;"></i>共 <span id="total-count">0</span> 道题将交由大模型生成</span>
         </div>
 
-        <div style="margin-top: 24px; text-align: center;">
-            <button type="submit" class="btn btn-primary" style="padding: 12px 48px; font-size: 16px;" onclick="return confirmSubmit()">🚀 下发 AI 生成任务</button>
+        <div style="margin-top:24px; text-align:center;">
+            <button type="submit" class="btn btn-primary btn-lg" onclick="return confirmSubmit()"><i class="fa-solid fa-rocket"></i> 下发 AI 生成任务</button>
         </div>
     </form>
 </div>
 
 <script>
-function updateSummary() {
-    const c = +document.getElementById('id_choice_count').value || 0;
-    const f = +document.getElementById('id_fill_count').value || 0;
-    const j = +document.getElementById('id_judge_count').value || 0;
-    const s = +document.getElementById('id_short_count').value || 0;
-    const a = +document.getElementById('id_calc_count').value || 0;
-    const d = +document.getElementById('id_draw_count').value || 0;
-    document.getElementById('total-count').textContent = c + f + j + s + a + d;
-}
-
-['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) {
-        el.addEventListener('input', updateSummary);
-    }
-});
+function updateSummary(){const c=+document.getElementById('id_choice_count').value||0;const f=+document.getElementById('id_fill_count').value||0;const j=+document.getElementById('id_judge_count').value||0;const s=+document.getElementById('id_short_count').value||0;const a=+document.getElementById('id_calc_count').value||0;const d=+document.getElementById('id_draw_count').value||0;document.getElementById('total-count').textContent=c+f+j+s+a+d;}
+['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',updateSummary);});
 updateSummary();
-
-function confirmSubmit() {
-    const total = parseInt(document.getElementById('total-count').textContent);
-    if (total === 0) {
-        alert("至少需要选择 1 道题目交由 AI 生成。");
-        return false;
-    }
-    return confirm("大模型处理可能需要较长时间（预计几十秒），确定要下发任务吗？下发后将跳转至任务列表等待。");
-}
+function confirmSubmit(){const total=parseInt(document.getElementById('total-count').textContent);if(total===0){alert("至少需要选择 1 道题目交由 AI 生成。");return false;}return confirm("大模型处理可能需要较长时间（预计几十秒），确定要下发任务吗？下发后将跳转至任务列表等待。");}
 </script>
 {% endblock %}

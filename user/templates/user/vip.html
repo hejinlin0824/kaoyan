@@ -2,30 +2,126 @@
 
 {% block title %}开通VIP - 考研平台{% endblock %}
 
+{% block extra_style %}
+<style>
+    .vip-hero{background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);border-radius:var(--radius);padding:40px 48px;margin-bottom:32px;color:#fff;display:flex;justify-content:space-between;align-items:center;}
+    .vip-hero-left h1{font-size:28px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+    .vip-hero-left h1 i{color:#fbbf24;font-size:26px;}
+    .vip-hero-left p{font-size:15px;opacity:0.85;line-height:1.7;}
+    .vip-hero-right{text-align:center;}
+    .vip-hero-right .price{font-size:14px;opacity:0.8;}
+    .vip-hero-right .price em{font-style:normal;font-size:36px;font-weight:800;}
+    .vip-hero-right .price span{font-size:14px;opacity:0.7;}
+
+    .section-title{font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+    .section-title i{color:var(--blue-500);font-size:16px;}
+
+    .plans-grid{display:grid;grid-template-columns:repeat(5, 1fr);gap:16px;margin-bottom:36px;}
+    .plan-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:28px 20px;text-align:center;}
+    .plan-duration{font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:12px;}
+    .plan-price{margin-bottom:4px;}
+    .plan-price .amount{font-size:32px;font-weight:800;color:var(--blue-700);}
+    .plan-price .unit{font-size:14px;color:var(--gray-500);font-weight:500;}
+    .plan-daily{font-size:12px;color:var(--gray-500);background:var(--gray-50);display:inline-block;padding:2px 10px;border-radius:10px;margin-top:8px;}
+
+    .pay-section{max-width:480px;margin:0 auto 36px;}
+    .pay-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:32px;text-align:center;}
+    .pay-card h3{font-size:17px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+    .pay-card .pay-subtitle{font-size:13px;color:var(--gray-500);margin-bottom:20px;}
+    .pay-card img{width:200px;height:200px;border-radius:8px;border:1px solid var(--gray-200);margin:0 auto 16px;}
+    .pay-card .pay-steps{font-size:13px;color:var(--gray-600);margin-top:16px;text-align:left;background:var(--gray-50);padding:14px 18px;border-radius:8px;line-height:2.2;}
+    .pay-card .pay-steps strong{color:var(--blue-700);}
+    .pay-card .pay-steps i{color:var(--blue-500);width:18px;text-align:center;margin-right:4px;}
+
+    .rights-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;margin-bottom:32px;}
+    .right-item{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px 16px;text-align:center;}
+    .right-item i{font-size:28px;color:var(--blue-500);margin-bottom:12px;}
+    .right-item h4{font-size:14px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+    .right-item p{font-size:12px;color:var(--gray-500);}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 600px; margin: 40px auto;">
-    <div style="text-align: center;">
-        <h1 class="page-title" style="background: linear-gradient(135deg, #f5af19, #f12711); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px;">
-            👑 开通 VIP 会员
-        </h1>
-        <p style="color: #888; font-size: 16px; margin-bottom: 30px;">解锁全部专属权益，助力考研上岸</p>
-
-        <div style="background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); border-radius: 12px; padding: 20px 24px; margin-bottom: 30px; text-align: left;">
-            <h3 style="color: #d48806; font-size: 16px; margin-bottom: 12px;">📱 开通方式</h3>
-            <p style="color: #555; font-size: 15px; line-height: 1.8;">
-                请添加<strong>客服学长微信</strong>，发送您的<strong>用户名</strong>和想要开通的<strong>时长</strong>，学长会为您手动开通。
-            </p>
-            <p style="color: #888; font-size: 13px; margin-top: 8px;">
-                可选时长：7天 / 30天 / 60天 / 90天 / 180天 / 365天
-            </p>
-        </div>
-
-        <div style="background: #f6f8fa; border-radius: 12px; padding: 30px 20px; margin-bottom: 24px;">
-            <p style="color: #333; font-size: 15px; font-weight: 500; margin-bottom: 16px;">扫一扫添加客服学长微信</p>
-            <img src="{{ wechat_qrcode_url }}" alt="客服学长微信二维码" style="width: 220px; height: 220px; border-radius: 8px; border: 2px solid #e8e8e8;">
-        </div>
-
-        <a href="{% url 'user:home' %}" class="btn btn-outline" style="margin-top: 10px;">返回首页</a>
+<div class="vip-hero">
+    <div class="vip-hero-left">
+        <h1><i class="fa-solid fa-crown"></i> VIP 会员</h1>
+        <p>解锁全部专属权益，真题组卷 / AI 变式出题 / 错题本<br>一站式备考，助力考研上岸</p>
     </div>
+    <div class="vip-hero-right">
+        <div class="price">低至 <em>0.83</em> <span>元/天</span></div>
+    </div>
+</div>
+
+<div class="pay-section">
+    <div class="pay-card">
+        <h3><i class="fa-solid fa-comment-dots" style="margin-right:6px;color:var(--blue-500);"></i>添加客服学长微信开通</h3>
+        <p class="pay-subtitle">扫描下方二维码，发送用户名和想要的套餐即可</p>
+        <img src="{{ wechat_qrcode_url }}" alt="客服学长微信二维码">
+        <div class="pay-steps">
+            <i class="fa-solid fa-1"></i>扫描二维码添加<strong>客服学长微信</strong><br>
+            <i class="fa-solid fa-2"></i>发送您的<strong>用户名</strong>和想要的<strong>套餐时长</strong><br>
+            <i class="fa-solid fa-3"></i>按套餐价格转账给学长<br>
+            <i class="fa-solid fa-4"></i>学长确认后手动开通，<strong>即时生效</strong>
+        </div>
+    </div>
+</div>
+
+<div class="section-title"><i class="fa-solid fa-tags"></i> 现有套餐</div>
+
+<div class="plans-grid">
+    <div class="plan-card">
+        <div class="plan-duration">1 天体验</div>
+        <div class="plan-price"><span class="amount">5</span><span class="unit">元</span></div>
+        <div class="plan-daily">5 元/天</div>
+    </div>
+    <div class="plan-card">
+        <div class="plan-duration">7 天周卡</div>
+        <div class="plan-price"><span class="amount">30</span><span class="unit">元</span></div>
+        <div class="plan-daily">4.29 元/天</div>
+    </div>
+    <div class="plan-card">
+        <div class="plan-duration">30 天月卡</div>
+        <div class="plan-price"><span class="amount">100</span><span class="unit">元</span></div>
+        <div class="plan-daily">3.33 元/天</div>
+    </div>
+    <div class="plan-card">
+        <div class="plan-duration">180 天半年卡</div>
+        <div class="plan-price"><span class="amount">200</span><span class="unit">元</span></div>
+        <div class="plan-daily">1.11 元/天</div>
+    </div>
+    <div class="plan-card">
+        <div class="plan-duration">360 天年卡</div>
+        <div class="plan-price"><span class="amount">300</span><span class="unit">元</span></div>
+        <div class="plan-daily">0.83 元/天</div>
+    </div>
+</div>
+
+<div class="section-title"><i class="fa-solid fa-star"></i> VIP 专属权益</div>
+
+<div class="rights-grid">
+    <div class="right-item">
+        <i class="fa-solid fa-file-pen"></i>
+        <h4>真题组卷</h4>
+        <p>按题型随机抽题，在线作答自动阅卷</p>
+    </div>
+    <div class="right-item">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <h4>AI 变式出题</h4>
+        <p>大模型改写真题，拓展解题思路</p>
+    </div>
+    <div class="right-item">
+        <i class="fa-solid fa-rotate-left"></i>
+        <h4>错题本</h4>
+        <p>自动收录错题，错误次数统计</p>
+    </div>
+    <div class="right-item">
+        <i class="fa-solid fa-infinity"></i>
+        <h4>无限练习</h4>
+        <p>VIP 期间不限次数组卷和练习</p>
+    </div>
+</div>
+
+<div style="text-align:center;">
+    <a href="{% url 'user:home' %}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> 返回首页</a>
 </div>
 {% endblock %}

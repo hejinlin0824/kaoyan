@@ -1,6 +1,6 @@
 {% extends "user/base.html" %}
 
-{% block title %}题库 - 考研平台{% endblock %}
+{% block title %}AI 题库 - 考研平台{% endblock %}
 
 {% block extra_style %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -21,6 +21,7 @@
     .tag-amber { background: #fffbeb; color: #b45309; }
     .tag-red { background: #fef2f2; color: #dc2626; }
     .tag-purple { background: #faf5ff; color: #7c3aed; }
+    .tag-cyan { background: #ecfeff; color: #0e7490; }
     .question-content { font-size: 15px; line-height: 1.8; margin-bottom: 8px; }
     .question-options { margin: 10px 0; padding-left: 8px; }
     .question-options .opt { padding: 3px 0; color: var(--gray-600); }
@@ -39,7 +40,21 @@
         font-size: 14px; line-height: 1.8; margin-top: 8px; display: none;
     }
     .answer-box.show { display: block; }
-    .admin-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .explanation-box {
+        background: #f0fdf4; border-left: 3px solid #22c55e;
+        padding: 14px 18px; border-radius: 0 8px 8px 0;
+        font-size: 14px; line-height: 1.8; margin-top: 8px; display: none;
+    }
+    .explanation-box.show { display: block; }
+    .explanation-toggle {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d;
+        padding: 6px 16px; border-radius: 8px; cursor: pointer;
+        font-size: 13px; font-weight: 500; margin-top: 8px; margin-left: 8px; transition: all 0.2s; user-select: none;
+    }
+    .explanation-toggle:hover { background: #dcfce7; }
+    .explanation-toggle .arrow { transition: transform 0.2s; font-size: 11px; }
+    .explanation-toggle.open .arrow { transform: rotate(90deg); }
     .pagination { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 28px; padding: 16px 0; }
     .pagination a, .pagination span {
         display: inline-flex; align-items: center; justify-content: center;
@@ -52,12 +67,7 @@
     .pagination .disabled { color: var(--gray-300); border-color: var(--gray-100); cursor: default; pointer-events: none; }
     .question-content h1,.question-content h2,.question-content h3 { margin: 10px 0 6px; }
     .question-content p { margin: 6px 0; }
-    .question-content img,.answer-box img { max-width: 100%; border-radius: 6px; }
-    .img-preview-box {
-        width: 100%; height: 240px; display: flex; align-items: center; justify-content: center;
-        background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden;
-    }
-    .img-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .toggle-group { display: flex; flex-wrap: wrap; gap: 0; margin-top: 12px; }
 </style>
 {% endblock %}
 
@@ -67,27 +77,26 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
 <div class="page-header">
-    <h1 class="page-title"><i class="fa-solid fa-book-open"></i> 题库</h1>
-    <p class="page-subtitle">浏览全部考研真题，按条件筛选</p>
+    <h1 class="page-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 题库</h1>
+    <p class="page-subtitle">浏览全部 AI 变式生成的练习题</p>
 </div>
 
 <div class="card filter-bar">
-    <div class="form-group"><label>专业课</label>{{ form.subject }}</div>
     <div class="form-group"><label>年份</label>{{ form.year }}</div>
     <div class="form-group"><label>学校</label>{{ form.school }}</div>
     <div class="form-group"><label>题型</label>{{ form.question_type }}</div>
     <div class="form-group"><label>难度</label>{{ form.difficulty }}</div>
     <button type="button" class="btn btn-primary" onclick="doSearch()"><i class="fa-solid fa-magnifying-glass"></i> 搜索</button>
-    <a href="{% url 'kaoyan:question_list' %}" class="btn btn-outline">重置</a>
+    <a href="{% url 'ai_test:ai_question_list' %}" class="btn btn-outline">重置</a>
 </div>
 
-<div class="result-count">共 {{ page_obj.paginator.count }} 道题目，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</div>
+<div class="result-count">共 {{ page_obj.paginator.count }} 道 AI 题目，第 {{ page_obj.number }}/{{ page_obj.paginator.num_pages }} 页</div>
 
 {% if page_obj %}
 {% for q in page_obj %}
 <div class="card question-item">
     <div class="question-meta">
-        <span class="tag tag-blue">{{ q.subject.name }}</span>
+        <span class="tag tag-cyan"><i class="fa-solid fa-robot" style="margin-right:3px;"></i>AI 变式</span>
         <span class="tag tag-blue">{{ q.year }}</span>
         <span class="tag tag-green">{{ q.school.name }}</span>
         <span class="tag tag-amber">{{ q.question_type.name }}</span>
@@ -104,19 +113,20 @@
         {% endfor %}
     </div>
     {% endif %}
-    {% if q.image %}
-    <div class="img-preview-box" style="margin:12px 0;"><img src="{{ q.image.url }}" alt="题目插图"></div>
-    {% endif %}
-    <div class="answer-toggle" onclick="toggleAnswer(this)">
-        <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案
+    <div class="toggle-group">
+        {% if q.correct_answer %}
+        <div class="answer-toggle" onclick="toggleAnswer(this)">
+            <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案
+        </div>
+        {% endif %}
+        <div class="explanation-toggle" onclick="toggleExplanation(this)">
+            <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看解析
+        </div>
     </div>
-    <div class="answer-box" data-raw="{{ q.answer|escape }}"{% if q.correct_answer %} data-correct="{{ q.correct_answer }}"{% endif %}></div>
-    {% if user.is_staff %}
-    <div class="admin-actions">
-        <a href="{% url 'kaoyan:question_edit' q.id %}" class="btn btn-outline" style="padding:5px 14px;font-size:13px;"><i class="fa-solid fa-pen-to-square"></i> 编辑</a>
-        <a href="{% url 'kaoyan:question_delete' q.id %}" class="btn btn-outline" style="padding:5px 14px;font-size:13px;color:#dc2626;border-color:#fca5a5;"><i class="fa-solid fa-trash-can"></i> 删除</a>
-    </div>
+    {% if q.correct_answer %}
+    <div class="answer-box" data-correct="{{ q.correct_answer }}"></div>
     {% endif %}
+    <div class="explanation-box" {% if q.explanation %}data-raw="{{ q.explanation|escape }}"{% else %}data-empty="1"{% endif %}></div>
 </div>
 {% endfor %}
 
@@ -146,15 +156,16 @@
 {% endif %}
 
 {% else %}
-<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>暂无匹配的题目</p></div>
+<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>暂无 AI 生成的题目</p></div>
 {% endif %}
 
 <script>
 const P={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
 function renderMd(t){if(!t)return'';const m=[];let i=0;function h(c,d){const p=`\x00LATEX${i}\x00`;m.push({ph:p,content:c.trim(),display:d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(item=>{try{html=html.split(item.ph).join(katex.renderToString(item.content,{displayMode:item.display,throwOnError:false}));}catch(e){html=html.split(item.ph).join(item.content);}});return DOMPurify.sanitize(html,P);}
-function doSearch(){const p=new URLSearchParams();['subject','year','school','question_type','difficulty'].forEach(k=>{const el=document.getElementById('id_'+k);if(el&&el.value)p.set(k,el.value);});window.location.search=p.toString();}
+function doSearch(){const p=new URLSearchParams();['year','school','question_type','difficulty'].forEach(k=>{const el=document.getElementById('id_'+k);if(el&&el.value)p.set(k,el.value);});window.location.search=p.toString();}
 document.querySelectorAll('.question-content').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
 document.querySelectorAll('.question-options .opt').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
-function toggleAnswer(btn){const box=btn.nextElementSibling;const isOpen=btn.classList.toggle('open');box.classList.toggle('show',isOpen);btn.innerHTML=isOpen?'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起答案':'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案';if(isOpen&&!box.dataset.rendered){const raw=box.getAttribute('data-raw');let html='';const correct=box.getAttribute('data-correct');if(correct)html+='<div style="font-size:15px;font-weight:600;color:var(--blue-700);margin-bottom:8px;">正确答案：'+renderMd(correct)+'</div>';if(raw){html+='<div style="margin-top:4px;color:var(--gray-700);"><strong style="color:var(--blue-600);">解析：</strong></div><div>'+renderMd(raw)+'</div>';}box.innerHTML=html||'<span style="color:var(--gray-400);">暂无答案</span>';box.dataset.rendered='1';}}
+function toggleAnswer(btn){const box=btn.closest('.question-item').querySelector('.answer-box');if(!box)return;const isOpen=btn.classList.toggle('open');box.classList.toggle('show',isOpen);btn.innerHTML=isOpen?'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起答案':'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案';if(isOpen&&!box.dataset.rendered){const correct=box.getAttribute('data-correct');box.innerHTML='<div style="font-size:15px;font-weight:600;color:var(--blue-700);margin-bottom:6px;">正确答案：'+renderMd(correct)+'</div>';box.dataset.rendered='1';}}
+function toggleExplanation(btn){const box=btn.closest('.question-item').querySelector('.explanation-box');if(!box)return;const isOpen=btn.classList.toggle('open');box.classList.toggle('show',isOpen);btn.innerHTML=isOpen?'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起解析':'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看解析';if(isOpen&&!box.dataset.rendered){if(box.getAttribute('data-empty')){box.innerHTML='<div style="color:var(--gray-400);font-style:italic;">暂无解析</div>';}else{const raw=box.getAttribute('data-raw');box.innerHTML='<div style="color:var(--gray-700);"><strong style="color:#15803d;">AI 解析：</strong></div><div style="margin-top:4px;">'+renderMd(raw)+'</div>';}box.dataset.rendered='1';}}
 </script>
 {% endblock %}

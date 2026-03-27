@@ -1,0 +1,70 @@
+{% extends "user/base.html" %}
+
+{% block title %}AI题库练习卷{% endblock %}
+
+{% block content %}
+<style>
+    .exam-card{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;margin-bottom:8px;transition:all 0.15s;}
+    .exam-card:hover{background:var(--blue-50);}
+    .exam-info{flex:1;}
+    .exam-id{font-size:13px;color:var(--gray-400);}
+    .exam-stats{display:flex;gap:16px;margin-top:4px;font-size:13px;color:var(--gray-500);}
+    .exam-stats .score{color:var(--blue-600);font-weight:600;}
+    .status-tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+    .status-preview{background:#e0e7ff;color:#4338ca;}
+    .status-taking{background:#fef3c7;color:#d97706;}
+    .status-submitted{background:#f0fdf4;color:#16a34a;}
+</style>
+
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-robot"></i> AI题库练习卷</h1>
+    <p class="page-subtitle">从AI题库中随机抽题的练习记录</p>
+</div>
+
+{% if exams %}
+<div class="card" style="padding:0;overflow:hidden;">
+    {% for exam in exams %}
+    <div class="exam-card" style="border-bottom:1px solid var(--gray-100);">
+        <div class="exam-info">
+            <div>
+                <span style="font-weight:600;color:var(--gray-800);">AI练习卷 #{{ exam.id }}</span>
+                <span class="status-tag status-{{ exam.status }}">{{ exam.get_status_display }}</span>
+            </div>
+            <div class="exam-id">{{ exam.created_at|date:"Y-m-d H:i" }}</div>
+            <div class="exam-stats">
+                <span>选择{{ exam.choice_count }} · 填空{{ exam.fill_count }} · 判断{{ exam.judge_count }}</span>
+                {% if exam.short_count %}<span>简答{{ exam.short_count }}</span>{% endif %}
+                {% if exam.calc_count %}<span>计算{{ exam.calc_count }}</span>{% endif %}
+                {% if exam.draw_count %}<span>画图{{ exam.draw_count }}</span>{% endif %}
+            </div>
+        </div>
+        <div>
+            {% if exam.status == "preview" %}
+            <a href="{% url 'ai_test:ai_practice_preview' exam.id %}" class="btn btn-outline btn-sm">预览</a>
+            <a href="{% url 'ai_test:ai_practice_take' exam.id %}" class="btn btn-primary btn-sm" style="margin-left:8px;">作答</a>
+            {% elif exam.status == "taking" %}
+            <a href="{% url 'ai_test:ai_practice_take' exam.id %}" class="btn btn-primary btn-sm">继续作答</a>
+            {% elif exam.status == "submitted" %}
+            <span class="score" style="font-size:18px;">{{ exam.score }}/{{ exam.total_objective_score }}</span>
+            <a href="{% url 'ai_test:ai_practice_result' exam.id %}" class="btn btn-outline btn-sm" style="margin-left:8px;">查看</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fa-solid fa-file-circle-plus" style="color:var(--blue-400);"></i>
+    <p>还没有AI题库练习记录</p>
+    <div style="margin-top:20px;">
+        <a href="{% url 'ai_test:ai_practice_create' %}" class="btn btn-primary"><i class="fa-solid fa-shuffle"></i> 去组卷</a>
+    </div>
+</div>
+{% endif %}
+
+<div style="text-align:center;margin:32px 0;display:flex;justify-content:center;gap:12px;">
+    <a href="{% url 'ai_test:ai_practice_create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 继续组卷</a>
+    <a href="{% url 'ai_test:ai_wrong_book' %}" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> AI错题本</a>
+    <a href="{% url 'ai_test:ai_question_list' %}" class="btn btn-outline"><i class="fa-solid fa-database"></i> 浏览AI题库</a>
+</div>
+{% endblock %}

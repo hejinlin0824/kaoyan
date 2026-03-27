@@ -4,66 +4,31 @@
 
 {% block content %}
 <style>
-    .create-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 600px;
-        margin: 0 auto;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    }
-    .type-row {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 12px 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .type-row:last-child { border-bottom: none; }
-    .type-label {
-        width: 80px;
-        font-weight: 600;
-        font-size: 15px;
-        color: #333;
-    }
-    .type-limit {
-        flex: 1;
-        font-size: 13px;
-        color: #999;
-    }
-    .type-input {
-        width: 80px;
-        text-align: center;
-    }
-    .type-input .form-input {
-        text-align: center;
-        font-size: 18px;
-        font-weight: 600;
-        height: 42px;
-    }
-    .summary-bar {
-        background: #f6f8ff;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .summary-total { font-size: 16px; font-weight: 600; color: #667eea; }
-    .summary-score { font-size: 14px; color: #999; }
+    .type-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--gray-100);}
+    .type-row:last-child{border-bottom:none;}
+    .type-label{width:80px;font-weight:600;font-size:15px;color:var(--gray-800);}
+    .type-limit{flex:1;font-size:13px;color:var(--gray-400);}
+    .type-input{width:80px;text-align:center;}
+    .type-input .form-input{text-align:center;font-size:18px;font-weight:600;height:42px;}
+    .summary-bar{background:var(--blue-50);border:1px solid var(--blue-200);border-radius:8px;padding:16px 20px;margin-top:20px;display:flex;justify-content:space-between;align-items:center;}
+    .summary-total{font-size:16px;font-weight:600;color:var(--blue-700);}
+    .summary-score{font-size:14px;color:var(--gray-500);}
 </style>
 
-<div class="create-card">
-    <h1 class="page-title" style="margin-bottom: 24px;">📝 智能组卷</h1>
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-file-pen"></i> 智能组卷</h1>
+    <p class="page-subtitle">按题型设定数量，随机抽取真题</p>
+</div>
 
-    {% if form.non_field_errors %}
-    <div class="form-errors-all">{{ form.non_field_errors }}</div>
-    {% endif %}
-
+<div class="card" style="max-width:640px;margin:0 auto;">
+    {% if form.non_field_errors %}<div class="form-errors-all">{{ form.non_field_errors }}</div>{% endif %}
     <form method="post">
         {% csrf_token %}
-
+        <div class="form-group" style="margin-bottom:20px;">
+            <label>{{ form.subject.label }} *</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<div class="form-error">{{ form.subject.errors }}</div>{% endif %}
+        </div>
         <div class="type-row">
             <div class="type-label">选择题</div>
             <div class="type-limit">0 ~ 10 道 · 每题 5 分</div>
@@ -94,32 +59,19 @@
             <div class="type-limit">0 ~ 2 道 · 主观题不计分</div>
             <div class="type-input">{{ form.draw_count }}{% if form.draw_count.errors %}<div class="form-error">{{ form.draw_count.errors }}</div>{% endif %}</div>
         </div>
-
         <div class="summary-bar">
-            <span class="summary-total">共 <span id="total-count">14</span> 道题</span>
-            <span class="summary-score">客观题满分 <span id="total-score">49</span> 分</span>
+            <span class="summary-total">共 <span id="total-count">0</span> 道题</span>
+            <span class="summary-score">客观题满分 <span id="total-score">0</span> 分</span>
         </div>
-
-        <div style="margin-top: 24px; text-align: center;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 48px; font-size: 16px;">🎲 开始抽题</button>
+        <div style="margin-top:24px;text-align:center;">
+            <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-shuffle"></i> 开始抽题</button>
         </div>
     </form>
 </div>
 
 <script>
-function updateSummary() {
-    const c = +document.getElementById('id_choice_count').value || 0;
-    const f = +document.getElementById('id_fill_count').value || 0;
-    const j = +document.getElementById('id_judge_count').value || 0;
-    const s = +document.getElementById('id_short_count').value || 0;
-    const a = +document.getElementById('id_calc_count').value || 0;
-    const d = +document.getElementById('id_draw_count').value || 0;
-    document.getElementById('total-count').textContent = c + f + j + s + a + d;
-    document.getElementById('total-score').textContent = c * 5 + f * 5 + j * 3;
-}
-['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateSummary);
-});
+function updateSummary(){const c=+document.getElementById('id_choice_count').value||0;const f=+document.getElementById('id_fill_count').value||0;const j=+document.getElementById('id_judge_count').value||0;const s=+document.getElementById('id_short_count').value||0;const a=+document.getElementById('id_calc_count').value||0;const d=+document.getElementById('id_draw_count').value||0;document.getElementById('total-count').textContent=c+f+j+s+a+d;document.getElementById('total-score').textContent=c*5+f*5+j*3;}
+['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id=>{document.getElementById(id).addEventListener('input',updateSummary);});
 updateSummary();
 </script>
 {% endblock %}

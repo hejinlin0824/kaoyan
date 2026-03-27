@@ -1,21 +1,18 @@
 {% extends "user/base.html" %}
 
-{% block title %}删除题目 - 题库管理{% endblock %}
+{% block title %}确认删除 - 考研平台{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 500px; margin: 40px auto; text-align: center;">
-    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-    <h2 style="margin-bottom: 12px; color: #ff4d4f;">确认删除</h2>
-    <p style="color: #666; margin-bottom: 8px;">确定要删除以下题目吗？此操作不可恢复。</p>
-    <p style="color: #333; font-weight: 500; margin-bottom: 24px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
-        {{ question.year }} - {{ question.school.name }} - {{ question.question_type.name }} - {{ question.knowledge_point }}
-    </p>
-    <form method="post">
-        {% csrf_token %}
-        <div style="display: flex; gap: 12px; justify-content: center;">
-            <button type="submit" class="btn" style="background: #ff4d4f; color: #fff;">确认删除</button>
+<div style="max-width: 480px; margin: 80px auto;">
+    <div class="card" style="text-align: center; padding: 40px;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 48px; color: #dc2626; margin-bottom: 20px;"></i>
+        <h1 style="font-size: 20px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px;">确认删除</h1>
+        <p style="font-size: 14px; color: var(--gray-500); margin-bottom: 32px;">确定要删除这道题目吗？此操作不可撤销。</p>
+        <form method="post" style="display: flex; gap: 12px; justify-content: center;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> 确认删除</button>
             <a href="{% url 'kaoyan:question_list' %}" class="btn btn-outline">取消</a>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 {% endblock %}

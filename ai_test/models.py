@@ -30,6 +30,7 @@ class AIGeneratedQuestion(models.Model):
         help_text='选择题必填，JSON 对象格式，如 {"A": "内容", "B": "内容"}'
     )
     correct_answer = models.TextField(null=True, blank=True, verbose_name="正确答案", help_text="选择题填A/B/C/D，判断题填对/错，填空题填标准答案，主观题留空")
+    explanation = models.TextField(null=True, blank=True, verbose_name="简要解析", help_text="AI 生成的解题思路与简要解析")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="生成时间")
 
@@ -50,6 +51,7 @@ class AIExam(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="用户")
+    subject = models.ForeignKey("kaoyan_app.Subject", on_delete=models.CASCADE, verbose_name="专业课")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="生成状态")
     task_id = models.CharField(max_length=100, null=True, blank=True, verbose_name="异步任务ID")
     
@@ -68,6 +70,12 @@ class AIExam(models.Model):
         verbose_name = "AI智能试卷"
         verbose_name_plural = "AI智能试卷"
         ordering = ["-created_at"]
+
+    def delete(self, *args, **kwargs):
+        # 级联删除该试卷关联的所有 AI 生成的题目
+        question_ids = self.questions.values_list('question_id', flat=True)
+        AIGeneratedQuestion.objects.filter(id__in=question_ids).delete()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username}的AI试卷-{self.created_at.strftime('%m%d%H%M')}"
@@ -88,3 +96,81 @@ class AIExamQuestion(models.Model):
 
     def __str__(self):
         return f"{self.exam} - 第{self.order}题"
+
+
+class AIPracticeExam(models.Model):
+    """AI题库组卷：从已有AI题库中不放回抽题，同步生成试卷"""
+    STATUS_CHOICES = [
+        ("preview", "预览中"),
+        ("taking", "作答中"),
+        ("submitted", "已提交"),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="用户")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="preview", verbose_name="状态")
+    duration_seconds = models.IntegerField(default=0, verbose_name="作答时长(秒)")
+    score = models.IntegerField(default=0, verbose_name="客观题得分")
+    total_objective_score = models.IntegerField(default=0, verbose_name="客观题总分")
+
+    # 组卷配置快照
+    choice_count = models.IntegerField(default=0, verbose_name="选择题数量")
+    fill_count = models.IntegerField(default=0, verbose_name="填空题数量")
+    judge_count = models.IntegerField(default=0, verbose_name="判断题数量")
+    short_count = models.IntegerField(default=0, verbose_name="简答题数量")
+    calc_count = models.IntegerField(default=0, verbose_name="计算题数量")
+    draw_count = models.IntegerField(default=0, verbose_name="画图题数量")
+
+    class Meta:
+        verbose_name = "AI题库练习卷"
+        verbose_name_plural = "AI题库练习卷"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username}的AI练习卷-{self.created_at.strftime('%m%d%H%M')}"
+
+
+class AIPracticeExamQuestion(models.Model):
+    """AI题库练习卷与AI题目的关联序列表"""
+    exam = models.ForeignKey(AIPracticeExam, on_delete=models.CASCADE, related_name="questions", verbose_name="AI练习卷")
+    question = models.ForeignKey(AIGeneratedQuestion, on_delete=models.CASCADE, verbose_name="AI题目")
+    order = models.IntegerField(verbose_name="题目顺序")
+    user_answer = models.TextField(null=True, blank=True, verbose_name="用户答案")
+    is_correct = models.BooleanField(null=True, blank=True, verbose_name="是否正确")
+    score = models.IntegerField(default=0, verbose_name="得分")
+
+    class Meta:
+        verbose_name = "AI练习卷题目明细"
+        verbose_name_plural = "AI练习卷题目明细"
+        ordering = ["order"]
+        unique_together = ("exam", "question")
+
+    def get_score_value(self):
+        """该题满分值"""
+        type_name = self.question.question_type.name
+        if type_name == "选择":
+            return 5
+        elif type_name == "填空":
+            return 5
+        elif type_name == "判断":
+            return 3
+        return 0
+
+    def __str__(self):
+        return f"{self.exam} - 第{self.order}题"
+
+
+class AIWrongQuestion(models.Model):
+    """AI题错题本：记录用户在AI题库练习中的错题"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="用户")
+    question = models.ForeignKey(AIGeneratedQuestion, on_delete=models.CASCADE, verbose_name="AI题目")
+    error_count = models.IntegerField(default=1, verbose_name="错误次数")
+    last_wrong_at = models.DateTimeField(auto_now=True, verbose_name="最近错误时间")
+
+    class Meta:
+        verbose_name = "AI错题"
+        verbose_name_plural = "AI错题本"
+        unique_together = ("user", "question")
+        ordering = ["-last_wrong_at"]
+
+    def __str__(self):
+        return f"{self.user.username}-AI错{self.error_count}次-{self.question.knowledge_point}"

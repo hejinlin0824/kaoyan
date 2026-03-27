@@ -2,170 +2,64 @@
 
 {% block title %}我的 AI 练习卷 - 考研平台{% endblock %}
 
-{% block content %}
+{% block extra_style %}
 <style>
-    .list-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-    .exam-item {
-        background: #fff;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-left: 4px solid transparent;
-        transition: all 0.2s;
-    }
-    .exam-item:hover {
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    }
-    .exam-item.status-pending {
-        border-left-color: #faad14;
-    }
-    .exam-item.status-completed {
-        border-left-color: #52c41a;
-    }
-    .exam-info h3 {
-        margin: 0 0 8px 0;
-        font-size: 16px;
-        color: #333;
-    }
-    .exam-meta {
-        font-size: 13px;
-        color: #888;
-        display: flex;
-        gap: 16px;
-    }
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        border-radius: 16px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-    .badge-pending {
-        background: #fffbe6;
-        color: #d48806;
-    }
-    .badge-completed {
-        background: #f6ffed;
-        color: #52c41a;
-    }
-    /* 加载动画 */
-    .spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(212, 136, 6, 0.3);
-        border-radius: 50%;
-        border-top-color: #d48806;
-        animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    .empty-state {
-        text-align: center;
-        padding: 80px 20px;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
+    .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+    .exam-item{padding:20px 24px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid transparent;transition:box-shadow 0.2s;}
+    .exam-item:hover{box-shadow:var(--shadow);}
+    .exam-item.status-pending{border-left-color:#d97706;}
+    .exam-item.status-completed{border-left-color:#16a34a;}
+    .exam-info h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--gray-800);}
+    .exam-meta{font-size:13px;color:var(--gray-500);display:flex;gap:16px;flex-wrap:wrap;}
+    .spinner{width:14px;height:14px;border:2px solid rgba(217,119,6,0.3);border-radius:50%;border-top-color:#d97706;animation:spin 1s ease-in-out infinite;display:inline-block;}
+    @keyframes spin{to{transform:rotate(360deg);}}
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="list-header">
-    <h1 class="page-title" style="margin: 0;">📝 我的 AI 练习卷</h1>
-    <a href="{% url 'ai_test:ai_exam_create' %}" class="btn btn-primary">➕ 新建 AI 组卷</a>
+    <h1 class="page-title" style="margin:0;"><i class="fa-solid fa-list-check"></i> 我的 AI 练习卷</h1>
+    <a href="{% url 'ai_test:ai_exam_create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 新建 AI 组卷</a>
 </div>
 
 {% if exams %}
-    <div id="exam-list-container">
-        {% for exam in exams %}
-        <div class="exam-item status-{{ exam.status }}" data-exam-id="{{ exam.id }}">
-            <div class="exam-info">
-                <h3>AI 智能组卷 - {{ exam.created_at|date:"Y-m-d H:i" }}</h3>
-                <div class="exam-meta">
-                    <span>选择:{{ exam.choice_count }}</span>
-                    <span>填空:{{ exam.fill_count }}</span>
-                    <span>判断:{{ exam.judge_count }}</span>
-                    <span>简答:{{ exam.short_count }}</span>
-                    <span>计算:{{ exam.calc_count }}</span>
-                    <span>画图:{{ exam.draw_count }}</span>
-                </div>
-            </div>
-            
-            <div class="exam-actions" id="actions-{{ exam.id }}">
-                {% if exam.status == 'pending' %}
-                    <div class="status-badge badge-pending">
-                        <div class="spinner"></div> 大模型生成中...
-                    </div>
-                {% else %}
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="status-badge badge-completed">✅ 已生成</span>
-                        <a href="{% url 'ai_test:ai_exam_take' exam.id %}" class="btn btn-primary" style="padding: 6px 20px; font-size: 14px;">进入练习</a>
-                    </div>
-                {% endif %}
+<div id="exam-list-container">
+    {% for exam in exams %}
+    <div class="card exam-item status-{{ exam.status }}" data-exam-id="{{ exam.id }}">
+        <div class="exam-info">
+            <h3>AI 智能组卷 - {{ exam.created_at|date:"Y-m-d H:i" }}</h3>
+            <div class="exam-meta">
+                <span><i class="fa-solid fa-circle-check" style="margin-right:3px;color:var(--blue-400);"></i>选择:{{ exam.choice_count }}</span>
+                <span><i class="fa-solid fa-pen" style="margin-right:3px;color:var(--blue-400);"></i>填空:{{ exam.fill_count }}</span>
+                <span><i class="fa-solid fa-scale-balanced" style="margin-right:3px;color:var(--blue-400);"></i>判断:{{ exam.judge_count }}</span>
+                <span><i class="fa-solid fa-align-left" style="margin-right:3px;color:var(--blue-400);"></i>简答:{{ exam.short_count }}</span>
+                <span><i class="fa-solid fa-calculator" style="margin-right:3px;color:var(--blue-400);"></i>计算:{{ exam.calc_count }}</span>
+                <span><i class="fa-solid fa-paintbrush" style="margin-right:3px;color:var(--blue-400);"></i>画图:{{ exam.draw_count }}</span>
             </div>
         </div>
-        {% endfor %}
+        <div class="exam-actions" id="actions-{{ exam.id }}">
+            {% if exam.status == 'pending' %}
+            <span class="badge badge-gray" style="display:inline-flex;align-items:center;gap:6px;"><span class="spinner"></span> 大模型生成中...</span>
+            {% else %}
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="badge badge-green"><i class="fa-solid fa-check" style="margin-right:3px;"></i>已生成</span>
+                <a href="{% url 'ai_test:ai_exam_take' exam.id %}" class="btn btn-primary" style="padding:6px 20px;font-size:14px;">进入练习</a>
+            </div>
+            {% endif %}
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <div class="empty-state">
-        <div style="font-size: 48px; margin-bottom: 16px;">🤖</div>
-        <h3 style="color: #333; margin-bottom: 8px;">暂无 AI 组卷记录</h3>
-        <p style="color: #999; margin-bottom: 24px;">点击右上角新建，让大模型为你生成专属变式练习题吧</p>
-        <a href="{% url 'ai_test:ai_exam_create' %}" class="btn btn-primary">➕ 新建 AI 组卷</a>
-    </div>
+<div class="empty-state">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+    <p>暂无 AI 组卷记录</p>
+    <div style="margin-top:20px;"><a href="{% url 'ai_test:ai_exam_create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 新建 AI 组卷</a></div>
+</div>
 {% endif %}
 
 <script>
-    // 轮询函数：检查所有 pending 状态的试卷
-    function pollExamStatus() {
-        const pendingItems = document.querySelectorAll('.exam-item.status-pending');
-        if (pendingItems.length === 0) return; // 如果没有生成中的任务，停止当前周期的检查
-
-        pendingItems.forEach(item => {
-            const examId = item.getAttribute('data-exam-id');
-            
-            fetch(`/ai-test/status/${examId}/`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'completed') {
-                    // 更新 UI 状态，将 pending 转换为 completed
-                    item.classList.remove('status-pending');
-                    item.classList.add('status-completed');
-                    
-                    const actionsContainer = document.getElementById(`actions-${examId}`);
-                    actionsContainer.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span class="status-badge badge-completed">✅ 已生成</span>
-                            <a href="/ai-test/take/${examId}/" class="btn btn-primary" style="padding: 6px 20px; font-size: 14px;">进入练习</a>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error polling status for exam', examId, error);
-            });
-        });
-    }
-
-    // 每 3 秒轮询一次
-    setInterval(pollExamStatus, 3000);
+function pollExamStatus(){const pendingItems=document.querySelectorAll('.exam-item.status-pending');if(pendingItems.length===0)return;pendingItems.forEach(item=>{const examId=item.getAttribute('data-exam-id');fetch(`/ai-test/status/${examId}/`,{headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}}).then(response=>{if(!response.ok)throw new Error('Network error');return response.json();}).then(data=>{if(data.status==='completed'){item.classList.remove('status-pending');item.classList.add('status-completed');const actionsContainer=document.getElementById(`actions-${examId}`);actionsContainer.innerHTML=`<div style="display:flex;align-items:center;gap:12px;"><span class="badge badge-green"><i class="fa-solid fa-check" style="margin-right:3px;"></i>已生成</span><a href="/ai-test/take/${examId}/" class="btn btn-primary" style="padding:6px 20px;font-size:14px;">进入练习</a></div>`;}}).catch(error=>{console.error('Error polling status for exam',examId,error);});});}
+setInterval(pollExamStatus,3000);
 </script>
 {% endblock %}

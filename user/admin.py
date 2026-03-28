@@ -4,7 +4,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils import timezone
 
-from .models import User
+from .models import User, PendingRegistration
 
 
 @admin.action(description="开通VIP 7天")
@@ -99,15 +99,24 @@ def cancel_vip(modeladmin, request, queryset):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "email", "vip_level", "vip_start_date", "vip_expire_date", "is_vip_display", "is_active", "is_staff")
+    list_display = ("username", "email", "email_verified", "vip_level", "vip_start_date", "vip_expire_date", "is_vip_display", "is_active", "is_staff")
     list_filter = ("vip_level", "is_active", "is_staff")
     search_fields = ("username", "email")
     actions = [set_vip_7_days, set_vip_30_days, set_vip_60_days, set_vip_90_days, set_vip_180_days, set_vip_365_days, cancel_vip]
     fieldsets = BaseUserAdmin.fieldsets + (
         ("VIP 信息", {"fields": ("vip_level", "vip_start_date", "vip_expire_date")}),
+        ("邮箱验证", {"fields": ("email_verified", "email_token")}),
     )
 
     @admin.display(boolean=True, description="VIP有效")
     def is_vip_display(self, obj):
         return obj.is_vip()
     is_vip_display.short_description = "VIP有效"
+
+
+@admin.register(PendingRegistration)
+class PendingRegistrationAdmin(admin.ModelAdmin):
+    list_display = ("username", "email", "created_at", "used")
+    list_filter = ("used",)
+    search_fields = ("username", "email")
+    readonly_fields = ("token", "created_at")

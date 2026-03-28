@@ -1,6 +1,7 @@
 {% extends "user/base.html" %}
+{% load static %}
 
-{% block title %}登录 - 考研平台{% endblock %}
+{% block title %}登录 - 厘米考研{% endblock %}
 
 {% block extra_style %}
 <style>
@@ -37,9 +38,8 @@
 
     <div class="card login-card" id="loginCard">
         <div class="text-center" style="margin-bottom: 32px;">
-            <i class="fa-solid fa-graduation-cap" style="font-size: 36px; color: var(--blue-500); margin-bottom: 16px;"></i>
-            <h1 style="font-size: 22px; font-weight: 700; color: var(--gray-900);">登录账号</h1>
-            <p style="font-size: 14px; color: var(--gray-500); margin-top: 6px;">登录后解锁更多功能</p>
+            <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:86px;width:auto;margin-bottom:12px;">
+            <p style="font-size: 14px; color: var(--gray-500); margin-top: 0;">你离上岸只差这一厘米，我们帮你！</p>
         </div>
 
         {% if form.non_field_errors %}
@@ -49,7 +49,7 @@
         <form method="post">
             {% csrf_token %}
             <div class="form-group">
-                <label><i class="fa-solid fa-user" style="margin-right: 6px; color: var(--gray-400);"></i>用户名</label>
+                <label><i class="fa-solid fa-user" style="margin-right: 6px; color: var(--gray-400);"></i>用户名 / 邮箱</label>
                 {{ form.username }}
                 {% if form.username.errors %}<div class="form-error">{{ form.username.errors }}</div>{% endif %}
             </div>
@@ -62,6 +62,12 @@
                 <i class="fa-solid fa-right-to-bracket"></i> 登录
             </button>
         </form>
+
+        <div style="text-align:right;margin-top:12px;">
+            <a href="{% url 'user:password_reset' %}" style="font-size:13px;color:var(--gray-500);">
+                <i class="fa-solid fa-circle-question" style="margin-right:3px;"></i>忘记密码？
+            </a>
+        </div>
 
         <div class="text-center mt-24">
             <span style="font-size: 14px; color: var(--gray-500);">还没有账号？</span>

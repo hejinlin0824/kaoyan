@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from kaoyan_app.models import QuestionType
-from zu_juan.views import vip_required
+from kaoyan_project.vip_utils import vip_required
 
 from .forms import AIExamCreateForm, AIQuestionSearchForm, AIPracticeExamCreateForm
 from .models import (
@@ -105,9 +105,13 @@ def ai_exam_take(request, pk):
     })
 
 
-@vip_required
+@login_required
 def ai_question_list(request):
-    """AI 题库浏览：与真题题库并行，展示所有 AI 生成的练习题"""
+    """
+    AI 题库浏览（免费可看列表，展示AI能力）：
+    - 免费用户：可浏览题干列表，但点击查看答案/详情时拦截引导升级
+    - VIP 用户：完全解锁
+    """
     form = AIQuestionSearchForm(request.GET or None)
     questions = AIGeneratedQuestion.objects.select_related("school", "question_type").all()
 
@@ -129,6 +133,8 @@ def ai_question_list(request):
     choice_type_id = QuestionType.objects.filter(name="选择").values_list("id", flat=True).first()
     judge_type_id = QuestionType.objects.filter(name="判断").values_list("id", flat=True).first()
 
+    is_vip = request.user.is_vip()
+
     paginator = Paginator(questions, 5)
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
@@ -143,6 +149,7 @@ def ai_question_list(request):
         "search_str": search_str,
         "choice_type_id": choice_type_id,
         "judge_type_id": judge_type_id,
+        "is_vip": is_vip,
     })
 
 
@@ -325,10 +332,33 @@ def ai_practice_list(request):
     return render(request, "ai_test/ai_practice_list.html", {"exams": exams})
 
 
-@vip_required
+@login_required
 def ai_wrong_book(request):
-    """AI错题本"""
-    wrongs = AIWrongQuestion.objects.filter(
+    """
+    AI错题本：
+    - 免费用户：仅展示最近 10 道，底部引导升级
+    - VIP 用户：完整错题本
+    """
+    wrongs_qs = AIWrongQuestion.objects.filter(
         user=request.user
-    ).select_related("question__school", "question__question_type").all()
-    return render(request, "ai_test/ai_wrong_book.html", {"wrong_questions": wrongs})
+    ).select_related("question__school", "question__question_type")
+
+    is_vip = request.user.is_vip()
+    total_count = wrongs_qs.count()
+
+    if is_vip:
+        from django.core.paginator import Paginator
+        paginator = Paginator(wrongs_qs, 20)
+        page_number = request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+        wrongs = page_obj
+    else:
+        wrongs = wrongs_qs[:10]
+        page_obj = None
+
+    return render(request, "ai_test/ai_wrong_book.html", {
+        "wrong_questions": wrongs,
+        "page_obj": page_obj,
+        "total_count": total_count,
+        "is_vip": is_vip,
+    })

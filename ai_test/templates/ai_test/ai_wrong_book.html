@@ -32,7 +32,9 @@
 </div>
 
 {% if wrong_questions %}
-<div>共 {{ wrong_questions|length }} 道错题</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div style="font-size:14px;color:var(--gray-500);">共 <span style="color:#dc2626;font-weight:700;font-size:18px;">{{ total_count }}</span> 道错题</div>
+</div>
 {% for wq in wrong_questions %}
 <div class="card wrong-item">
     <div class="q-content">
@@ -47,17 +49,27 @@
         {% endfor %}
     </div>
     {% endif %}
-    {% if wq.question.correct_answer %}
-    <div class="answer-box answer-correct">
-        <div class="answer-label">正确答案：</div>
-        <div data-raw="{{ wq.question.correct_answer|escape }}"></div>
-    </div>
-    {% endif %}
-    {% if wq.question.explanation %}
-    <div class="answer-analysis">
-        <div class="answer-label" style="color:var(--blue-700);">解析：</div>
-        <div data-raw="{{ wq.question.explanation|escape }}"></div>
-    </div>
+    {% if is_vip %}
+        {# VIP：展示正确答案 + 解析 #}
+        {% if wq.question.correct_answer %}
+        <div class="answer-box answer-correct">
+            <div class="answer-label">正确答案：</div>
+            <div data-raw="{{ wq.question.correct_answer|escape }}"></div>
+        </div>
+        {% endif %}
+        {% if wq.question.explanation %}
+        <div class="answer-analysis">
+            <div class="answer-label" style="color:var(--blue-700);">解析：</div>
+            <div data-raw="{{ wq.question.explanation|escape }}"></div>
+        </div>
+        {% endif %}
+    {% else %}
+        {# 免费用户：隐藏答案与解析 #}
+        <div style="margin-top:10px;padding:14px 18px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:8px;text-align:center;">
+            <i class="fa-solid fa-lock" style="color:#d97706;margin-right:6px;"></i>
+            <span style="color:#92400e;font-size:14px;">查看答案与解析请</span>
+            <a href="{% url 'user:vip' %}?from=ai_wrong_book" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
+        </div>
     {% endif %}
     <div class="q-meta">
         <span>{{ wq.question.question_type.name }}题</span>
@@ -68,6 +80,17 @@
     </div>
 </div>
 {% endfor %}
+
+{# 免费用户底部引导升级 #}
+{% if not is_vip and total_count > 10 %}
+<div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:10px;padding:20px 28px;margin-top:24px;text-align:center;">
+    <i class="fa-solid fa-crown" style="color:#d97706;font-size:24px;margin-bottom:8px;"></i>
+    <p style="color:#92400e;font-size:15px;font-weight:600;">您共有 {{ total_count }} 道错题，免费用户仅展示最近 10 道</p>
+    <p style="color:#a16207;font-size:13px;margin-top:4px;">升级 VIP 解锁完整 AI 错题本</p>
+    <a href="{% url 'user:vip' %}?from=ai_wrong_book" class="btn" style="background:#d97706;color:#fff;margin-top:12px;"><i class="fa-solid fa-crown" style="margin-right:6px;"></i>升级 VIP</a>
+</div>
+{% endif %}
+
 {% else %}
 <div class="empty-state">
     <i class="fa-solid fa-check-circle" style="color:#16a34a;"></i>

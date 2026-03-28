@@ -24,11 +24,14 @@
     .question-content { font-size: 15px; line-height: 1.8; margin-bottom: 8px; }
     .question-options { margin: 10px 0; padding-left: 8px; }
     .question-options .opt { padding: 3px 0; color: var(--gray-600); }
-    .answer-toggle {
+    .answer-toggle, .explanation-toggle {
         display: inline-flex; align-items: center; gap: 6px;
-        background: var(--blue-50); border: 1px solid var(--blue-200); color: var(--blue-700);
         padding: 6px 16px; border-radius: 8px; cursor: pointer;
-        font-size: 13px; font-weight: 500; margin-top: 12px; transition: all 0.2s; user-select: none;
+        font-size: 13px; font-weight: 500; transition: all 0.2s; user-select: none;
+        min-width: 100px; justify-content: center; white-space: nowrap;
+    }
+    .answer-toggle {
+        background: var(--blue-50); border: 1px solid var(--blue-200); color: var(--blue-700);
     }
     .answer-toggle:hover { background: var(--blue-100); }
     .answer-toggle .arrow { transition: transform 0.2s; font-size: 11px; }
@@ -39,6 +42,18 @@
         font-size: 14px; line-height: 1.8; margin-top: 8px; display: none;
     }
     .answer-box.show { display: block; }
+    .explanation-toggle {
+        background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d;
+    }
+    .explanation-toggle:hover { background: #dcfce7; }
+    .explanation-toggle .arrow { transition: transform 0.2s; font-size: 11px; }
+    .explanation-toggle.open .arrow { transform: rotate(90deg); }
+    .explanation-box {
+        background: #f0fdf4; border-left: 3px solid #22c55e;
+        padding: 14px 18px; border-radius: 0 8px 8px 0;
+        font-size: 14px; line-height: 1.8; margin-top: 8px; display: none;
+    }
+    .explanation-box.show { display: block; }
     .admin-actions { display: flex; gap: 8px; margin-top: 12px; }
     .pagination { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 28px; padding: 16px 0; }
     .pagination a, .pagination span {
@@ -107,10 +122,17 @@
     {% if q.image %}
     <div class="img-preview-box" style="margin:12px 0;"><img src="{{ q.image.url }}" alt="题目插图"></div>
     {% endif %}
-    <div class="answer-toggle" onclick="toggleAnswer(this)">
-        <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案
+    {# 真题题库：答案与解析对所有用户开放 #}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+        <div class="answer-toggle" onclick="toggleAnswer(this)">
+            <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案
+        </div>
+        <div class="explanation-toggle" onclick="toggleExplanation(this)">
+            <span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看解析
+        </div>
     </div>
-    <div class="answer-box" data-raw="{{ q.answer|escape }}"{% if q.correct_answer %} data-correct="{{ q.correct_answer }}"{% endif %}></div>
+    <div class="answer-box"{% if q.correct_answer %} data-correct="{{ q.correct_answer }}"{% endif %}></div>
+    <div class="explanation-box" data-raw="{{ q.answer|escape }}"></div>
     {% if user.is_staff %}
     <div class="admin-actions">
         <a href="{% url 'kaoyan:question_edit' q.id %}" class="btn btn-outline" style="padding:5px 14px;font-size:13px;"><i class="fa-solid fa-pen-to-square"></i> 编辑</a>
@@ -155,6 +177,40 @@ function renderMd(t){if(!t)return'';const m=[];let i=0;function h(c,d){const p=`
 function doSearch(){const p=new URLSearchParams();['subject','year','school','question_type','difficulty'].forEach(k=>{const el=document.getElementById('id_'+k);if(el&&el.value)p.set(k,el.value);});window.location.search=p.toString();}
 document.querySelectorAll('.question-content').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
 document.querySelectorAll('.question-options .opt').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
-function toggleAnswer(btn){const box=btn.nextElementSibling;const isOpen=btn.classList.toggle('open');box.classList.toggle('show',isOpen);btn.innerHTML=isOpen?'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起答案':'<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案';if(isOpen&&!box.dataset.rendered){const raw=box.getAttribute('data-raw');let html='';const correct=box.getAttribute('data-correct');if(correct)html+='<div style="font-size:15px;font-weight:600;color:var(--blue-700);margin-bottom:8px;">正确答案：'+renderMd(correct)+'</div>';if(raw){html+='<div style="margin-top:4px;color:var(--gray-700);"><strong style="color:var(--blue-600);">解析：</strong></div><div>'+renderMd(raw)+'</div>';}box.innerHTML=html||'<span style="color:var(--gray-400);">暂无答案</span>';box.dataset.rendered='1';}}
+function toggleAnswer(btn){
+    /* btn 在 flex 容器内，answer-box 是 flex 容器的 nextElementSibling */
+    const wrapper = btn.parentElement;
+    const box = wrapper.nextElementSibling;
+    const isOpen = btn.classList.toggle('open');
+    box.classList.toggle('show', isOpen);
+    btn.innerHTML = isOpen
+        ? '<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起答案'
+        : '<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看答案';
+    if (isOpen && !box.dataset.rendered) {
+        let html = '';
+        const correct = box.getAttribute('data-correct');
+        if (correct) html += '<div style="font-size:15px;font-weight:600;color:var(--blue-700);margin-bottom:8px;">正确答案：' + renderMd(correct) + '</div>';
+        box.innerHTML = html || '<span style="color:var(--gray-400);">暂无答案</span>';
+        box.dataset.rendered = '1';
+    }
+}
+function toggleExplanation(btn){
+    /* explanation-box 是 answer-box 的 nextElementSibling */
+    const wrapper = btn.parentElement;
+    const answerBox = wrapper.nextElementSibling;
+    const box = answerBox.nextElementSibling;
+    const isOpen = btn.classList.toggle('open');
+    box.classList.toggle('show', isOpen);
+    btn.innerHTML = isOpen
+        ? '<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 收起解析'
+        : '<span class="arrow"><i class="fa-solid fa-caret-right"></i></span> 查看解析';
+    if (isOpen && !box.dataset.rendered) {
+        const raw = box.getAttribute('data-raw');
+        box.innerHTML = raw
+            ? '<div><strong style="color:#15803d;">详细解析：</strong></div><div style="margin-top:6px;">' + renderMd(raw) + '</div>'
+            : '<span style="color:var(--gray-400);">暂无解析</span>';
+        box.dataset.rendered = '1';
+    }
+}
 </script>
 {% endblock %}

@@ -1,0 +1,107 @@
+{% extends "user/base.html" %}
+
+{% block title %}邮箱验证 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    @keyframes confetti-fall {
+        0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+    }
+    .confetti { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confetti-fall 1.5s ease-out forwards; pointer-events: none; }
+    .verify-wrapper { position: relative; overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:60px auto;">
+    <div class="card verify-wrapper" style="text-align:center;padding:52px 40px;">
+
+        {% if status == "success" %}
+        {# ── 验证成功 ── #}
+        <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(34,197,94,0.3);">
+            <i class="fa-solid fa-check" style="font-size:40px;color:#fff;"></i>
+        </div>
+        <h1 style="font-size:24px;font-weight:800;color:var(--gray-900);margin-bottom:8px;">🎉 恭喜加入厘米考研！</h1>
+        <p style="font-size:17px;color:var(--blue-600);font-weight:600;margin-bottom:16px;">
+            你离上岸只差这一厘米，我们帮你！
+        </p>
+        <p style="font-size:14px;color:var(--gray-500);line-height:1.7;margin-bottom:32px;">
+            你的邮箱已验证成功，账号已激活。<br>
+            现在你已自动登录，可以开始你的备考之旅了。
+        </p>
+        <a href="{% url 'user:home' %}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-graduation-cap"></i> 进入首页，开始刷题
+        </a>
+
+        {# 彩带动画 #}
+        <div class="confetti" style="left:10%;top:0;background:#fbbf24;animation-delay:0.1s;"></div>
+        <div class="confetti" style="left:25%;top:0;background:#3b82f6;animation-delay:0.3s;width:10px;height:10px;"></div>
+        <div class="confetti" style="left:45%;top:0;background:#ef4444;animation-delay:0.2s;"></div>
+        <div class="confetti" style="left:65%;top:0;background:#22c55e;animation-delay:0.4s;width:12px;height:6px;"></div>
+        <div class="confetti" style="left:80%;top:0;background:#a855f7;animation-delay:0.15s;"></div>
+        <div class="confetti" style="left:35%;top:0;background:#f97316;animation-delay:0.5s;width:6px;height:12px;"></div>
+        <div class="confetti" style="left:55%;top:0;background:#06b6d4;animation-delay:0.35s;"></div>
+        <div class="confetti" style="left:90%;top:0;background:#ec4899;animation-delay:0.25s;"></div>
+
+        {% elif status == "conflict" %}
+        {# ── 用户名/邮箱冲突 ── #}
+        <div style="width:72px;height:72px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:30px;color:#f59e0b;"></i>
+        </div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--gray-700);margin-bottom:12px;">注册信息冲突</h1>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:28px;">
+            在你等待验证期间，{{ field }}已被其他用户注册。<br>
+            请重新注册，更换一个{{ field }}。
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <a href="{% url 'user:register' %}" class="btn btn-primary">
+                <i class="fa-solid fa-user-plus"></i> 重新注册
+            </a>
+            <a href="{% url 'user:home' %}" class="btn btn-ghost">
+                <i class="fa-solid fa-house"></i> 返回首页
+            </a>
+        </div>
+
+        {% elif status == "used" %}
+        {# ── 链接已使用 ── #}
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+            <i class="fa-solid fa-link-slash" style="font-size:30px;color:var(--gray-400);"></i>
+        </div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--gray-700);margin-bottom:12px;">该链接已作废</h1>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:28px;">
+            此验证链接已经被使用过，无法再次访问。<br>
+            如果忘记密码，请重新注册或联系管理员。
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <a href="{% url 'user:login' %}" class="btn btn-outline">
+                <i class="fa-solid fa-right-to-bracket"></i> 去登录
+            </a>
+            <a href="{% url 'user:home' %}" class="btn btn-ghost">
+                <i class="fa-solid fa-house"></i> 返回首页
+            </a>
+        </div>
+
+        {% else %}
+        {# ── 链接无效 ── #}
+        <div style="width:72px;height:72px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+            <i class="fa-solid fa-circle-xmark" style="font-size:30px;color:#dc2626;"></i>
+        </div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--gray-700);margin-bottom:12px;">验证链接无效</h1>
+        <p style="font-size:14px;color:var(--gray-500);margin-bottom:28px;">
+            该链接不存在或已过期，请检查是否复制完整。<br>
+            如有问题请联系管理员。
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <a href="{% url 'user:register' %}" class="btn btn-outline">
+                <i class="fa-solid fa-user-plus"></i> 重新注册
+            </a>
+            <a href="{% url 'user:home' %}" class="btn btn-ghost">
+                <i class="fa-solid fa-house"></i> 返回首页
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

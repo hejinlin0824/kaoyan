@@ -1,6 +1,7 @@
 {% extends "user/base.html" %}
+{% load static %}
 
-{% block title %}注册 - 考研平台{% endblock %}
+{% block title %}注册 - 厘米考研{% endblock %}
 
 {% block extra_style %}
 <style>
@@ -35,9 +36,8 @@
 
     <div class="card register-card" id="registerCard">
         <div class="text-center" style="margin-bottom: 32px;">
-            <i class="fa-solid fa-graduation-cap" style="font-size: 36px; color: var(--blue-500); margin-bottom: 16px;"></i>
-            <h1 style="font-size: 22px; font-weight: 700; color: var(--gray-900);">注册账号</h1>
-            <p style="font-size: 14px; color: var(--gray-500); margin-top: 6px;">创建你的考研学习账号</p>
+            <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:86px;width:auto;margin-bottom:12px;">
+            <p style="font-size: 14px; color: var(--gray-500); margin-top: 0;">你离上岸只差这一厘米，我们帮你！</p>
         </div>
 
         {% if form.non_field_errors %}
@@ -50,6 +50,11 @@
                 <label><i class="fa-solid fa-user" style="margin-right: 6px; color: var(--gray-400);"></i>用户名</label>
                 {{ form.username }}
                 {% if form.username.errors %}<div class="form-error">{{ form.username.errors }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-envelope" style="margin-right: 6px; color: var(--gray-400);"></i>邮箱</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="form-error">{{ form.email.errors }}</div>{% endif %}
             </div>
             <div class="form-group">
                 <label><i class="fa-solid fa-lock" style="margin-right: 6px; color: var(--gray-400);"></i>密码</label>

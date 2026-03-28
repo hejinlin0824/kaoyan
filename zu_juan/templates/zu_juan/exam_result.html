@@ -89,17 +89,28 @@
             <div>{{ eq.user_answer }}</div>
         </div>
         {% endif %}
-        {% if eq.question.correct_answer %}
-        <div class="answer-box answer-correct">
-            <div class="answer-label">正确答案：</div>
-            <div data-raw="{{ eq.question.correct_answer|escape }}"></div>
-        </div>
-        {% endif %}
-        {% if eq.question.answer %}
-        <div class="answer-analysis">
-            <div class="answer-label" style="color:var(--blue-700);">解析：</div>
-            <div data-raw="{{ eq.question.answer|escape }}"></div>
-        </div>
+
+        {% if is_vip %}
+            {# VIP 用户：展示正确答案 + 详细解析 #}
+            {% if eq.question.correct_answer %}
+            <div class="answer-box answer-correct">
+                <div class="answer-label">正确答案：</div>
+                <div data-raw="{{ eq.question.correct_answer|escape }}"></div>
+            </div>
+            {% endif %}
+            {% if eq.question.answer %}
+            <div class="answer-analysis">
+                <div class="answer-label" style="color:var(--blue-700);">解析：</div>
+                <div data-raw="{{ eq.question.answer|escape }}"></div>
+            </div>
+            {% endif %}
+        {% else %}
+            {# 免费用户：隐藏答案与解析，引导升级 #}
+            <div class="vip-lock-box" style="margin-top:10px;padding:16px 20px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:8px;text-align:center;">
+                <i class="fa-solid fa-lock" style="color:#d97706;font-size:16px;margin-right:6px;"></i>
+                <span style="color:#92400e;font-size:14px;font-weight:500;">查看正确答案与详细解析请</span>
+                <a href="{% url 'user:vip' %}?from=exam_result" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
+            </div>
         {% endif %}
         <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }}</div>
     </div>

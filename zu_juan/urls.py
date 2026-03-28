@@ -11,4 +11,5 @@ urlpatterns = [
     path("submit/<int:pk>/", views.exam_submit, name="exam_submit"),
     path("result/<int:pk>/", views.exam_result, name="exam_result"),
     path("wrong-book/", views.wrong_book, name="wrong_book"),
+    path("wrong-book/export/", views.wrong_book_export, name="wrong_book_export"),
 ]

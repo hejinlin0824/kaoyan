@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}考研平台{% endblock %}</title>
+    <title>{% block title %}厘米考研{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/CM-small.png' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -67,7 +68,7 @@
             gap: 10px;
         }
         .navbar .logo i { font-size: 24px; color: var(--blue-500); }
-        .navbar .nav-links { display: flex; align-items: center; gap: 8px; }
+        .navbar .nav-links { display: flex; align-items: center; gap: 4px; }
         .navbar .nav-links a {
             color: var(--gray-600);
             text-decoration: none;
@@ -79,6 +80,33 @@
         }
         .navbar .nav-links a:hover { background: var(--blue-50); color: var(--blue-700); }
         .navbar .nav-links a.active { background: var(--blue-50); color: var(--blue-700); }
+        /* 下拉菜单 */
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-toggle {
+            color: var(--gray-600); text-decoration: none; font-size: 14px; font-weight: 500;
+            padding: 8px 16px; border-radius: var(--radius); transition: all 0.2s;
+            cursor: pointer; display: flex; align-items: center; gap: 4px; background: none; border: none;
+            font-family: inherit;
+        }
+        .nav-dropdown-toggle:hover { background: var(--blue-50); color: var(--blue-700); }
+        .nav-dropdown-toggle .caret { font-size: 10px; transition: transform 0.2s; }
+        .nav-dropdown.open .caret { transform: rotate(180deg); }
+        .nav-dropdown-menu {
+            position: absolute; top: 100%; left: 0; min-width: 180px;
+            background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); padding: 6px 0; z-index: 200;
+            opacity: 0; visibility: hidden; transform: translateY(-4px);
+            transition: all 0.15s ease;
+        }
+        .nav-dropdown.open .nav-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(4px); }
+        .nav-dropdown-menu a {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px; font-size: 14px; color: var(--gray-700);
+            text-decoration: none; transition: all 0.15s; border-radius: 0;
+        }
+        .nav-dropdown-menu a:hover { background: var(--blue-50); color: var(--blue-700); }
+        .nav-dropdown-menu a i { width: 18px; text-align: center; font-size: 13px; }
+        .nav-dropdown-menu .divider { height: 1px; background: var(--gray-100); margin: 4px 0; }
         .nav-user {
             display: flex;
             align-items: center;
@@ -274,20 +302,36 @@
 <body>
     <nav class="navbar">
         <a href="{% url 'user:home' %}" class="logo">
-            <i class="fa-solid fa-graduation-cap"></i>
-            考研平台
+            <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:65px;width:auto;border-radius:4px;">
         </a>
         <div class="nav-links">
-            <a href="{% url 'kaoyan:question_list' %}"><i class="fa-solid fa-book-open" style="margin-right:4px;"></i>题库</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'ai_test:ai_exam_create' %}"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:4px;"></i>AI 出题</a>
-                <a href="{% url 'ai_test:ai_exam_list' %}"><i class="fa-solid fa-list-check" style="margin-right:4px;"></i>AI 试卷</a>
-                <a href="{% url 'ai_test:ai_question_list' %}"><i class="fa-solid fa-robot" style="margin-right:4px;"></i>AI 题库</a>
-                <a href="{% url 'ai_test:ai_practice_create' %}"><i class="fa-solid fa-shuffle" style="margin-right:4px;"></i>AI 练习</a>
-                <a href="{% url 'zu_juan:exam_create' %}"><i class="fa-solid fa-file-pen" style="margin-right:4px;"></i>组卷</a>
-                <a href="{% url 'zu_juan:wrong_book' %}"><i class="fa-solid fa-rotate-left" style="margin-right:4px;"></i>错题本</a>
-                <a href="{% url 'ai_test:ai_wrong_book' %}"><i class="fa-solid fa-robot" style="margin-right:4px;"></i>AI 错题</a>
-            {% endif %}
+            {# ── 真题 下拉菜单 ── #}
+            <div class="nav-dropdown" onclick="this.classList.toggle('open')">
+                <button class="nav-dropdown-toggle">
+                    <i class="fa-solid fa-book-open"></i> 真题 <i class="fa-solid fa-chevron-down caret"></i>
+                </button>
+                <div class="nav-dropdown-menu" onclick="event.stopPropagation()">
+                    <a href="{% url 'kaoyan:question_list' %}"><i class="fa-solid fa-book-open"></i> 真题题库</a>
+                    <a href="{% url 'zu_juan:exam_create' %}"><i class="fa-solid fa-file-pen"></i> 真题组卷</a>
+                    <a href="{% url 'zu_juan:wrong_book' %}"><i class="fa-solid fa-rotate-left"></i> 真题错题本</a>
+                </div>
+            </div>
+
+            {# ── AI 练习 下拉菜单 ── #}
+            <div class="nav-dropdown" onclick="this.classList.toggle('open')">
+                <button class="nav-dropdown-toggle">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI 练习 <i class="fa-solid fa-chevron-down caret"></i>
+                </button>
+                <div class="nav-dropdown-menu" onclick="event.stopPropagation()">
+                    <a href="{% url 'ai_test:ai_exam_create' %}"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 变式出题</a>
+                    <a href="{% url 'ai_test:ai_practice_create' %}"><i class="fa-solid fa-shuffle"></i> AI 题库组卷</a>
+                    <a href="{% url 'ai_test:ai_question_list' %}"><i class="fa-solid fa-robot"></i> AI 题库</a>
+                    <div class="divider"></div>
+                    <a href="{% url 'ai_test:ai_exam_list' %}"><i class="fa-solid fa-list-check"></i> 我的 AI 试卷</a>
+                    <a href="{% url 'ai_test:ai_wrong_book' %}"><i class="fa-solid fa-circle-xmark"></i> AI 错题本</a>
+                </div>
+            </div>
+
             {% if user.is_authenticated and user.is_staff %}
                 <div class="nav-divider"></div>
                 <a href="{% url 'kaoyan:question_add' %}"><i class="fa-solid fa-plus" style="margin-right:4px;"></i>录入题目</a>
@@ -310,5 +354,13 @@
     <div class="main-content">
         {% block content %}{% endblock %}
     </div>
+    <script>
+    // 点击页面其他区域时关闭导航下拉菜单
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('.nav-dropdown.open').forEach(function(dd) {
+            if (!dd.contains(e.target)) dd.classList.remove('open');
+        });
+    });
+    </script>
 </body>
 </html>

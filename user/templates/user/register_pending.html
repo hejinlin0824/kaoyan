@@ -1,0 +1,31 @@
+{% extends "user/base.html" %}
+
+{% block title %}验证邮箱 - 厘米考研{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:80px auto;">
+    <div class="card" style="text-align:center;padding:48px 36px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--blue-50);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+            <i class="fa-solid fa-envelope-circle-check" style="font-size:32px;color:var(--blue-500);"></i>
+        </div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--gray-900);margin-bottom:12px;">验证邮件已发送</h1>
+        <p style="font-size:15px;color:var(--gray-600);line-height:1.7;">
+            我们已向 <strong style="color:var(--blue-600);">{{ email }}</strong> 发送了一封验证邮件。
+        </p>
+        <p style="font-size:14px;color:var(--gray-500);margin-top:12px;">
+            请前往你的邮箱，点击验证链接完成注册。
+        </p>
+        <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;">
+            <a href="{% url 'user:login' %}" class="btn btn-outline">
+                <i class="fa-solid fa-right-to-bracket"></i> 去登录
+            </a>
+            <a href="{% url 'user:home' %}" class="btn btn-ghost">
+                <i class="fa-solid fa-house"></i> 返回首页
+            </a>
+        </div>
+        <p style="font-size:12px;color:var(--gray-400);margin-top:24px;">
+            <i class="fa-solid fa-circle-info"></i> 没有收到？请检查垃圾邮件文件夹
+        </p>
+    </div>
+</div>
+{% endblock %}

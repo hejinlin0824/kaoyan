@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'kaoyan_project.vip_utils.vip_context',
             ],
         },
     },
@@ -82,9 +83,23 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
         'OPTIONS': {
             'timeout': 30,
+            'init_command': '',  # placeholder，实际通过 PRAGMA 设置
         }
     }
 }
+
+# SQLite 并发优化：启用 WAL 模式 + 增大 busy_timeout
+# WAL 模式允许读写并发，解决 Django + Celery 同时访问时的 I/O 锁冲突
+def _set_sqlite_wal(sender, connection, **kwargs):
+    """数据库连接建立时自动开启 WAL 模式"""
+    if connection.vendor == 'sqlite':
+        cursor = connection.cursor()
+        cursor.execute('PRAGMA journal_mode=WAL;')
+        cursor.execute('PRAGMA busy_timeout=30000;')
+        cursor.execute('PRAGMA synchronous=NORMAL;')
+
+from django.db.backends.signals import connection_created
+connection_created.connect(_set_sqlite_wal)
 
 
 # Password validation
@@ -125,6 +140,9 @@ CSRF_COOKIE_NAME = "kaoyan_csrftoken"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# 登录跳转 URL（未登录用户访问需认证页面时自动重定向）
+LOGIN_URL = '/login/'
+
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -155,3 +173,18 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+
+# ==========================================
+# 邮件发送配置（邮箱验证用）
+# ==========================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '1285021260@qq.com'
+EMAIL_HOST_PASSWORD = 'pwfkduhgjwonhihj'
+DEFAULT_FROM_EMAIL = '厘米考研 <1285021260@qq.com>'
+
+# 站点基本信息
+SITE_NAME = "厘米考研"
+SITE_TAGLINE = "你离上岸只差这一厘米，我们帮你！"

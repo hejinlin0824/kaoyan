@@ -1,6 +1,7 @@
 {% extends "user/base.html" %}
+{% load static %}
 
-{% block title %}首页 - 考研平台{% endblock %}
+{% block title %}首页 - 厘米考研{% endblock %}
 
 {% block extra_style %}
 <style>
@@ -16,9 +17,8 @@
 
 {% if not user.is_authenticated %}
 <div class="card home-stagger" style="text-align:center; padding:60px 40px; margin-bottom:28px;">
-    <i class="fa-solid fa-graduation-cap" style="font-size:48px; color:var(--blue-500); margin-bottom:20px;"></i>
-    <h2 style="font-size:24px; font-weight:700; color:var(--gray-900); margin-bottom:8px;">欢迎来到考研平台</h2>
-    <p style="font-size:15px; color:var(--gray-500); margin-bottom:32px;">助你高效备考，一战成硕</p>
+    <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:72px;width:auto;margin-bottom:16px;">
+    <p style="font-size:15px; color:var(--gray-500); margin-bottom:32px;">你离上岸只差这一厘米，我们帮你！</p>
     <div style="display:flex; gap:12px; justify-content:center;">
         <a href="{% url 'user:register' %}" class="btn btn-primary btn-lg"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
         <a href="{% url 'user:login' %}" class="btn btn-outline btn-lg"><i class="fa-solid fa-right-to-bracket"></i> 已有账号，去登录</a>
@@ -52,22 +52,23 @@
     {% endif %}
 {% endif %}
 
-{% if is_vip %}
+{% if user.is_authenticated %}
 <div class="home-stagger" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;">
-    <a href="{% url 'zu_juan:exam_create' %}" style="display:flex; align-items:center; gap:16px; background:var(--blue-600); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
+    <a href="{% url 'zu_juan:exam_create' %}" style="display:flex; align-items:center; gap:16px; background:var(--blue-600); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;position:relative;">
         <i class="fa-solid fa-file-pen" style="font-size:28px; opacity:0.9;"></i>
         <div>
-            <div style="font-weight:600; font-size:16px;">真题组卷</div>
+            <div style="font-weight:600; font-size:16px;">真题组卷{% if not is_vip %}<span style="font-size:11px;background:#fbbf24;color:#92400e;padding:2px 8px;border-radius:4px;margin-left:8px;">每日1套</span>{% endif %}</div>
             <div style="font-size:13px; opacity:0.8; margin-top:4px;">随机抽题 / 在线作答 / 自动阅卷</div>
         </div>
     </a>
     <a href="{% url 'zu_juan:wrong_book' %}" style="display:flex; align-items:center; gap:16px; background:#dc2626; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
         <i class="fa-solid fa-rotate-left" style="font-size:28px; opacity:0.9;"></i>
         <div>
-            <div style="font-weight:600; font-size:16px;">错题本</div>
+            <div style="font-weight:600; font-size:16px;">错题本{% if not is_vip %}<span style="font-size:11px;background:#fbbf24;color:#92400e;padding:2px 8px;border-radius:4px;margin-left:8px;">限10题</span>{% endif %}</div>
             <div style="font-size:13px; opacity:0.8; margin-top:4px;">查漏补缺 / 错误次数统计</div>
         </div>
     </a>
+    {% if is_vip %}
     <a href="{% url 'ai_test:ai_exam_create' %}" style="display:flex; align-items:center; gap:16px; background:#059669; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
         <i class="fa-solid fa-wand-magic-sparkles" style="font-size:28px; opacity:0.9;"></i>
         <div>
@@ -96,6 +97,36 @@
             <div style="font-size:13px; opacity:0.8; margin-top:4px;">AI练习错题 / 查漏补缺</div>
         </div>
     </a>
+    {% else %}
+    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#059669,#065f46); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
+        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:28px; opacity:0.9;"></i>
+        <div>
+            <div style="font-weight:600; font-size:16px;">AI 变式出题 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
+            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
+        </div>
+    </a>
+    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#d97706,#92400e); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
+        <i class="fa-solid fa-list-check" style="font-size:28px; opacity:0.9;"></i>
+        <div>
+            <div style="font-weight:600; font-size:16px;">我的 AI 试卷 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
+            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
+        </div>
+    </a>
+    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
+        <i class="fa-solid fa-shuffle" style="font-size:28px; opacity:0.9;"></i>
+        <div>
+            <div style="font-weight:600; font-size:16px;">AI 题库组卷 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
+            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
+        </div>
+    </a>
+    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#be123c,#881337); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
+        <i class="fa-solid fa-robot" style="font-size:28px; opacity:0.9;"></i>
+        <div>
+            <div style="font-weight:600; font-size:16px;">AI 错题本 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
+            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
+        </div>
+    </a>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -105,19 +136,11 @@
         <h3 style="font-size:16px; font-weight:600; color:var(--gray-800); margin-bottom:6px;">题库浏览</h3>
         <p style="font-size:13px; color:var(--gray-500);">按年份学校筛选题目</p>
     </a>
-    {% if is_vip %}
     <a href="{% url 'zu_juan:exam_create' %}" class="card" style="text-align:center; padding:32px 20px; text-decoration:none; transition:box-shadow 0.2s;">
         <i class="fa-solid fa-file-pen" style="font-size:32px; color:var(--blue-500); margin-bottom:14px;"></i>
-        <h3 style="font-size:16px; font-weight:600; color:var(--gray-800); margin-bottom:6px;">智能组卷</h3>
+        <h3 style="font-size:16px; font-weight:600; color:var(--gray-800); margin-bottom:6px;">智能组卷{% if not is_vip %}<span style="font-size:10px;background:#fef3c7;color:#b45309;padding:2px 6px;border-radius:4px;margin-left:6px;">每日1套</span>{% endif %}</h3>
         <p style="font-size:13px; color:var(--gray-500);">随机抽题，在线答题</p>
     </a>
-    {% else %}
-    <div class="card" style="text-align:center; padding:32px 20px; opacity:0.5;">
-        <i class="fa-solid fa-file-pen" style="font-size:32px; color:var(--gray-400); margin-bottom:14px;"></i>
-        <h3 style="font-size:16px; font-weight:600; color:var(--gray-500); margin-bottom:6px;">智能组卷</h3>
-        <p style="font-size:13px; color:var(--gray-400);"><i class="fa-solid fa-lock" style="margin-right:4px;"></i>VIP 专属权益</p>
-    </div>
-    {% endif %}
     <div class="card" style="text-align:center; padding:32px 20px; opacity:0.5;">
         <i class="fa-solid fa-video" style="font-size:32px; color:var(--gray-400); margin-bottom:14px;"></i>
         <h3 style="font-size:16px; font-weight:600; color:var(--gray-500); margin-bottom:6px;">视频课程</h3>

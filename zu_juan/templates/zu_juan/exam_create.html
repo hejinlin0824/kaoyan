@@ -20,6 +20,17 @@
     <p class="page-subtitle">按题型设定数量，随机抽取真题</p>
 </div>
 
+{% if not is_vip %}
+<div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:10px;padding:16px 24px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+    <i class="fa-solid fa-circle-info" style="color:#d97706;font-size:20px;"></i>
+    <div style="flex:1;">
+        <strong style="color:#92400e;">免费用户每日限组 1 套试卷</strong>
+        <span style="color:#a16207;font-size:13px;margin-left:8px;">今日已组 {{ daily_count|default:"0" }} 套</span>
+    </div>
+    <a href="{% url 'user:vip' %}?from=exam_create" class="btn" style="background:#d97706;color:#fff;padding:6px 16px;font-size:13px;"><i class="fa-solid fa-crown" style="margin-right:4px;"></i>升级VIP无限组卷</a>
+</div>
+{% endif %}
+
 <div class="card" style="max-width:640px;margin:0 auto;">
     {% if form.non_field_errors %}<div class="form-errors-all">{{ form.non_field_errors }}</div>{% endif %}
     <form method="post">

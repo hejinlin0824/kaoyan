@@ -113,6 +113,8 @@
         {% endfor %}
     </div>
     {% endif %}
+    {% if is_vip %}
+    {# VIP 用户：完全解锁答案与解析 #}
     <div class="toggle-group">
         {% if q.correct_answer %}
         <div class="answer-toggle" onclick="toggleAnswer(this)">
@@ -127,6 +129,14 @@
     <div class="answer-box" data-correct="{{ q.correct_answer }}"></div>
     {% endif %}
     <div class="explanation-box" {% if q.explanation %}data-raw="{{ q.explanation|escape }}"{% else %}data-empty="1"{% endif %}></div>
+    {% else %}
+    {# 免费用户：锁定答案与解析，引导升级 #}
+    <div style="margin-top:12px;padding:14px 18px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:8px;text-align:center;">
+        <i class="fa-solid fa-lock" style="color:#d97706;margin-right:6px;"></i>
+        <span style="color:#92400e;font-size:14px;">查看 AI 答案与解析需</span>
+        <a href="{% url 'user:vip' %}?from=ai_question_list" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
+    </div>
+    {% endif %}
 </div>
 {% endfor %}
 

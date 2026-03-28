@@ -33,7 +33,7 @@ def question_list(request):
         if difficulty:
             questions = questions.filter(difficulty=difficulty)
 
-    # 获取题型 ID（用于前端判断）
+    # 获取题型 ID（用于前端判断选项显示）
     choice_type_id = QuestionType.objects.filter(name="选择").values_list("id", flat=True).first()
     judge_type_id = QuestionType.objects.filter(name="判断").values_list("id", flat=True).first()
 
@@ -42,6 +42,9 @@ def question_list(request):
         if q.options and isinstance(q.options, list):
             q.options = {chr(ord("A") + i): opt.split(". ", 1)[-1] if ". " in opt else opt
                          for i, opt in enumerate(q.options[:4])}
+
+    # 真题题库：答案与解析对所有用户开放（引流策略）
+    # VIP 分层控制仅在组卷结果页、AI 模块、错题本中生效
 
     # 分页：每页5题
     paginator = Paginator(questions, 5)

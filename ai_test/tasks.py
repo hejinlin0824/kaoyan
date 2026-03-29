@@ -256,12 +256,25 @@ def generate_ai_exam_task(exam_id):
 
             logger.info(f"🔎 正在抽取【{type_name}】题库候选数据，需 {needed} 道...")
 
-            candidates = list(
-                Question.objects.select_related("school", "question_type")
-                .filter(subject=exam.subject, question_type__name=type_name)
-                .filter(Q(image__isnull=True) | Q(image__exact=''))
-                .order_by("?")[:needed]
-            )
+            # 优先选取从未被用作变式原题的题目，确保多样性
+            used_ids = set(AIGeneratedQuestion.objects.values_list("original_question_id", flat=True))
+            base_qs = Question.objects.select_related("school", "question_type").filter(
+                subject=exam.subject, question_type__name=type_name
+            ).filter(Q(image__isnull=True) | Q(image__exact=''))
+
+            fresh_qs = base_qs.exclude(id__in=used_ids)
+            fresh_count = fresh_qs.count()
+            logger.info(f"      - 【{type_name}】总候选: {base_qs.count()} 道，未被用作原题: {fresh_count} 道")
+
+            candidates = list(fresh_qs.order_by("?")[:needed])
+
+            if len(candidates) < needed:
+                remaining = needed - len(candidates)
+                existing_ids = {q.id for q in candidates}
+                fill_qs = base_qs.filter(id__in=used_ids).exclude(id__in=existing_ids)
+                fill = list(fill_qs.order_by("?")[:remaining])
+                logger.info(f"      - 新题不足，从已用原题中补充 {len(fill)} 道")
+                candidates.extend(fill)
 
             if len(candidates) < needed:
                 logger.warning(f"⚠️ 题库中无图的【{type_name}】仅有 {len(candidates)} 道，少于所需的 {needed} 道！")

@@ -1,0 +1,105 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}我的投稿 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .sub-page { max-width: 960px; margin: 0 auto; }
+    .sub-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; color: var(--gray-800); display: flex; align-items: center; justify-content: space-between; }
+    .sub-page h2 a {
+        font-size: 14px; padding: 8px 20px; background: var(--blue-600); color: #fff;
+        border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.15s;
+    }
+    .sub-page h2 a:hover { background: var(--blue-700); }
+    .sub-card {
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px;
+        padding: 20px 24px; margin-bottom: 12px; transition: box-shadow 0.15s;
+    }
+    .sub-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .sc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sc-title { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+    .sc-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px; }
+    .sc-status.pending { background: #fef3c7; color: #92400e; }
+    .sc-status.accepted { background: #d1fae5; color: #065f46; }
+    .sc-status.rejected { background: #fee2e2; color: #991b1b; }
+    .sc-desc { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-bottom: 8px; }
+    .sc-meta { font-size: 12px; color: var(--gray-400); display: flex; gap: 16px; flex-wrap: wrap; }
+    .sc-note { margin-top: 10px; padding: 10px 14px; background: #fef2f2; border-radius: 6px; font-size: 13px; color: #991b1b; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; }
+    .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
+    .pagination a, .pagination span {
+        padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none;
+        border: 1px solid var(--gray-200); color: var(--gray-600);
+    }
+    .pagination .active { background: var(--blue-600); color: #fff; border-color: var(--blue-600); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sub-page">
+    <h2>
+        <span><i class="fa-solid fa-paper-plane" style="color:var(--blue-500);"></i> 我的投稿</span>
+        <a href="{% url 'res_center:submit' %}"><i class="fa-solid fa-plus"></i> 投稿新资源</a>
+    </h2>
+
+    {% for sub in page_obj %}
+    <div class="sub-card">
+        <div class="sc-top">
+            <span class="sc-title">{{ sub.title }}</span>
+            <span class="sc-status {{ sub.status }}">{{ sub.get_status_display }}</span>
+        </div>
+        <div class="sc-desc">{{ sub.description|truncatewords:30 }}</div>
+        <div class="sc-meta">
+            <span><i class="fa-solid fa-folder"></i> {{ sub.category.name }}</span>
+            {% if sub.price == 0 %}
+            <span><i class="fa-solid fa-coins"></i> 免费</span>
+            {% else %}
+            <span><i class="fa-solid fa-coins"></i> {{ sub.price }} 点数</span>
+            {% endif %}
+            <span><i class="fa-regular fa-clock"></i> {{ sub.created_at|date:"Y-m-d H:i" }}</span>
+            {% if sub.reviewed_at %}
+            <span><i class="fa-solid fa-check-circle"></i> 审核于 {{ sub.reviewed_at|date:"Y-m-d H:i" }}</span>
+            {% endif %}
+        </div>
+        {% if sub.status == 'rejected' and sub.admin_note %}
+        <div class="sc-note">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            驳回原因：{{ sub.admin_note }}
+        </div>
+        {% endif %}
+        {% if sub.status == 'accepted' and sub.admin_note %}
+        <div style="margin-top:10px;padding:10px 14px;background:#f0fdf4;border-radius:6px;font-size:13px;color:#065f46;">
+            <i class="fa-solid fa-check-circle"></i>
+            管理员备注：{{ sub.admin_note }}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fa-regular fa-paper-plane"></i>
+        <p>你还没有投过稿</p>
+        <a href="{% url 'res_center:submit' %}" style="color:var(--blue-600);font-weight:600;">去投稿</a>
+    </div>
+    {% endfor %}
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">&laquo; 上一页</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="active">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">下一页 &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

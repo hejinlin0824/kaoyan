@@ -1,6 +1,8 @@
 from django.contrib import admin
-from .models import Comment, CommentLike, Notification
+from .models import Comment, CommentLike, Notification, QuestionReport, ResourceSubmission
 
 admin.site.register(Comment)
 admin.site.register(CommentLike)
 admin.site.register(Notification)
+admin.site.register(QuestionReport)
+admin.site.register(ResourceSubmission)

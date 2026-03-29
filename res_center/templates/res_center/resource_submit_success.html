@@ -1,0 +1,37 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}投稿成功 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .success-page { max-width: 600px; margin: 0 auto; text-align: center; padding: 60px 20px; }
+    .success-icon { font-size: 64px; color: #059669; margin-bottom: 20px; }
+    .success-page h2 { font-size: 24px; font-weight: 700; color: var(--gray-800); margin-bottom: 12px; }
+    .success-page p { font-size: 15px; color: var(--gray-500); line-height: 1.8; margin-bottom: 8px; }
+    .success-page .resource-name { font-weight: 600; color: var(--gray-700); }
+    .success-actions { display: flex; gap: 12px; justify-content: center; margin-top: 32px; }
+    .success-actions a {
+        padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
+        text-decoration: none; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--blue-600); color: #fff; }
+    .btn-primary:hover { background: var(--blue-700); }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-600); }
+    .btn-secondary:hover { background: var(--gray-200); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-page">
+    <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+    <h2>投稿提交成功！</h2>
+    <p>你的资源「<span class="resource-name">{{ submission.title }}</span>」已提交审核。</p>
+    <p>管理员审核通过后，资源将正式发布，你将获得 <strong>1天VIP + 100点数</strong> 奖励。</p>
+    <p>审核结果会通过站内通知告知你，请留意通知消息。</p>
+    <div class="success-actions">
+        <a href="{% url 'res_center:submit' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> 继续投稿</a>
+        <a href="{% url 'res_center:my_submissions' %}" class="btn-secondary"><i class="fa-solid fa-list"></i> 查看我的投稿</a>
+    </div>
+</div>
+{% endblock %}

@@ -197,6 +197,84 @@ def resource_edit(request, pk):
 
 
 @login_required
+def resource_submit(request):
+    """用户投稿资源"""
+    from .forms import ResourceSubmissionForm
+    from .models import ResourceCategory
+    from kaoyan_app.models import School, Subject
+
+    if request.method == "POST":
+        form = ResourceSubmissionForm(request.POST, request.FILES)
+        if form.is_valid():
+            from community.models import ResourceSubmission
+            category_id = form.cleaned_data["category"]
+            category = ResourceCategory.objects.get(pk=category_id)
+            subject_id = form.cleaned_data.get("subject")
+            school_id = form.cleaned_data.get("school")
+
+            submission = ResourceSubmission(
+                user=request.user,
+                title=form.cleaned_data["title"],
+                category=category,
+                subject=Subject.objects.get(pk=subject_id) if subject_id else None,
+                school=School.objects.get(pk=school_id) if school_id else None,
+                cover=form.cleaned_data.get("cover"),
+                description=form.cleaned_data["description"],
+                link=form.cleaned_data["link"],
+                price=form.cleaned_data["price"],
+            )
+            submission.save()
+
+            # 通知管理员
+            from django.contrib.auth import get_user_model
+            from community.models import Notification
+            User = get_user_model()
+            for admin in User.objects.filter(is_staff=True):
+                Notification.objects.create(
+                    recipient=admin,
+                    sender=request.user,
+                    noti_type="resource_new",
+                    content=f"{request.user.username} 投稿了新资源：{submission.title}",
+                    url=f"/community/resource-submissions/{submission.pk}/",
+                )
+
+            return render(request, "res_center/resource_submit_success.html", {
+                "submission": submission,
+            })
+    else:
+        form = ResourceSubmissionForm()
+
+    categories = ResourceCategory.objects.all()
+    schools = School.objects.all()
+    subjects = Subject.objects.all()
+
+    return render(request, "res_center/resource_submit.html", {
+        "form": form,
+        "categories": categories,
+        "schools": schools,
+        "subjects": subjects,
+    })
+
+
+@login_required
+def my_submissions(request):
+    """我投稿的资源"""
+    from community.models import ResourceSubmission
+
+    submissions = ResourceSubmission.objects.filter(
+        user=request.user
+    ).select_related("category", "school", "subject").order_by("-created_at")
+
+    paginator = Paginator(submissions, 12)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "res_center/my_submissions.html", {
+        "page_obj": page_obj,
+    })
+
+
+@login_required
 def my_purchases(request):
     """我购买的资源"""
     purchases = ResourcePurchase.objects.filter(

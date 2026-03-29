@@ -225,6 +225,15 @@
 <div class="discuss-page">
     <a href="javascript:history.back()" class="back-link"><i class="fa-solid fa-arrow-left"></i> 返回题库</a>
 
+    <!-- 纠错按钮 -->
+    {% if user.is_authenticated %}
+    <div style="text-align:right; margin-bottom:10px;">
+        <button class="btn btn-outline" onclick="showReportModal()" style="font-size:13px;color:#e67e22;border-color:#e67e22;">
+            <i class="fa-solid fa-flag"></i> 汇报错误
+        </button>
+    </div>
+    {% endif %}
+
     <!-- 题目卡片 -->
     <div class="q-card">
         <div class="q-meta">
@@ -251,17 +260,25 @@
         </div>
         {% endif %}
 
+        {% if is_vip %}
         <div class="q-answer-box">
             <button class="q-answer-toggle" onclick="toggleAnswer(this)">
                 <i class="fa-solid fa-chevron-down"></i> 查看答案与解析
             </button>
             <div class="q-answer-content" id="q-answer">
                 {% if question.correct_answer %}
-                <div class="q-correct"><i class="fa-solid fa-check-circle"></i> 正确答案：{{ question.correct_answer }}</div>
+                <div class="q-correct"><i class="fa-solid fa-check-circle"></i> 正确答案：<span data-raw="{{ question.correct_answer|escape }}"></span></div>
                 {% endif %}
                 <div class="md-content" id="q-explain" data-raw="{{ question.answer|escape }}"></div>
             </div>
         </div>
+        {% else %}
+        <div style="margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:1px solid #f59e0b;border-radius:8px;text-align:center;">
+            <i class="fa-solid fa-lock" style="color:#d97706;margin-right:6px;"></i>
+            <span style="color:#92400e;font-size:14px;">查看答案与解析需</span>
+            <a href="{% url 'user:vip' %}?from=question_discuss" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
+        </div>
+        {% endif %}
     </div>
 
     <!-- 讨论区 -->
@@ -327,7 +344,9 @@
                         <div class="ri-top">
                             <img src="{{ reply.user.avatar.url }}" class="ri-avatar" alt="">
                             <span class="ri-name">{{ reply.user.username }}</span>
-                            <span class="ri-reply-to">回复 @{{ comment.user.username }}</span>
+                            {% if reply.parent_id != comment.id %}
+                            <span class="ri-reply-to">回复 @{{ reply.parent.user.username }}</span>
+                            {% endif %}
                             <span class="ri-time">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
                         </div>
                         <div class="ri-body">{{ reply.content }}</div>
@@ -337,6 +356,11 @@
                                 <i class="fa-{% if reply.id in liked_ids %}solid{% else %}regular{% endif %} fa-thumbs-up"></i>
                                 <span>{{ reply.like_count }}</span>
                             </button>
+                            {% if user.is_authenticated %}
+                            <button class="ci-action-btn" onclick="showReplyForm({{ comment.id }}, {{ reply.id }}, '{{ reply.user.username }}')">
+                                <i class="fa-regular fa-comment"></i> 回复
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -386,7 +410,11 @@ function submitComment(questionId, parentId) {
 
     const body = new FormData();
     body.append('content', content);
-    if (parentId) body.append('parent_id', parentId);
+    if (parentId) {
+        // 如果 textarea 上有 data-reply-to，则回复的是那条回复（而非顶级评论）
+        const replyTo = inputEl.dataset.replyTo;
+        body.append('parent_id', replyTo || parentId);
+    }
 
     body.append('source', 'kaoyan');
     fetch('/community/question/' + questionId + '/comment/', {
@@ -435,15 +463,83 @@ function toggleLike(commentId, btn) {
     .catch(() => {});
 }
 
-// 显示回复表单
-function showReplyForm(commentId) {
-    const form = document.getElementById('reply-form-' + commentId);
-    if (form) {
-        form.classList.toggle('show');
-        if (form.classList.contains('show')) {
-            form.querySelector('textarea').focus();
-        }
+// 显示回复表单（支持回复回复）
+function showReplyForm(topCommentId, replyId, replyUsername) {
+    const form = document.getElementById('reply-form-' + topCommentId);
+    const textarea = form.querySelector('textarea');
+    if (!form) return;
+    form.classList.add('show');
+    if (replyId && replyUsername) {
+        textarea.placeholder = '回复 @' + replyUsername + '...';
+        textarea.dataset.replyTo = replyId;
+    } else {
+        textarea.placeholder = '回复...';
+        delete textarea.dataset.replyTo;
     }
+    textarea.focus();
+}
+
+// 纠错弹窗
+function showReportModal() {
+    let modal = document.getElementById('reportModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'reportModal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:12px;padding:28px;width:90%;max-width:480px;max-height:80vh;overflow-y:auto;">
+                <h3 style="margin:0 0 6px;font-size:18px;color:#1f2937;"><i class="fa-solid fa-flag" style="color:#e67e22;"></i> 汇报题目错误</h3>
+                <p style="font-size:13px;color:#6b7280;margin:0 0 16px;">纠错被采纳后，你将自动获得 <strong style="color:#e67e22;">1天VIP</strong> 奖励！</p>
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">纠错描述 *</label>
+                    <textarea id="reportDesc" rows="4" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;" placeholder="请描述你认为错误的地方及你的看法..."></textarea>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">手写过程图片（可选，限1张）</label>
+                    <input type="file" id="reportImage" accept="image/*" style="font-size:13px;">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button onclick="closeReportModal()" style="padding:8px 18px;border:1px solid #d1d5db;background:#fff;border-radius:6px;cursor:pointer;font-size:13px;">取消</button>
+                    <button onclick="submitReport({{ question.id }})" style="padding:8px 18px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">提交纠错</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeReportModal(); });
+    } else {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitReport(qId) {
+    const desc = document.getElementById('reportDesc').value.trim();
+    if (!desc) { alert('请填写纠错描述'); return; }
+    const formData = new FormData();
+    formData.append('description', desc);
+    formData.append('source', 'kaoyan');
+    const img = document.getElementById('reportImage').files[0];
+    if (img) formData.append('image', img);
+
+    fetch('/community/report/' + qId + '/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            alert(data.msg);
+            closeReportModal();
+        } else {
+            alert(data.msg || '提交失败');
+        }
+    })
+    .catch(() => alert('网络错误'));
 }
 </script>
 {% endblock %}

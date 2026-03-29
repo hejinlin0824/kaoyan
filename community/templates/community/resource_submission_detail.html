@@ -1,0 +1,170 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}资源投稿详情 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+    .detail-page { max-width: 960px; margin: 0 auto; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--gray-500); margin-bottom: 16px; text-decoration: none; }
+    .back-link:hover { color: var(--blue-600); }
+    .section { background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px; padding: 24px; margin-bottom: 16px; }
+    .section h3 { font-size: 16px; font-weight: 700; color: var(--gray-800); margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 8px; }
+    .ri-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+    .ri-label { font-weight: 600; color: var(--gray-500); min-width: 80px; }
+    .ri-value { color: var(--gray-800); flex: 1; line-height: 1.6; }
+    .status-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px; }
+    .status-badge.pending { background: #fef3c7; color: #92400e; }
+    .status-badge.accepted { background: #d1fae5; color: #065f46; }
+    .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+    .cover-preview { max-width: 300px; max-height: 200px; border-radius: 8px; border: 1px solid var(--gray-200); margin-top: 8px; }
+    .link-preview { color: var(--blue-600); word-break: break-all; }
+    .review-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .btn-accept { padding: 10px 24px; background: #059669; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-accept:hover { background: #047857; }
+    .btn-reject { padding: 10px 24px; background: #dc2626; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-reject:hover { background: #b91c1c; }
+    .review-note { width: 100%; min-height: 60px; padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; margin-top: 8px; }
+    .review-result { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 14px; }
+    .review-result.accepted { background: #d1fae5; color: #065f46; }
+    .review-result.rejected { background: #fee2e2; color: #991b1b; }
+    .md-content h1,.md-content h2,.md-content h3,.md-content h4 { margin: 12px 0 6px; font-weight: 700; }
+    .md-content p { margin: 6px 0; }
+    .md-content ul,.md-content ol { padding-left: 20px; margin: 6px 0; }
+    .md-content code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .md-content pre { background: var(--gray-100); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+    .md-content pre code { background: none; padding: 0; }
+    .md-content blockquote { border-left: 3px solid var(--blue-400); padding-left: 12px; color: var(--gray-500); margin: 8px 0; }
+    .md-content img { max-width: 100%; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+    <a href="/community/resource-submissions/" class="back-link"><i class="fa-solid fa-arrow-left"></i> 返回投稿列表</a>
+
+    <!-- 投稿信息 -->
+    <div class="section">
+        <h3><i class="fa-solid fa-cloud-arrow-up" style="color:var(--blue-500);"></i> 投稿信息</h3>
+        <div class="ri-row">
+            <span class="ri-label">投稿人</span>
+            <span class="ri-value">
+                <img src="{{ submission.user.avatar.url }}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">
+                {{ submission.user.username }}
+            </span>
+        </div>
+        <div class="ri-row">
+            <span class="ri-label">标题</span>
+            <span class="ri-value" style="font-weight:600;">{{ submission.title }}</span>
+        </div>
+        <div class="ri-row">
+            <span class="ri-label">分类</span>
+            <span class="ri-value">{{ submission.category.name }}</span>
+        </div>
+        {% if submission.school %}
+        <div class="ri-row">
+            <span class="ri-label">学校</span>
+            <span class="ri-value">{{ submission.school.name }}</span>
+        </div>
+        {% endif %}
+        {% if submission.subject %}
+        <div class="ri-row">
+            <span class="ri-label">专业课</span>
+            <span class="ri-value">{{ submission.subject.name }}</span>
+        </div>
+        {% endif %}
+        <div class="ri-row">
+            <span class="ri-label">价格</span>
+            <span class="ri-value">{% if submission.price == 0 %}免费{% else %}{{ submission.price }} 点数{% endif %}</span>
+        </div>
+        <div class="ri-row">
+            <span class="ri-label">状态</span>
+            <span class="ri-value"><span class="status-badge {{ submission.status }}">{{ submission.get_status_display }}</span></span>
+        </div>
+        <div class="ri-row">
+            <span class="ri-label">提交时间</span>
+            <span class="ri-value">{{ submission.created_at|date:"Y-m-d H:i" }}</span>
+        </div>
+        <div class="ri-row">
+            <span class="ri-label">资源链接</span>
+            <span class="ri-value link-preview"><a href="{{ submission.link }}" target="_blank">{{ submission.link }}</a></span>
+        </div>
+        {% if submission.cover %}
+        <div class="ri-row">
+            <span class="ri-label">封面图片</span>
+            <span class="ri-value"><img src="{{ submission.cover.url }}" class="cover-preview" alt="封面"></span>
+        </div>
+        {% endif %}
+        <div class="ri-row">
+            <span class="ri-label">简介</span>
+            <span class="ri-value md-content" data-raw="{{ submission.description|escape }}"></span>
+        </div>
+
+        {% if submission.status != 'pending' %}
+        <div class="review-result {{ submission.status }}">
+            <strong>{{ submission.get_status_display }}</strong>
+            {% if submission.reviewed_by %}由 {{ submission.reviewed_by.username }}{% endif %}
+            {% if submission.reviewed_at %}于 {{ submission.reviewed_at|date:"Y-m-d H:i" }}{% endif %}
+            {% if submission.admin_note %}<br>备注：{{ submission.admin_note }}{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 审核操作 -->
+    {% if submission.status == 'pending' %}
+    <div class="section">
+        <h3><i class="fa-solid fa-gavel" style="color:#7c3aed;"></i> 审核操作</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">
+            <i class="fa-solid fa-gift" style="color:#e67e22;"></i>
+            采纳后将自动创建正式资源，并奖励投稿人 <strong>1天VIP + 100点数</strong>
+        </p>
+        <textarea id="reviewNote" class="review-note" placeholder="备注（采纳可选填，驳回必须填写原因）"></textarea>
+        <div class="review-actions">
+            <button class="btn-accept" onclick="reviewSubmission({{ submission.id }}, 'accept')">
+                <i class="fa-solid fa-check"></i> 采纳（1天VIP + 100点数）
+            </button>
+            <button class="btn-reject" onclick="reviewSubmission({{ submission.id }}, 'reject')">
+                <i class="fa-solid fa-xmark"></i> 驳回
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const CSRF = "{{ csrf_token }}";
+
+function reviewSubmission(subId, action) {
+    const note = document.getElementById('reviewNote').value.trim();
+    if (action === 'reject' && !note) {
+        alert('驳回必须附带原因');
+        return;
+    }
+    fetch('/community/resource-submissions/' + subId + '/review/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({action: action, reason: note}),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) { alert(data.msg); location.reload(); }
+        else { alert(data.msg || '操作失败'); }
+    })
+    .catch(() => alert('网络错误'));
+}
+
+// Markdown + LaTeX 渲染
+const P={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function renderMd(t){if(!t)return'';const m=[];let i=0;function h(c,d){const p='\x00LATEX'+i+'\x00';m.push({ph:p,content:c.trim(),display:d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(item=>{try{html=html.split(item.ph).join(katex.renderToString(item.content,{displayMode:item.display,throwOnError:false}));}catch(e){html=html.split(item.ph).join(item.content);}});return DOMPurify.sanitize(html,P);}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-raw]').forEach(function(el) {
+        const raw = el.getAttribute('data-raw');
+        if (raw) el.innerHTML = renderMd(raw);
+    });
+});
+</script>
+{% endblock %}

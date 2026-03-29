@@ -1,0 +1,102 @@
+{% extends "user/base.html" %}
+
+{% block title %}审核中心 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .review-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+        margin-top: 24px;
+    }
+    .review-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 32px;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .review-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+        border-color: var(--blue-200);
+    }
+    .review-card-icon {
+        width: 56px; height: 56px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 16px;
+        font-size: 24px;
+    }
+    .review-card-icon.report { background: #fef3c7; color: #d97706; }
+    .review-card-icon.resource { background: #dbeafe; color: #2563eb; }
+    .review-card h3 {
+        font-size: 18px; font-weight: 700; color: var(--gray-800);
+        margin-bottom: 8px;
+    }
+    .review-card p {
+        font-size: 14px; color: var(--gray-500); line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    .review-card .stat {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 600;
+        padding: 4px 12px; border-radius: 6px;
+    }
+    .review-card .stat.pending { background: #fef3c7; color: #92400e; }
+    .review-card .stat.ok { background: #f0fdf4; color: #15803d; }
+    .review-card .arrow {
+        float: right; font-size: 14px; color: var(--gray-400);
+        margin-top: -30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> 审核中心</h1>
+    <p class="page-subtitle">集中管理所有待审核内容</p>
+</div>
+
+<div class="review-grid">
+    <!-- 纠错审核 -->
+    <a href="{% url 'community:report_list' %}" class="review-card">
+        <div class="review-card-icon report">
+            <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <h3>纠错审核</h3>
+        <p>审核用户提交的题目纠错，采纳后奖励用户1天VIP</p>
+        <span class="stat {% if pending_reports > 0 %}pending{% else %}ok{% endif %}">
+            <i class="fa-solid {% if pending_reports > 0 %}fa-clock{% else %}fa-check-circle{% endif %}"></i>
+            {% if pending_reports > 0 %}
+                {{ pending_reports }} 条待审核
+            {% else %}
+                暂无待审核
+            {% endif %}
+        </span>
+        <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+
+    <!-- 资源审核 -->
+    <a href="{% url 'community:resource_submission_list' %}" class="review-card">
+        <div class="review-card-icon resource">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <h3>资源审核</h3>
+        <p>审核用户投稿的资源，采纳后自动发布并奖励投稿人</p>
+        <span class="stat {% if pending_submissions > 0 %}pending{% else %}ok{% endif %}">
+            <i class="fa-solid {% if pending_submissions > 0 %}fa-clock{% else %}fa-check-circle{% endif %}"></i>
+            {% if pending_submissions > 0 %}
+                {{ pending_submissions }} 条待审核
+            {% else %}
+                暂无待审核
+            {% endif %}
+        </span>
+        <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+</div>
+{% endblock %}

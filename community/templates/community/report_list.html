@@ -1,0 +1,78 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}纠错审核 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .report-page { max-width: 960px; margin: 0 auto; }
+    .report-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; color: var(--gray-800); }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+    .filter-bar a {
+        padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        text-decoration: none; border: 1px solid var(--gray-200); color: var(--gray-600);
+        background: var(--white); transition: all 0.15s;
+    }
+    .filter-bar a.active, .filter-bar a:hover {
+        background: var(--blue-600); color: #fff; border-color: var(--blue-600);
+    }
+    .report-card {
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px;
+        padding: 20px 24px; margin-bottom: 12px; transition: box-shadow 0.15s;
+        text-decoration: none; display: block; color: inherit;
+    }
+    .report-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .rc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .rc-user { display: flex; align-items: center; gap: 8px; }
+    .rc-user img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+    .rc-user span { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+    .rc-status {
+        font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+    }
+    .rc-status.pending { background: #fef3c7; color: #92400e; }
+    .rc-status.accepted { background: #d1fae5; color: #065f46; }
+    .rc-status.rejected { background: #fee2e2; color: #991b1b; }
+    .rc-desc { font-size: 14px; color: var(--gray-700); line-height: 1.6; margin-bottom: 8px; }
+    .rc-meta { font-size: 12px; color: var(--gray-400); display: flex; gap: 16px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <h2><i class="fa-solid fa-clipboard-check" style="color:var(--blue-500);"></i> 纠错审核</h2>
+
+    <div class="filter-bar">
+        <a href="?status=pending" class="{% if status_filter == 'pending' %}active{% endif %}">待审核</a>
+        <a href="?status=accepted" class="{% if status_filter == 'accepted' %}active{% endif %}">已采纳</a>
+        <a href="?status=rejected" class="{% if status_filter == 'rejected' %}active{% endif %}">已驳回</a>
+        <a href="?status=" class="{% if not status_filter %}active{% endif %}">全部</a>
+    </div>
+
+    {% for report in reports %}
+    <a href="/community/reports/{{ report.id }}/" class="report-card">
+        <div class="rc-top">
+            <div class="rc-user">
+                <img src="{{ report.user.avatar.url }}" alt="">
+                <span>{{ report.user.username }}</span>
+            </div>
+            <span class="rc-status {{ report.status }}">{{ report.get_status_display }}</span>
+        </div>
+        <div class="rc-desc">{{ report.description|truncatewords:40 }}</div>
+        <div class="rc-meta">
+            <span><i class="fa-solid fa-tag"></i> {{ report.get_question_source_display }} #{{ report.question_id }}</span>
+            <span><i class="fa-regular fa-clock"></i> {{ report.created_at|date:"Y-m-d H:i" }}</span>
+            {% if report.image %}
+            <span><i class="fa-solid fa-image"></i> 有图片</span>
+            {% endif %}
+        </div>
+    </a>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fa-regular fa-clipboard"></i>
+        <p>暂无纠错记录</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

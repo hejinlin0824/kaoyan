@@ -1,0 +1,163 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}投稿资源 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .submit-page { max-width: 720px; margin: 0 auto; }
+    .submit-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--gray-800); }
+    .submit-page .subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; }
+    .reward-hint {
+        display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+        background: linear-gradient(135deg, #fef3c7, #fff7ed); border: 1px solid #fbbf24;
+        border-radius: 10px; margin-bottom: 24px; font-size: 14px; color: #92400e;
+    }
+    .reward-hint i { font-size: 20px; color: #e67e22; }
+    .form-section {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: 10px; padding: 24px; margin-bottom: 16px;
+    }
+    .form-section h3 {
+        font-size: 16px; font-weight: 700; color: var(--gray-800);
+        margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+        display: block; font-size: 14px; font-weight: 600; color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+    .form-group label .optional { font-weight: 400; color: var(--gray-400); font-size: 12px; }
+    .form-input {
+        width: 100%; padding: 10px 14px; border: 1px solid var(--gray-200);
+        border-radius: 8px; font-size: 14px; font-family: inherit;
+        transition: border-color 0.15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--blue-400); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    textarea.form-input { min-height: 120px; resize: vertical; }
+    select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .form-row { display: flex; gap: 16px; }
+    .form-row .form-group { flex: 1; }
+    .form-error { color: #dc2626; font-size: 13px; margin-top: 4px; }
+    .submit-btn {
+        padding: 12px 32px; background: var(--blue-600); color: #fff; border: none;
+        border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+        transition: background 0.15s;
+    }
+    .submit-btn:hover { background: var(--blue-700); }
+    .file-hint { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="submit-page">
+    <h2><i class="fa-solid fa-cloud-arrow-up" style="color:var(--blue-500);"></i> 投稿资源</h2>
+    <p class="subtitle">分享优质学习资源，帮助更多考研人</p>
+
+    <div class="reward-hint">
+        <i class="fa-solid fa-gift"></i>
+        <div>
+            <strong>投稿奖励：</strong>审核通过后可获得 <strong>1天VIP + 100点数</strong>！
+            资源需经管理员审核后才会正式发布。
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-section">
+            <h3><i class="fa-solid fa-file-lines" style="color:var(--blue-500);"></i> 基本信息</h3>
+
+            <div class="form-group">
+                <label for="id_title">资源标题</label>
+                <input type="text" name="title" id="id_title" class="form-input"
+                       placeholder="如：2026考研数学一真题解析PDF" value="{{ form.title.value|default:'' }}" required>
+                {% if form.title.errors %}
+                <div class="form-error">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_category">资源分类</label>
+                <select name="category" id="id_category" class="form-input" required>
+                    <option value="">请选择分类</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if form.category.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.category.errors %}
+                <div class="form-error">{{ form.category.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_school">关联学校 <span class="optional">（可选）</span></label>
+                    <select name="school" id="id_school" class="form-input">
+                        <option value="">不限</option>
+                        {% for s in schools %}
+                        <option value="{{ s.id }}" {% if form.school.value|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="id_subject">关联专业课 <span class="optional">（可选）</span></label>
+                    <select name="subject" id="id_subject" class="form-input">
+                        <option value="">不限</option>
+                        {% for s in subjects %}
+                        <option value="{{ s.id }}" {% if form.subject.value|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fa-solid fa-link" style="color:#059669;"></i> 资源内容</h3>
+
+            <div class="form-group">
+                <label for="id_link">资源链接</label>
+                <input type="url" name="link" id="id_link" class="form-input"
+                       placeholder="https://pan.baidu.com/s/... 或其他网盘链接" value="{{ form.link.value|default:'' }}" required>
+                {% if form.link.errors %}
+                <div class="form-error">{{ form.link.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_description">资源简介</label>
+                <textarea name="description" id="id_description" class="form-input"
+                          placeholder="描述资源内容、包含的资料、适合人群等。支持 Markdown + LaTeX 公式" required>{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                <div class="form-error">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_cover">封面图片 <span class="optional">（可选）</span></label>
+                    <input type="file" name="cover" id="id_cover" class="form-input" accept="image/*">
+                    <div class="file-hint">支持 JPG/PNG，建议尺寸 400x300</div>
+                    {% if form.cover.errors %}
+                    <div class="form-error">{{ form.cover.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_price">价格（点数）</label>
+                    <input type="number" name="price" id="id_price" class="form-input"
+                           min="0" value="{{ form.price.value|default:'0' }}" required>
+                    <div class="file-hint">0 表示免费资源</div>
+                    {% if form.price.errors %}
+                    <div class="form-error">{{ form.price.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <a href="{% url 'res_center:list' %}" style="padding:12px 24px;background:var(--gray-100);color:var(--gray-600);border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">取消</a>
+            <button type="submit" class="submit-btn"><i class="fa-solid fa-paper-plane"></i> 提交审核</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

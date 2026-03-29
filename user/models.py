@@ -58,6 +58,19 @@ class User(AbstractUser):
         from django.utils import timezone
         return self.vip_expire_date > timezone.now()
 
+    def extend_vip(self, days):
+        """延长 VIP 天数，如果没有 VIP 则开通"""
+        from django.utils import timezone
+        from datetime import timedelta
+        now = timezone.now()
+        if self.is_vip():
+            self.vip_expire_date = self.vip_expire_date + timedelta(days=days)
+        else:
+            self.vip_level = 1
+            self.vip_start_date = now
+            self.vip_expire_date = now + timedelta(days=days)
+        self.save(update_fields=["vip_level", "vip_start_date", "vip_expire_date"])
+
     def __str__(self):
         return self.username
 
@@ -66,6 +79,7 @@ class CoinRecord(models.Model):
     """站内点数变动记录"""
     REASON_CHOICES = [
         ("daily_checkin", "每日打卡"),
+        ("wheel_spin", "幸运转盘"),
         ("admin_adjust", "管理员调整"),
         ("reward", "系统奖励"),
         ("consume", "消费扣除"),

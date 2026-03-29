@@ -5,7 +5,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import LoginForm, RegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm, ProfileEditForm
 from .models import User, PendingRegistration, CoinRecord
@@ -336,6 +338,14 @@ def checkin_calendar(request):
         else:
             break
 
+    # 转盘状态
+    from .coin_utils import can_daily_checkin
+    has_checked_in_today = not can_daily_checkin(request.user)
+    has_spun_today = CoinRecord.objects.filter(
+        user=request.user, reason="wheel_spin", created_at__date=now.date(),
+    ).exists()
+    can_spin = has_checked_in_today and not has_spun_today
+
     return render(request, "user/checkin_calendar.html", {
         "month_name": month_name,
         "month_days": month_days,
@@ -350,6 +360,81 @@ def checkin_calendar(request):
         "total_checkin_count": total_checkin_count,
         "streak": streak,
         "user_coins": request.user.coins,
+        "can_spin": can_spin,
+        "has_checked_in_today": has_checked_in_today,
+        "has_spun_today": has_spun_today,
+    })
+
+
+@login_required
+@require_POST
+def spin_wheel(request):
+    """幸运转盘：打卡后可转一次"""
+    import random
+    from django.utils import timezone
+    from .coin_utils import add_coins, can_daily_checkin
+    from .models import CoinRecord
+
+    # 必须今日已打卡
+    if can_daily_checkin(request.user):
+        return JsonResponse({"ok": False, "msg": "请先完成今日打卡"}, status=400)
+
+    # 检查今日是否已转过
+    today = timezone.now().date()
+    if CoinRecord.objects.filter(
+        user=request.user,
+        reason="wheel_spin",
+        created_at__date=today,
+    ).exists():
+        return JsonResponse({"ok": False, "msg": "今日已转过转盘"}, status=400)
+
+    # 8 个奖品 & 概率（顺序与前端转盘一致）
+    prizes = [
+        {"name": "10 点数",          "type": "coin",  "value": 10,  "prob": 0.30},
+        {"name": "好运签·逢考必过",   "type": "lucky", "value": 0,   "prob": 0.10},
+        {"name": "50 点数",          "type": "coin",  "value": 50,  "prob": 0.20},
+        {"name": "好运签·金榜题名",   "type": "lucky", "value": 0,   "prob": 0.10},
+        {"name": "100 点数",         "type": "coin",  "value": 100, "prob": 0.05},
+        {"name": "好运签·一战成硕",   "type": "lucky", "value": 0,   "prob": 0.10},
+        {"name": "1天VIP",           "type": "vip",   "value": 1,   "prob": 0.05},
+        {"name": "好运签·一战上岸",   "type": "lucky", "value": 0,   "prob": 0.10},
+    ]
+
+    # 加权随机
+    r = random.random()
+    cumulative = 0
+    prize = prizes[-1]
+    prize_index = len(prizes) - 1
+    for i, p in enumerate(prizes):
+        cumulative += p["prob"]
+        if r <= cumulative:
+            prize = p
+            prize_index = i
+            break
+
+    # 发放奖励
+    if prize["type"] == "coin":
+        add_coins(request.user, prize["value"], reason="wheel_spin",
+                  description=f"幸运转盘奖励：{prize['name']}")
+    elif prize["type"] == "vip":
+        request.user.extend_vip(prize["value"])
+        CoinRecord.objects.create(
+            user=request.user, amount=0, reason="wheel_spin",
+            description=f"幸运转盘奖励：{prize['name']}",
+        )
+    else:
+        # 好运签 — 纪念记录
+        CoinRecord.objects.create(
+            user=request.user, amount=0, reason="wheel_spin",
+            description=f"幸运转盘：{prize['name']}",
+        )
+
+    return JsonResponse({
+        "ok": True,
+        "prize_index": prize_index,
+        "prize_name": prize["name"],
+        "prize_type": prize["type"],
+        "prize_value": prize["value"],
     })
 
 

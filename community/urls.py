@@ -14,4 +14,15 @@ urlpatterns = [
     path("notifications/latest/", views.notification_latest, name="notification_latest"),
     path("notifications/mark-read/", views.notification_mark_read, name="notification_mark_read"),
     path("notifications/mark-all-read/", views.notification_mark_all_read, name="notification_mark_all_read"),
+    # 纠错
+    path("report/<int:pk>/", views.submit_report, name="submit_report"),
+    path("reports/", views.report_list, name="report_list"),
+    path("reports/<int:pk>/", views.report_detail, name="report_detail"),
+    path("reports/<int:pk>/review/", views.report_review, name="report_review"),
+    # 审核中心
+    path("review-center/", views.review_center, name="review_center"),
+    # 资源投稿审核
+    path("resource-submissions/", views.resource_submission_list, name="resource_submission_list"),
+    path("resource-submissions/<int:pk>/", views.resource_submission_detail, name="resource_submission_detail"),
+    path("resource-submissions/<int:pk>/review/", views.resource_submission_review, name="resource_submission_review"),
 ]

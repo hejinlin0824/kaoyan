@@ -14,6 +14,7 @@ urlpatterns = [
     path("password-reset/", views.password_reset_request, name="password_reset"),
     path("password-reset/<uuid:token>/", views.password_reset_confirm, name="password_reset_confirm"),
     path("checkin-calendar/", views.checkin_calendar, name="checkin_calendar"),
+    path("spin-wheel/", views.spin_wheel, name="spin_wheel"),
     path("my-exams/", views.my_exams, name="my_exams"),
     path("profile/", views.profile, name="profile"),
     path("profile/<int:pk>/", views.profile, name="profile_detail"),

@@ -1,28 +1,40 @@
 {% extends "user/base.html" %}
+{% load static %}
 
 {% block title %}打卡日历 - 厘米考研{% endblock %}
 
 {% block extra_style %}
 <style>
-    .calendar-container {
-        max-width: 800px;
-        margin: 0 auto;
+    .page-layout {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
     }
+    .left-col {
+        flex: 1;
+        min-width: 0;
+    }
+    .right-col {
+        width: 360px;
+        flex-shrink: 0;
+    }
+
+    /* ── 统计行 ── */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 28px;
+        gap: 12px;
+        margin-bottom: 20px;
     }
     .stat-card {
         background: var(--white);
         border: 1px solid var(--gray-200);
         border-radius: var(--radius);
-        padding: 20px;
+        padding: 14px;
         text-align: center;
     }
     .stat-card .stat-value {
-        font-size: 28px;
+        font-size: 22px;
         font-weight: 700;
         color: var(--blue-600);
     }
@@ -32,64 +44,56 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    .stat-card .stat-value.streak {
-        color: #059669;
-    }
+    .stat-card .stat-value.streak { color: #059669; }
     .stat-card .stat-label {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--gray-500);
-        margin-top: 4px;
+        margin-top: 2px;
     }
+
+    /* ── 日历 ── */
     .calendar-card {
         background: var(--white);
         border: 1px solid var(--gray-200);
         border-radius: var(--radius);
-        padding: 28px;
+        padding: 20px;
     }
     .calendar-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
     }
     .calendar-header h2 {
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--gray-800);
     }
-    .calendar-nav {
-        display: flex;
-        gap: 8px;
-    }
+    .calendar-nav { display: flex; gap: 6px; }
     .calendar-nav a {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 30px; height: 30px;
+        border-radius: 6px;
         background: var(--gray-50);
         color: var(--gray-600);
         text-decoration: none;
         transition: all 0.2s;
-        font-size: 14px;
+        font-size: 12px;
     }
-    .calendar-nav a:hover {
-        background: var(--blue-50);
-        color: var(--blue-600);
-    }
+    .calendar-nav a:hover { background: var(--blue-50); color: var(--blue-600); }
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 4px;
+        gap: 3px;
     }
     .calendar-weekday {
         text-align: center;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--gray-400);
-        padding: 8px 0;
-        text-transform: uppercase;
+        padding: 4px 0;
     }
     .calendar-day {
         aspect-ratio: 1;
@@ -97,16 +101,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 10px;
-        font-size: 14px;
+        border-radius: 8px;
+        font-size: 12px;
         font-weight: 500;
         color: var(--gray-700);
-        position: relative;
         transition: all 0.2s;
     }
-    .calendar-day.empty {
-        color: transparent;
-    }
+    .calendar-day.empty { color: transparent; }
     .calendar-day.today {
         border: 2px solid var(--blue-500);
         font-weight: 700;
@@ -116,76 +117,222 @@
         background: linear-gradient(135deg, #22c55e, #16a34a);
         color: #fff;
         font-weight: 700;
-        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        box-shadow: 0 1px 4px rgba(34,197,94,0.3);
     }
-    .calendar-day.checked-in .check-icon {
-        display: block;
-    }
-    .calendar-day .check-icon {
-        display: none;
-        font-size: 10px;
-        margin-top: 1px;
-    }
-    .calendar-day.future {
-        color: var(--gray-300);
-    }
+    .calendar-day .check-icon { display: none; font-size: 8px; margin-top: 1px; }
+    .calendar-day.checked-in .check-icon { display: block; }
+    .calendar-day.future { color: var(--gray-300); }
     .calendar-legend {
         display: flex;
         justify-content: center;
-        gap: 24px;
-        margin-top: 20px;
-        padding-top: 16px;
+        gap: 16px;
+        margin-top: 14px;
+        padding-top: 10px;
         border-top: 1px solid var(--gray-100);
     }
     .legend-item {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 13px;
+        gap: 4px;
+        font-size: 11px;
         color: var(--gray-500);
     }
     .legend-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 4px;
+        width: 10px; height: 10px;
+        border-radius: 3px;
     }
     .legend-dot.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .legend-dot.blue-border { border: 2px solid var(--blue-500); width: 10px; height: 10px; }
-    .legend-dot.gray { background: var(--gray-100); border: 1px solid var(--gray-200); width: 10px; height: 10px; }
+    .legend-dot.blue-border { border: 2px solid var(--blue-500); width: 8px; height: 8px; }
+    .legend-dot.gray { background: var(--gray-100); border: 1px solid var(--gray-200); width: 8px; height: 8px; }
 
     .checkin-rules {
         background: var(--blue-50);
         border: 1px solid var(--blue-200);
         border-radius: var(--radius);
-        padding: 20px 24px;
-        margin-top: 20px;
+        padding: 14px 16px;
+        margin-top: 14px;
     }
     .checkin-rules h3 {
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 600;
         color: var(--blue-800);
-        margin-bottom: 10px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
-    .checkin-rules ul {
-        list-style: none;
-        padding: 0;
-    }
+    .checkin-rules ul { list-style: none; padding: 0; }
     .checkin-rules li {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--gray-600);
-        padding: 4px 0;
+        padding: 2px 0;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
-    .checkin-rules li i {
-        color: var(--blue-500);
-        font-size: 12px;
-        width: 16px;
+    .checkin-rules li i { color: var(--blue-500); font-size: 10px; width: 14px; text-align: center; }
+
+    /* ── 幸运转盘 ── */
+    .wheel-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 20px;
         text-align: center;
+    }
+    .wheel-card h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: var(--gray-800);
+    }
+    .wheel-card .wheel-subtitle {
+        font-size: 12px;
+        color: var(--gray-400);
+        margin-bottom: 16px;
+    }
+    .wheel-wrapper {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        margin: 0 auto;
+    }
+    .wheel-outer {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid #f59e0b;
+        box-shadow: 0 0 20px rgba(245,158,11,0.25);
+        overflow: hidden;
+        transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    }
+    .wheel-outer.spinning { /* JS 控制 rotate */ }
+    .wheel-canvas {
+        width: 100%;
+        height: 100%;
+    }
+    .wheel-pointer {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 14px solid transparent;
+        border-right: 14px solid transparent;
+        border-top: 28px solid #ef4444;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        z-index: 10;
+    }
+    .wheel-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        z-index: 10;
+    }
+    .spin-btn {
+        margin-top: 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 28px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(245,158,11,0.4);
+    }
+    .spin-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245,158,11,0.5);
+    }
+    .spin-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .spin-btn.is-done {
+        background: var(--gray-300);
+        box-shadow: none;
+    }
+    .wheel-status {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--gray-400);
+    }
+
+    /* ── 中奖弹窗 ── */
+    .prize-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    .prize-modal-overlay.show { display: flex; }
+    .prize-modal {
+        background: #fff;
+        border-radius: 16px;
+        padding: 36px 32px;
+        text-align: center;
+        max-width: 320px;
+        width: 90%;
+        animation: popIn 0.4s ease;
+        position: relative;
+    }
+    @keyframes popIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .prize-modal .prize-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+    .prize-modal .prize-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 8px;
+    }
+    .prize-modal .prize-desc {
+        font-size: 14px;
+        color: var(--gray-500);
+        margin-bottom: 20px;
+    }
+    .prize-modal .prize-close-btn {
+        padding: 8px 24px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* ── 响应式 ── */
+    @media (max-width: 820px) {
+        .page-layout { flex-direction: column; }
+        .right-col { width: 100%; }
+        .wheel-wrapper { width: 260px; height: 260px; }
     }
 </style>
 {% endblock %}
@@ -196,102 +343,279 @@
     <p class="page-subtitle">每日完成试卷即可打卡，坚持学习赢取更多点数</p>
 </div>
 
-<div class="calendar-container">
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-value coins">{{ user_coins }}</div>
-            <div class="stat-label"><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> 当前点数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value streak">{{ streak }}</div>
-            <div class="stat-label"><i class="fa-solid fa-fire" style="color:#059669;"></i> 连续打卡（天）</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ total_checkin_count }}</div>
-            <div class="stat-label"><i class="fa-solid fa-check-double" style="color:var(--blue-500);"></i> 累计打卡（天）</div>
-        </div>
-    </div>
-
-    <div class="calendar-card">
-        <div class="calendar-header">
-            <div class="calendar-nav">
-                <a href="?year={{ prev_year }}&month={{ prev_month }}"><i class="fa-solid fa-chevron-left"></i></a>
+<div class="page-layout">
+    <!-- 左侧：日历 -->
+    <div class="left-col">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value coins">{{ user_coins }}</div>
+                <div class="stat-label"><i class="fa-solid fa-coins" style="color:#f59e0b;"></i> 当前点数</div>
             </div>
-            <h2>{{ month_name }} <span style="font-size:14px; color:var(--gray-400); font-weight:400;">本月打卡 {{ month_checkin_count }} 天</span></h2>
-            <div class="calendar-nav">
-                <a href="?year={{ next_year }}&month={{ next_month }}"><i class="fa-solid fa-chevron-right"></i></a>
+            <div class="stat-card">
+                <div class="stat-value streak">{{ streak }}</div>
+                <div class="stat-label"><i class="fa-solid fa-fire" style="color:#059669;"></i> 连续打卡</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total_checkin_count }}</div>
+                <div class="stat-label"><i class="fa-solid fa-check-double" style="color:var(--blue-500);"></i> 累计打卡</div>
             </div>
         </div>
 
-        <div class="calendar-grid">
-            {# 星期头部 #}
-            <div class="calendar-weekday">日</div>
-            <div class="calendar-weekday">一</div>
-            <div class="calendar-weekday">二</div>
-            <div class="calendar-weekday">三</div>
-            <div class="calendar-weekday">四</div>
-            <div class="calendar-weekday">五</div>
-            <div class="calendar-weekday">六</div>
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <a href="?year={{ prev_year }}&month={{ prev_month }}"><i class="fa-solid fa-chevron-left"></i></a>
+                </div>
+                <h2>{{ month_name }} <span style="font-size:12px;color:var(--gray-400);font-weight:400;">打卡 {{ month_checkin_count }} 天</span></h2>
+                <div class="calendar-nav">
+                    <a href="?year={{ next_year }}&month={{ next_month }}"><i class="fa-solid fa-chevron-right"></i></a>
+                </div>
+            </div>
 
-            {# 日历格子 #}
-            {% load tz %}
-            {% now "Y" as current_year %}
-            {% now "n" as current_month %}
-            {% now "j" as current_day %}
+            <div class="calendar-grid">
+                <div class="calendar-weekday">日</div>
+                <div class="calendar-weekday">一</div>
+                <div class="calendar-weekday">二</div>
+                <div class="calendar-weekday">三</div>
+                <div class="calendar-weekday">四</div>
+                <div class="calendar-weekday">五</div>
+                <div class="calendar-weekday">六</div>
 
-            {% for week in month_days %}
-                {% for day in week %}
-                    {% if day == 0 %}
-                        <div class="calendar-day empty"></div>
-                    {% else %}
-                        {% if day in checkin_dates %}
-                        <div class="calendar-day checked-in" title="打卡成功">
-                            {{ day }}
-                            <span class="check-icon"><i class="fa-solid fa-check"></i></span>
-                        </div>
-                        {% elif year|stringformat:"d" == current_year and month|stringformat:"d" == current_month and day|stringformat:"d" == current_day %}
-                        <div class="calendar-day today">
-                            {{ day }}
-                        </div>
-                        {% elif year|stringformat:"d" == current_year and month|stringformat:"d" == current_month and day > current_day|stringformat:"d"|add:"0" %}
-                        <div class="calendar-day future">
-                            {{ day }}
-                        </div>
+                {% load tz %}
+                {% now "Y" as current_year %}
+                {% now "n" as current_month %}
+                {% now "j" as current_day %}
+
+                {% for week in month_days %}
+                    {% for day in week %}
+                        {% if day == 0 %}
+                            <div class="calendar-day empty"></div>
                         {% else %}
-                        <div class="calendar-day">
-                            {{ day }}
-                        </div>
+                            {% if day in checkin_dates %}
+                            <div class="calendar-day checked-in" title="打卡成功">
+                                {{ day }}
+                                <span class="check-icon"><i class="fa-solid fa-check"></i></span>
+                            </div>
+                            {% elif year|stringformat:"d" == current_year and month|stringformat:"d" == current_month and day|stringformat:"d" == current_day %}
+                            <div class="calendar-day today">{{ day }}</div>
+                            {% elif year|stringformat:"d" == current_year and month|stringformat:"d" == current_month and day > current_day|stringformat:"d"|add:"0" %}
+                            <div class="calendar-day future">{{ day }}</div>
+                            {% else %}
+                            <div class="calendar-day">{{ day }}</div>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            </div>
+
+            <div class="calendar-legend">
+                <div class="legend-item"><div class="legend-dot green"></div><span>已打卡</span></div>
+                <div class="legend-item"><div class="legend-dot blue-border"></div><span>今天</span></div>
+                <div class="legend-item"><div class="legend-dot gray"></div><span>未打卡</span></div>
+            </div>
         </div>
 
-        <div class="calendar-legend">
-            <div class="legend-item">
-                <div class="legend-dot green"></div>
-                <span>已打卡</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-dot blue-border"></div>
-                <span>今天</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-dot gray"></div>
-                <span>未打卡</span>
-            </div>
+        <div class="checkin-rules">
+            <h3><i class="fa-solid fa-circle-info"></i> 打卡规则</h3>
+            <ul>
+                <li><i class="fa-solid fa-check"></i> 每日完成一套试卷（真题组卷或AI题库组卷均可）</li>
+                <li><i class="fa-solid fa-check"></i> 试卷题量 ≥ 5 道题</li>
+                <li><i class="fa-solid fa-check"></i> 客观题得分 ≥ 20 分</li>
+                <li><i class="fa-solid fa-check"></i> 满足以上条件自动打卡，奖励 <strong style="color:#f59e0b;">+100 点数</strong></li>
+                <li><i class="fa-solid fa-check"></i> 打卡后可转动幸运转盘一次</li>
+            </ul>
         </div>
     </div>
 
-    <div class="checkin-rules">
-        <h3><i class="fa-solid fa-circle-info"></i> 打卡规则</h3>
-        <ul>
-            <li><i class="fa-solid fa-check"></i> 每日完成一套试卷（真题组卷或AI题库组卷均可）</li>
-            <li><i class="fa-solid fa-check"></i> 试卷题量 ≥ 5 道题</li>
-            <li><i class="fa-solid fa-check"></i> 客观题得分 ≥ 20 分</li>
-            <li><i class="fa-solid fa-check"></i> 满足以上条件自动打卡，奖励 <strong style="color:#f59e0b;">+100 点数</strong></li>
-            <li><i class="fa-solid fa-check"></i> 每天仅限打卡 1 次</li>
-        </ul>
+    <!-- 右侧：幸运转盘 -->
+    <div class="right-col">
+        <div class="wheel-card">
+            <h3><i class="fa-solid fa-dharmachakra"></i> 幸运转盘</h3>
+            <div class="wheel-subtitle">每日打卡后可转一次</div>
+
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <div class="wheel-outer" id="wheelOuter">
+                    <canvas id="wheelCanvas" class="wheel-canvas" width="292" height="292"></canvas>
+                </div>
+                <div class="wheel-center">GO</div>
+            </div>
+
+            {% if can_spin %}
+                <button class="spin-btn" id="spinBtn" onclick="startSpin()">
+                    <i class="fa-solid fa-play"></i> 开始抽奖
+                </button>
+                <div class="wheel-status">今日已打卡，可抽奖一次 🎉</div>
+            {% elif has_spun_today %}
+                <button class="spin-btn is-done" disabled>
+                    <i class="fa-solid fa-check"></i> 今日已抽奖
+                </button>
+                <div class="wheel-status">明天打卡后再来哦 ✨</div>
+            {% else %}
+                <button class="spin-btn" disabled>
+                    <i class="fa-solid fa-lock"></i> 未打卡
+                </button>
+                <div class="wheel-status">完成今日打卡后解锁 📝</div>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<!-- 中奖弹窗 -->
+<div class="prize-modal-overlay" id="prizeModal">
+    <div class="prize-modal">
+        <div class="prize-icon" id="prizeIcon">🎁</div>
+        <div class="prize-title" id="prizeTitle">恭喜你！</div>
+        <div class="prize-desc" id="prizeDesc">获得了大奖</div>
+        <button class="prize-close-btn" onclick="closePrizeModal()">太好了！</button>
+    </div>
+</div>
+
+<script>
+// 奖品配置（与后端一致顺序）
+const PRIZES = [
+    { name: "10 点数",   color: "#fef3c7", textColor: "#92400e" },
+    { name: "好运签·逢考必过", color: "#fce7f3", textColor: "#9d174d" },
+    { name: "50 点数",   color: "#d1fae5", textColor: "#065f46" },
+    { name: "好运签·金榜题名", color: "#ede9fe", textColor: "#5b21b6" },
+    { name: "100 点数",  color: "#fee2e2", textColor: "#991b1b" },
+    { name: "好运签·一战成硕", color: "#e0f2fe", textColor: "#075985" },
+    { name: "1天VIP",    color: "#fef9c3", textColor: "#854d0e" },
+    { name: "好运签·一战上岸", color: "#f3e8ff", textColor: "#6b21a8" },
+];
+
+// 绘制转盘
+function drawWheel() {
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2, r = Math.max(1, cx - 4);
+    const sliceAngle = 2 * Math.PI / PRIZES.length;
+
+    PRIZES.forEach((prize, i) => {
+        const startAngle = i * sliceAngle - Math.PI / 2;
+        const endAngle = startAngle + sliceAngle;
+
+        // 扇形
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = prize.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 文字
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = prize.textColor;
+        ctx.font = 'bold 11px sans-serif';
+        // 分行显示
+        const parts = prize.name.split('·');
+        if (parts.length > 1) {
+            ctx.fillText(parts[0], r * 0.58, -4);
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText(parts[1], r * 0.58, 8);
+        } else {
+            ctx.fillText(prize.name, r * 0.6, 3);
+        }
+        ctx.restore();
+    });
+}
+
+let isSpinning = false;
+let currentRotation = 0;
+
+function startSpin() {
+    if (isSpinning) return;
+    isSpinning = true;
+
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 抽奖中…';
+
+    fetch('{% url "user:spin_wheel" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.ok) {
+            alert(data.msg || '抽奖失败');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> 开始抽奖';
+            isSpinning = false;
+            return;
+        }
+
+        // 计算目标角度
+        const sliceAngle = 360 / PRIZES.length;
+        // 奖品索引对应位置（从顶部顺时针）
+        // 转盘上第i个扇区中心在 i * sliceAngle 度
+        // 指针在顶部（-90deg），需要转到使目标扇区对准顶部
+        const targetSliceCenter = data.prize_index * sliceAngle + sliceAngle / 2;
+        // 随机偏移，不总是正中心
+        const offset = (Math.random() - 0.5) * sliceAngle * 0.6;
+        const targetRotation = 360 - targetSliceCenter + offset;
+        // 加上若干整圈
+        const totalRotation = currentRotation + 360 * (5 + Math.floor(Math.random() * 3)) + targetRotation - (currentRotation % 360);
+
+        const wheel = document.getElementById('wheelOuter');
+        wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+        wheel.style.transform = `rotate(${totalRotation}deg)`;
+        currentRotation = totalRotation;
+
+        setTimeout(() => {
+            showPrize(data.prize_type, data.prize_name, data.prize_value);
+            isSpinning = false;
+        }, 4200);
+    })
+    .catch(() => {
+        alert('网络错误，请重试');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> 开始抽奖';
+        isSpinning = false;
+    });
+}
+
+function showPrize(type, name, value) {
+    const modal = document.getElementById('prizeModal');
+    const icon = document.getElementById('prizeIcon');
+    const title = document.getElementById('prizeTitle');
+    const desc = document.getElementById('prizeDesc');
+
+    if (type === 'coin') {
+        icon.textContent = '🪙';
+        title.textContent = '恭喜获得点数！';
+        desc.textContent = `+${value} 点数已到账`;
+    } else if (type === 'vip') {
+        icon.textContent = '👑';
+        title.textContent = '恭喜获得VIP！';
+        desc.textContent = `${value}天VIP已到账`;
+    } else {
+        icon.textContent = '🎋';
+        title.textContent = name;
+        desc.textContent = '好运将至，考研加油！';
+    }
+
+    modal.classList.add('show');
+
+    // 更新按钮状态
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = true;
+    btn.classList.add('is-done');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> 今日已抽奖';
+}
+
+function closePrizeModal() {
+    document.getElementById('prizeModal').classList.remove('show');
+}
+
+// 页面加载绘制转盘
+drawWheel();
+</script>
 {% endblock %}

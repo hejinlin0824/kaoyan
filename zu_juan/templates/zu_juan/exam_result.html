@@ -112,7 +112,10 @@
                 <a href="{% url 'user:vip' %}?from=exam_result" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
             </div>
         {% endif %}
-        <div class="q-meta">{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }}</div>
+        <div class="q-meta" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>{{ eq.question.year }} · {{ eq.question.school.name }} · {{ eq.question.knowledge_point }}</span>
+            <a href="/community/question/{{ eq.question.id }}/" class="btn btn-outline" style="font-size:12px;padding:4px 12px;"><i class="fa-solid fa-comments"></i> 去讨论</a>
+        </div>
     </div>
     {% endfor %}
 </div>

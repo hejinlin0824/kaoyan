@@ -91,8 +91,9 @@
         <div class="explanation-reveal" data-raw="{{ eq.question.explanation|escape }}"></div>
         {% endif %}
 
-        <div class="q-meta">
-            <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i>变式溯源：由 {{ eq.question.year }}年 {{ eq.question.school.name }} 真题 [{{ eq.question.knowledge_point }}] 改写
+        <div class="q-meta" style="display:flex;justify-content:space-between;align-items:center;">
+            <span><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i>变式溯源：由 {{ eq.question.year }}年 {{ eq.question.school.name }} 真题 [{{ eq.question.knowledge_point }}] 改写</span>
+            <a href="/community/ai-question/{{ eq.question.id }}/" class="btn btn-outline" style="font-size:12px;padding:4px 12px;"><i class="fa-solid fa-comments"></i> 去讨论</a>
         </div>
     </div>
     {% endwith %}

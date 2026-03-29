@@ -1,0 +1,587 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}编辑资源{% else %}上传资源{% endif %} - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    .upload-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+    @media (max-width: 800px) {
+        .upload-layout { grid-template-columns: 1fr; }
+    }
+    .upload-form-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 28px;
+    }
+
+    /* ── 预览区域 ── */
+    .preview-panel {
+        position: sticky;
+        top: 80px;
+    }
+    .preview-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0;
+    }
+    .preview-tab {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-500);
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+        border-bottom: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .preview-tab:first-child { border-radius: 10px 0 0 0; }
+    .preview-tab:last-child { border-radius: 0 10px 0 0; }
+    .preview-tab.active {
+        background: var(--white);
+        color: var(--blue-700);
+        border-bottom-color: var(--white);
+        margin-bottom: -1px;
+        position: relative;
+        z-index: 1;
+    }
+    .preview-tab i { font-size: 13px; }
+    .preview-body {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: 0 0 10px 10px;
+        padding: 24px;
+    }
+    .preview-pane { display: none; }
+    .preview-pane.active { display: block; }
+
+    /* ── 卡片预览 ── */
+    .card-preview-wrapper {
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+        background: var(--gray-50);
+        border-radius: 8px;
+    }
+    .res-card-preview {
+        width: 260px;
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+    .res-card-preview:hover {
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+    .res-card-preview-cover {
+        width: 100%;
+        height: 160px;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .res-card-preview-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .res-card-preview-cover .placeholder-icon {
+        font-size: 48px;
+        color: var(--gray-300);
+    }
+    .res-card-preview-body {
+        padding: 16px;
+    }
+    .res-card-preview-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .res-card-preview-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    .res-card-preview-meta .badge {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+    .res-card-preview-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .res-price-preview {
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .res-price-preview.free { color: #16a34a; }
+    .res-price-preview.paid { color: #d97706; }
+    .res-price-preview i { font-size: 12px; }
+
+    /* ── 详情预览 ── */
+    .detail-preview-wrapper {
+        background: var(--gray-50);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .detail-preview-cover {
+        width: 100%;
+        max-height: 240px;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .detail-preview-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .detail-preview-cover .placeholder-icon {
+        font-size: 60px;
+        color: var(--gray-300);
+        padding: 40px 0;
+    }
+    .detail-preview-body {
+        padding: 24px;
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: 0 0 8px 8px;
+    }
+    .detail-preview-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 10px;
+    }
+    .detail-preview-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .detail-preview-tags .badge { font-size: 12px; padding: 3px 10px; }
+    .detail-preview-desc {
+        font-size: 15px;
+        color: var(--gray-700);
+        line-height: 1.8;
+        min-height: 80px;
+    }
+    .detail-preview-desc img { max-width: 100%; border-radius: 6px; }
+    .detail-preview-desc pre {
+        background: var(--gray-100);
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+    }
+    .detail-preview-desc code {
+        background: var(--gray-100);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .detail-preview-desc pre code { background: none; padding: 0; }
+    .detail-preview-desc table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    .detail-preview-desc th, .detail-preview-desc td {
+        border: 1px solid var(--gray-200); padding: 8px 12px; font-size: 14px;
+    }
+    .detail-preview-desc th { background: var(--gray-50); font-weight: 600; }
+
+    .detail-preview-sidebar {
+        margin-top: 16px;
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .detail-preview-sidebar .price-row {
+        font-size: 24px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+    }
+    .detail-preview-sidebar .price-row.free { color: #16a34a; }
+    .detail-preview-sidebar .price-row.paid { color: #d97706; }
+    .detail-preview-sidebar .price-row i { font-size: 18px; }
+    .detail-preview-sidebar .price-label {
+        font-size: 13px;
+        color: var(--gray-400);
+        margin-bottom: 12px;
+    }
+    .detail-preview-sidebar .info-row {
+        font-size: 14px;
+        color: var(--gray-600);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .detail-preview-sidebar .info-row i { width: 18px; text-align: center; color: var(--gray-400); }
+
+    #cover-preview { max-width: 200px; max-height: 160px; border-radius: 8px; margin-top: 8px; display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h1 class="page-title">
+            <i class="fa-solid {% if is_edit %}fa-pen-to-square{% else %}fa-cloud-arrow-up{% endif %}"></i>
+            {% if is_edit %}编辑资源{% else %}上传资源{% endif %}
+        </h1>
+        <a href="{% url 'res_center:list' %}" class="btn btn-ghost">
+            <i class="fa-solid fa-arrow-left"></i> 返回
+        </a>
+    </div>
+</div>
+
+<div class="upload-layout">
+    {# ── 左侧：表单 ── #}
+    <div class="upload-form-card">
+        {% if form.errors %}
+        <div class="form-errors-all">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    {{ field.label }}: {{ error }}<br>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                {{ error }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                {{ form.category }}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.school.id_for_label }}">{{ form.school.label }}</label>
+                    {{ form.school }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="{{ form.cover.id_for_label }}">{{ form.cover.label }}</label>
+                {{ form.cover }}
+                {% if resource and resource.cover %}
+                <div style="margin-top:8px;">
+                    <img src="{{ resource.cover.url }}" style="max-width:120px;max-height:80px;border-radius:6px;">
+                </div>
+                {% endif %}
+                <img id="cover-preview" src="" alt="封面预览">
+            </div>
+            <div class="form-group">
+                <label for="{{ form.link.id_for_label }}">{{ form.link.label }}</label>
+                {{ form.link }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.price.id_for_label }}">{{ form.price.label }}</label>
+                {{ form.price }}
+                <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">
+                    <i class="fa-solid fa-circle-info"></i> 0 表示免费，VIP 用户始终免费获取
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">
+                    <i class="fa-solid fa-circle-info"></i> 支持 Markdown 和 LaTeX 公式（$...$ / $$...$$）
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-check"></i> {% if is_edit %}保存修改{% else %}发布资源{% endif %}
+                </button>
+                <a href="{% url 'res_center:list' %}" class="btn btn-outline">取消</a>
+            </div>
+        </form>
+    </div>
+
+    {# ── 右侧：双 Tab 预览 ── #}
+    <div class="preview-panel">
+        <div class="preview-tabs">
+            <div class="preview-tab active" data-tab="card">
+                <i class="fa-solid fa-id-card"></i> 卡片预览
+            </div>
+            <div class="preview-tab" data-tab="detail">
+                <i class="fa-solid fa-file-lines"></i> 详情预览
+            </div>
+        </div>
+        <div class="preview-body">
+            {# ── 卡片预览 ── #}
+            <div class="preview-pane active" id="pane-card">
+                <div class="card-preview-wrapper">
+                    <div class="res-card-preview">
+                        <div class="res-card-preview-cover" id="card-cover">
+                            <i class="fa-solid fa-file placeholder-icon" id="card-cover-icon"></i>
+                        </div>
+                        <div class="res-card-preview-body">
+                            <div class="res-card-preview-title" id="card-title">资源标题</div>
+                            <div class="res-card-preview-meta" id="card-meta">
+                                <span class="badge badge-blue"><i class="fa-solid fa-file" style="margin-right:3px;font-size:10px;"></i> 未分类</span>
+                            </div>
+                            <div class="res-card-preview-footer">
+                                <span class="res-price-preview free" id="card-price"><i class="fa-solid fa-gift"></i> 免费</span>
+                                <span style="font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px;">
+                                    <i class="fa-solid fa-download"></i> 0
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--gray-400);">
+                    <i class="fa-solid fa-circle-info"></i> 资源在列表页的展示效果
+                </div>
+            </div>
+
+            {# ── 详情预览 ── #}
+            <div class="preview-pane" id="pane-detail">
+                <div class="detail-preview-wrapper">
+                    <div class="detail-preview-cover" id="detail-cover">
+                        <i class="fa-solid fa-file placeholder-icon" id="detail-cover-icon"></i>
+                    </div>
+                    <div class="detail-preview-body">
+                        <div class="detail-preview-title" id="detail-title">资源标题</div>
+                        <div class="detail-preview-tags" id="detail-tags">
+                            <span class="badge badge-blue"><i class="fa-solid fa-file" style="margin-right:3px;font-size:10px;"></i> 未分类</span>
+                        </div>
+                        <div class="detail-preview-desc" id="detail-desc">在左侧输入简介后，这里会实时预览...</div>
+                    </div>
+                </div>
+                <div class="detail-preview-sidebar">
+                    <div class="price-row free" id="detail-price"><i class="fa-solid fa-gift"></i> 免费</div>
+                    <div class="price-label">点数价格</div>
+                    <div class="info-row"><i class="fa-solid fa-download"></i><span>已获取 0 次</span></div>
+                    <div class="info-row"><i class="fa-solid fa-clock"></i><span id="detail-date">今天</span></div>
+                    <div class="info-row"><i class="fa-solid fa-user"></i><span>管理员</span></div>
+                </div>
+                <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--gray-400);">
+                    <i class="fa-solid fa-circle-info"></i> 资源详情页的展示效果
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    /* ── 分类数据 ── */
+    var categoryMap = {};
+    {% for cat in categories %}
+    categoryMap[{{ cat.id }}] = { name: "{{ cat.name }}", icon: "{{ cat.icon }}" };
+    {% endfor %}
+    var schoolMap = {};
+    {% for s in schools %}
+    schoolMap[{{ s.id }}] = "{{ s.name }}";
+    {% endfor %}
+    var subjectMap = {};
+    {% for sub in subjects %}
+    subjectMap[{{ sub.id }}] = "{{ sub.name }}";
+    {% endfor %}
+
+    /* ── Tab 切换 ── */
+    var tabs = document.querySelectorAll('.preview-tab');
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.preview-pane').forEach(function(p) { p.classList.remove('active'); });
+            tab.classList.add('active');
+            document.getElementById('pane-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    /* ── 封面上传预览 ── */
+    var coverInput = document.querySelector('input[name="cover"]');
+    var coverDataUrl = null;
+
+    coverInput.addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                coverDataUrl = ev.target.result;
+                // 表单下方小预览
+                var img = document.getElementById('cover-preview');
+                img.src = coverDataUrl;
+                img.style.display = 'block';
+                updateCoverPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function updateCoverPreview() {
+        var cardCover = document.getElementById('card-cover');
+        var detailCover = document.getElementById('detail-cover');
+        var cardIcon = document.getElementById('card-cover-icon');
+        var detailIcon = document.getElementById('detail-cover-icon');
+
+        if (coverDataUrl) {
+            cardCover.innerHTML = '<img src="' + coverDataUrl + '" alt="cover">';
+            detailCover.innerHTML = '<img src="' + coverDataUrl + '" alt="cover">';
+        } else {
+            // 恢复占位图标
+            var catId = document.querySelector('select[name="category"]').value;
+            var iconClass = 'fa-file';
+            if (catId && categoryMap[catId]) {
+                iconClass = categoryMap[catId].icon || 'fa-file';
+            }
+            cardCover.innerHTML = '<i class="fa-solid ' + iconClass + ' placeholder-icon"></i>';
+            detailCover.innerHTML = '<i class="fa-solid ' + iconClass + ' placeholder-icon"></i>';
+        }
+    }
+
+    /* ── 标题 ── */
+    var titleInput = document.querySelector('input[name="title"]');
+    titleInput.addEventListener('input', function() {
+        var v = titleInput.value || '资源标题';
+        document.getElementById('card-title').textContent = v;
+        document.getElementById('detail-title').textContent = v;
+    });
+
+    /* ── 分类 / 学校 / 专业课 ── */
+    function updateMeta() {
+        var catId = document.querySelector('select[name="category"]').value;
+        var schoolId = document.querySelector('select[name="school"]').value;
+        var subjectId = document.querySelector('select[name="subject"]').value;
+
+        var catInfo = catId ? categoryMap[catId] : null;
+        var catName = catInfo ? catInfo.name : '未分类';
+        var catIcon = catInfo ? catInfo.icon : 'fa-file';
+
+        // 卡片预览 meta
+        var metaHtml = '<span class="badge badge-blue"><i class="fa-solid ' + catIcon + '" style="margin-right:3px;font-size:10px;"></i> ' + catName + '</span>';
+        if (schoolId && schoolMap[schoolId]) {
+            metaHtml += '<span class="badge badge-gray"><i class="fa-solid fa-school" style="margin-right:3px;font-size:10px;"></i> ' + schoolMap[schoolId] + '</span>';
+        }
+        if (subjectId && subjectMap[subjectId]) {
+            metaHtml += '<span class="badge badge-gray"><i class="fa-solid fa-book" style="margin-right:3px;font-size:10px;"></i> ' + subjectMap[subjectId] + '</span>';
+        }
+        document.getElementById('card-meta').innerHTML = metaHtml;
+        document.getElementById('detail-tags').innerHTML = metaHtml;
+
+        // 封面图标（无封面上传时）
+        if (!coverDataUrl) {
+            updateCoverPreview();
+        }
+    }
+
+    document.querySelector('select[name="category"]').addEventListener('change', updateMeta);
+    document.querySelector('select[name="school"]').addEventListener('change', updateMeta);
+    document.querySelector('select[name="subject"]').addEventListener('change', updateMeta);
+
+    /* ── 价格 ── */
+    var priceInput = document.querySelector('input[name="price"]');
+    priceInput.addEventListener('input', function() {
+        var p = parseInt(priceInput.value) || 0;
+        if (p === 0) {
+            document.getElementById('card-price').innerHTML = '<i class="fa-solid fa-gift"></i> 免费';
+            document.getElementById('card-price').className = 'res-price-preview free';
+            document.getElementById('detail-price').innerHTML = '<i class="fa-solid fa-gift"></i> 免费';
+            document.getElementById('detail-price').className = 'price-row free';
+        } else {
+            document.getElementById('card-price').innerHTML = '<i class="fa-solid fa-coins"></i> ' + p;
+            document.getElementById('card-price').className = 'res-price-preview paid';
+            document.getElementById('detail-price').innerHTML = '<i class="fa-solid fa-coins"></i> ' + p;
+            document.getElementById('detail-price').className = 'price-row paid';
+        }
+    });
+
+    /* ── 描述 (Markdown + KaTeX) ── */
+    var descField = document.querySelector('textarea[name="description"]');
+    var detailDesc = document.getElementById('detail-desc');
+    var debounceTimer;
+
+    function renderMd() {
+        var text = descField.value;
+        if (text.trim() && typeof marked !== 'undefined') {
+            var html = marked.parse(text);
+            detailDesc.innerHTML = html;
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(detailDesc, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ]
+                });
+            }
+        } else {
+            detailDesc.textContent = '在左侧输入简介后，这里会实时预览...';
+        }
+    }
+
+    descField.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(renderMd, 300);
+    });
+
+    /* ── 日期 ── */
+    var today = new Date();
+    var dateStr = today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+    document.getElementById('detail-date').textContent = dateStr;
+
+    /* ── 初始渲染（编辑模式） ── */
+    if (titleInput.value) {
+        document.getElementById('card-title').textContent = titleInput.value;
+        document.getElementById('detail-title').textContent = titleInput.value;
+    }
+    updateMeta();
+    updateCoverPreview();
+
+    {% if resource and resource.cover %}
+    coverDataUrl = "{{ resource.cover.url }}";
+    updateCoverPreview();
+    {% endif %}
+
+    // 初始化 description 预览
+    if (descField.value.trim()) {
+        setTimeout(renderMd, 500);
+    }
+})();
+</script>
+{% endblock %}

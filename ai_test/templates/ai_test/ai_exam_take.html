@@ -7,13 +7,16 @@
 <style>
     .exam-header{background:var(--white);border-radius:var(--radius);padding:16px 24px;margin-bottom:20px;border:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;position:sticky;top:64px;z-index:10;}
     .timer{font-size:20px;font-weight:700;color:var(--blue-600);font-variant-numeric:tabular-nums;}
-    .warning-banner{background:var(--blue-50);border:1px solid var(--blue-200);padding:14px 20px;border-radius:8px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;}
-    .warning-text{font-size:14px;color:var(--blue-800);line-height:1.7;}
+    .timer.warning{color:#f59e0b;}
+    .timer.danger{color:#ef4444;animation:blink 1s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.5;}}
+    .timer-bar{height:4px;background:var(--gray-200);border-radius:2px;margin-top:8px;overflow:hidden;}
+    .timer-bar-fill{height:100%;background:var(--blue-600);transition:width 1s linear;border-radius:2px;}
+    .timer-bar-fill.warning{background:#f59e0b;}
+    .timer-bar-fill.danger{background:#ef4444;}
     .q-section{margin-bottom:24px;}
     .q-section-title{font-size:16px;font-weight:600;color:var(--blue-700);margin-bottom:12px;padding-left:12px;border-left:3px solid var(--blue-500);}
     .q-item{padding:20px 24px;margin-bottom:10px;transition:border-color 0.3s;}
-    .q-item.correct{border-color:#22c55e;background:#f0fdf4;}
-    .q-item.wrong{border-color:#ef4444;background:#fef2f2;}
     .q-num{font-weight:600;color:var(--blue-600);margin-right:8px;}
     .q-content{font-size:15px;line-height:1.8;}
     .q-meta{font-size:12px;color:var(--gray-400);margin-top:12px;padding-top:8px;border-top:1px dashed var(--gray-200);}
@@ -25,39 +28,19 @@
     .choice-opt{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
     .choice-opt:hover{background:var(--blue-50);}
     .choice-opt.selected{background:var(--blue-50);border-color:var(--blue-400);}
-    .choice-opt.opt-correct{background:#f0fdf4;border-color:#22c55e;}
-    .choice-opt.opt-wrong{background:#fef2f2;border-color:#ef4444;}
     .choice-opt input[type="radio"]{accent-color:var(--blue-600);width:18px;height:18px;}
     .choice-opt .opt-label{font-size:15px;}
     .judge-options{display:flex;gap:16px;}
     .judge-opt{display:flex;align-items:center;gap:8px;padding:8px 24px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all 0.15s;}
     .judge-opt:hover{background:var(--blue-50);}
     .judge-opt.selected{background:var(--blue-50);border-color:var(--blue-400);}
-    .judge-opt.opt-correct{background:#f0fdf4;border-color:#22c55e;}
-    .judge-opt.opt-wrong{background:#fef2f2;border-color:#ef4444;}
     .judge-opt input[type="radio"]{accent-color:var(--blue-600);width:18px;height:18px;}
     .fill-input{width:100%;padding:10px 14px;border:1px solid var(--gray-300);border-radius:8px;font-size:15px;transition:all 0.2s;box-sizing:border-box;background:var(--white);}
     .fill-input:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
-    .fill-input.fill-correct{border-color:#22c55e;background:#f0fdf4;}
-    .fill-input.fill-wrong{border-color:#ef4444;background:#fef2f2;}
     .subjective-area{width:100%;padding:10px 14px;border:1px solid var(--gray-300);border-radius:8px;font-size:15px;min-height:80px;font-family:inherit;resize:vertical;background:var(--white);}
     .subjective-area:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
     .submit-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);padding:12px 0;box-shadow:0 -2px 12px rgba(0,0,0,0.08);text-align:center;z-index:20;}
-    .result-banner{display:none;position:fixed;top:64px;left:0;right:0;background:var(--white);padding:16px 0;box-shadow:0 2px 12px rgba(0,0,0,0.08);text-align:center;z-index:15;border-bottom:1px solid var(--gray-200);}
-    .result-banner.show{display:block;}
-    .result-score{font-size:28px;font-weight:700;color:var(--blue-600);}
-    .result-detail{font-size:14px;color:var(--gray-500);margin-top:4px;}
-    .answer-toggle{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 16px;background:var(--blue-50);border:1px solid var(--blue-200);color:var(--blue-700);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;user-select:none;}
-    .answer-toggle:hover{background:var(--blue-100);}
-    .answer-reveal{display:none;margin-top:8px;padding:14px 16px;background:var(--blue-50);border-left:3px solid var(--blue-500);border-radius:0 8px 8px 0;font-size:14px;line-height:1.8;}
-    .answer-reveal.show{display:block;}
-    .explanation-reveal{display:none;margin-top:8px;padding:14px 16px;background:#f0fdf4;border-left:3px solid #22c55e;border-radius:0 8px 8px 0;font-size:14px;line-height:1.8;color:var(--gray-700);}
-    .explanation-reveal.show{display:block;}
-    .result-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-left:8px;}
-    .result-tag-correct{background:#dcfce7;color:#15803d;}
-    .result-tag-wrong{background:#fee2e2;color:#dc2626;}
-    .result-tag-skip{background:var(--gray-100);color:var(--gray-500);}
-    .graded .answer-area{pointer-events:none;opacity:0.7;}
+    .auto-submit-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:24px 40px;border-radius:12px;font-size:18px;z-index:100;display:none;}
 </style>
 {% endblock %}
 
@@ -66,21 +49,16 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
+<form id="examForm" method="POST" action="{% url 'ai_test:ai_exam_submit' exam.id %}">
+{% csrf_token %}
+<input type="hidden" id="duration_seconds" name="duration_seconds" value="0">
+
 <div class="exam-header">
-    <div class="timer" id="timer"><i class="fa-solid fa-clock" style="margin-right:6px;font-size:16px;"></i>00:00</div>
-    <div style="font-size:14px;color:var(--gray-500);">共 {{ exam_questions|length }} 道变式题</div>
-</div>
-
-<div class="result-banner" id="resultBanner">
-    <div class="result-score" id="resultScore"></div>
-    <div class="result-detail" id="resultDetail"></div>
-</div>
-
-<div class="warning-banner">
-    <i class="fa-solid fa-lightbulb" style="font-size:18px;color:var(--blue-500);margin-top:2px;"></i>
-    <div class="warning-text">
-        <strong>AI 变式练习：</strong>完成作答后点击"提交阅卷"，系统将自动批改客观题并展示每题的答案与解析。主观题请结合解析自评。
+    <div>
+        <div class="timer" id="timer"><i class="fa-solid fa-clock" style="margin-right:6px;font-size:16px;"></i>00:00:00</div>
+        <div class="timer-bar"><div class="timer-bar-fill" id="timerBar" style="width:100%;"></div></div>
     </div>
+    <div style="font-size:14px;color:var(--gray-500);">共 {{ exam_questions|length }} 道变式题 · 限时 1.5 小时</div>
 </div>
 
 {% regroup exam_questions by question.question_type.name as sections %}
@@ -88,11 +66,10 @@
 <div class="q-section">
     <div class="q-section-title">{{ section.grouper }}题（共 {{ section.list|length }} 道）</div>
     {% for eq in section.list %}
-    <div class="card q-item" id="qitem_{{ eq.id }}" data-type="{{ section.grouper }}" data-correct="{{ eq.question.correct_answer|default_if_none:'' }}" data-eid="{{ eq.id }}">
+    <div class="card q-item" id="qitem_{{ eq.id }}" data-type="{{ section.grouper }}" data-eid="{{ eq.id }}">
         <div class="q-content">
             <span class="q-num">{{ forloop.counter }}.</span>
             <span data-raw="{{ eq.question.content|escape }}"></span>
-            <span class="result-tag" id="rtag_{{ eq.id }}" style="display:none;"></span>
         </div>
 
         <div class="answer-area">
@@ -100,35 +77,32 @@
             <div class="choice-options" id="opts_{{ eq.id }}">
                 {% if eq.question.options %}
                     {% for key, val in eq.question.options.items %}
-                    <label class="choice-opt" data-val="{{ key }}" onclick="selectChoice(this)">
-                        <input type="radio" name="answer_{{ eq.id }}" value="{{ key }}">
+                    <label class="choice-opt {% if eq.user_answer == key %}selected{% endif %}" data-val="{{ key }}" onclick="selectChoice(this, {{ eq.id }})">
+                        <input type="radio" name="answer_{{ eq.id }}" value="{{ key }}" {% if eq.user_answer == key %}checked{% endif %}>
                         <span class="opt-label" data-raw="{{ key }}. {{ val|escape }}"></span>
                     </label>
                     {% endfor %}
                 {% else %}
-                    <span style="color:var(--gray-400);font-size:13px;">(大模型未返回选项格式)</span>
+                    <span style="color:var(--gray-400);font-size:13px;">(无选项)</span>
                 {% endif %}
             </div>
             {% elif section.grouper == "判断" %}
             <div class="judge-options" id="opts_{{ eq.id }}">
-                <label class="judge-opt" data-val="对" onclick="selectJudge(this)">
-                    <input type="radio" name="answer_{{ eq.id }}" value="对">
+                <label class="judge-opt {% if eq.user_answer == "对" %}selected{% endif %}" data-val="对" onclick="selectJudge(this, {{ eq.id }})">
+                    <input type="radio" name="answer_{{ eq.id }}" value="对" {% if eq.user_answer == "对" %}checked{% endif %}>
                     <span><i class="fa-solid fa-check" style="color:#16a34a;margin-right:4px;"></i>对</span>
                 </label>
-                <label class="judge-opt" data-val="错" onclick="selectJudge(this)">
-                    <input type="radio" name="answer_{{ eq.id }}" value="错">
+                <label class="judge-opt {% if eq.user_answer == "错" %}selected{% endif %}" data-val="错" onclick="selectJudge(this, {{ eq.id }})">
+                    <input type="radio" name="answer_{{ eq.id }}" value="错" {% if eq.user_answer == "错" %}checked{% endif %}>
                     <span><i class="fa-solid fa-xmark" style="color:#dc2626;margin-right:4px;"></i>错</span>
                 </label>
             </div>
             {% elif section.grouper == "填空" %}
-            <input type="text" class="fill-input" id="fill_{{ eq.id }}" placeholder="请输入答案（多空用分号;分隔）">
+            <input type="text" class="fill-input" name="answer_{{ eq.id }}" value="{{ eq.user_answer|default:'' }}" placeholder="请输入答案（多空用分号;分隔）">
             {% else %}
-            <textarea class="subjective-area" placeholder="请在此处输入解答思路或过程..."></textarea>
+            <textarea class="subjective-area" name="answer_{{ eq.id }}" placeholder="请在此处输入解答思路或过程...">{{ eq.user_answer|default:'' }}</textarea>
             {% endif %}
         </div>
-
-        <div class="answer-reveal" id="ans_{{ eq.id }}" data-correct="{{ eq.question.correct_answer|escape }}"></div>
-        <div class="explanation-reveal" id="expl_{{ eq.id }}" {% if eq.question.explanation %}data-raw="{{ eq.question.explanation|escape }}"{% else %}data-empty="1"{% endif %}></div>
 
         <div class="q-meta">
             <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i>变式溯源：由 {{ eq.question.year }}年 {{ eq.question.school.name }} 真题 [{{ eq.question.knowledge_point }}] 改写生成
@@ -138,117 +112,71 @@
 </div>
 {% endfor %}
 
-<div class="submit-bar" id="submitBar">
-    <button class="btn btn-primary" onclick="submitExam()"><i class="fa-solid fa-paper-plane"></i> 提交阅卷</button>
-    <a href="{% url 'ai_test:ai_exam_list' %}" class="btn btn-outline" style="margin-left:12px;"><i class="fa-solid fa-arrow-left"></i> 返回列表</a>
+<div class="submit-bar">
+    <button type="submit" class="btn btn-primary" onclick="return confirmSubmit()"><i class="fa-solid fa-paper-plane"></i> 提交阅卷</button>
+    <a href="{% url 'user:my_exams' %}" class="btn btn-outline" style="margin-left:12px;"><i class="fa-solid fa-arrow-left"></i> 我的考试</a>
 </div>
-<div class="submit-bar" id="afterBar" style="display:none;">
-    <a href="{% url 'ai_test:ai_exam_list' %}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> 返回列表</a>
-</div>
+</form>
+
+<div class="auto-submit-msg" id="autoSubmitMsg"><i class="fa-solid fa-hourglass-end"></i> 考试时间到，正在自动提交...</div>
 
 <div style="height:80px;"></div>
 
 <script>
+const MAX_SECONDS = 5400; // 1.5h
+let elapsed = {{ elapsed_seconds }};
+
+// Markdown + KaTeX rendering
 const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
-function wrapLatex(t){if(!t)return t;const parts=t.split(/(\$[^$]+?\$|\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/);return parts.map((part,idx)=>{if(idx%2===1)return part;return part.replace(/(\\[a-zA-Z]+(?:\s*\^{[^}]*}|\s*_{[^}]*}|\s*\^{[^{][^}]*}|\s*_{[^{][^}]*}|\s*\^{.\s}|\s*_{.\s}|\s*\([^)]*\))*)+/g,'$$$1$$');}).join('');}
+function wrapLatex(t){if(!t)return t;const parts=t.split(/(\$[^$]+?\$|\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/);return parts.map((part,idx)=>{if(idx%2===1)return part;return part.replace(/(\\[a-zA-Z]+(?:\s*\^{[^}]*}|\s*_{[^}]*}|\s*\^{[^{][^}]*}|\s*_{[^{][^}]*}|\s*\([^)]*\))*)+/g,'$$$1$$');}).join('');}
 function renderMd(t){if(!t)return '';t=wrapLatex(t);const m=[];let i=0;function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(x=>{try{html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));}catch(e){html=html.split(x.p).join(x.c);}});return DOMPurify.sanitize(html,PURIFY_CFG);}
 document.querySelectorAll('[data-raw]').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
-function selectChoice(label){label.closest('.choice-options').querySelectorAll('.choice-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');label.querySelector('input').checked=true;}
-function selectJudge(label){label.closest('.judge-options').querySelectorAll('.judge-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');label.querySelector('input').checked=true;}
-let seconds=0;let timerRunning=true;const timerEl=document.getElementById('timer');const timerInterval=setInterval(()=>{if(!timerRunning)return;seconds++;const m=String(Math.floor(seconds/60)).padStart(2,'0');const s=String(seconds%60).padStart(2,'0');timerEl.innerHTML='<i class="fa-solid fa-clock" style="margin-right:6px;font-size:16px;"></i>'+m+':'+s;},1000);
 
-function getUserAnswer(eid,type){
-    if(type==='选择'||type==='判断'){
-        const checked=document.querySelector('input[name="answer_'+eid+'"]:checked');
-        return checked?checked.value:'';
-    }else if(type==='填空'){
-        const el=document.getElementById('fill_'+eid);
-        return el?el.value.trim():'';
+function selectChoice(label, eid){label.closest('.choice-options').querySelectorAll('.choice-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');label.querySelector('input').checked=true;}
+function selectJudge(label, eid){label.closest('.judge-options').querySelectorAll('.judge-opt').forEach(l=>l.classList.remove('selected'));label.classList.add('selected');label.querySelector('input').checked=true;}
+
+// Timer
+const timerEl=document.getElementById('timer');
+const timerBar=document.getElementById('timerBar');
+const durationInput=document.getElementById('duration_seconds');
+const form=document.getElementById('examForm');
+let submitted=false;
+
+function updateTimer(){
+    if(submitted) return;
+    elapsed++;
+    durationInput.value=elapsed;
+    const remaining=Math.max(0,MAX_SECONDS-elapsed);
+    const h=String(Math.floor(remaining/3600)).padStart(2,'0');
+    const m=String(Math.floor((remaining%3600)/60)).padStart(2,'0');
+    const s=String(remaining%60).padStart(2,'0');
+    timerEl.innerHTML='<i class="fa-solid fa-clock" style="margin-right:6px;font-size:16px;"></i>'+h+':'+m+':'+s;
+
+    // Progress bar
+    const pct=Math.max(0,(remaining/MAX_SECONDS)*100);
+    timerBar.style.width=pct+'%';
+
+    // Color states
+    timerEl.classList.remove('warning','danger');
+    timerBar.classList.remove('warning','danger');
+    if(remaining<=300){timerEl.classList.add('danger');timerBar.classList.add('danger');}
+    else if(remaining<=900){timerEl.classList.add('warning');timerBar.classList.add('warning');}
+
+    // Auto-submit at 1.5h
+    if(remaining<=0){
+        submitted=true;
+        document.getElementById('autoSubmitMsg').style.display='block';
+        setTimeout(()=>{form.submit();},1000);
     }
-    return '';
 }
+setInterval(updateTimer,1000);
+// Initial display
+(function(){const r=Math.max(0,MAX_SECONDS-elapsed);const h=String(Math.floor(r/3600)).padStart(2,'0');const m=String(Math.floor((r%3600)/60)).padStart(2,'0');const s=String(r%60).padStart(2,'0');timerEl.innerHTML='<i class="fa-solid fa-clock" style="margin-right:6px;font-size:16px;"></i>'+h+':'+m+':'+s;durationInput.value=elapsed;})();
 
-function submitExam(){
-    if(!confirm('确定要提交阅卷吗？提交后将显示所有答案和解析。'))return;
-    timerRunning=false;
-    const items=document.querySelectorAll('.q-item[data-eid]');
-    let total=0,correct=0,wrong=0,skip=0;
-    items.forEach(item=>{
-        const eid=item.getAttribute('data-eid');
-        const type=item.getAttribute('data-type');
-        const correctAns=item.getAttribute('data-correct');
-        total++;
-        const userAns=getUserAnswer(eid,type);
-        let isCorrect=false;
-        if(type==='选择'||type==='判断'){
-            if(!userAns){skip++;}
-            else if(userAns.trim()===correctAns.trim()){isCorrect=true;correct++;}
-            else{wrong++;}
-            // highlight options
-            const opts=document.getElementById('opts_'+eid);
-            if(opts){
-                opts.querySelectorAll('.choice-opt,.judge-opt').forEach(opt=>{
-                    const val=opt.getAttribute('data-val');
-                    if(val===correctAns)opt.classList.add('opt-correct');
-                    if(val===userAns&&!isCorrect)opt.classList.add('opt-wrong');
-                });
-            }
-        }else if(type==='填空'){
-            if(!userAns){skip++;}
-            else if(userAns.replace(/\s/g,'')===correctAns.replace(/\s/g,'')){isCorrect=true;correct++;}
-            else{wrong++;}
-            const fillEl=document.getElementById('fill_'+eid);
-            if(fillEl)fillEl.classList.add(isCorrect?'fill-correct':'fill-wrong');
-        }else{
-            skip++; // subjective
-        }
-        // result tag
-        const rtag=document.getElementById('rtag_'+eid);
-        rtag.style.display='inline-flex';
-        if(type==='简答'||type==='计算'||type==='画图'){
-            rtag.className='result-tag result-tag-skip';
-            rtag.innerHTML='<i class="fa-solid fa-pen"></i> 主观题';
-        }else if(!userAns){
-            rtag.className='result-tag result-tag-skip';
-            rtag.innerHTML='<i class="fa-solid fa-minus"></i> 未作答';
-        }else if(isCorrect){
-            rtag.className='result-tag result-tag-correct';
-            rtag.innerHTML='<i class="fa-solid fa-check"></i> 正确';
-            item.classList.add('correct');
-        }else{
-            rtag.className='result-tag result-tag-wrong';
-            rtag.innerHTML='<i class="fa-solid fa-xmark"></i> 错误';
-            item.classList.add('wrong');
-        }
-        // show answer
-        const ansEl=document.getElementById('ans_'+eid);
-        const ca=ansEl.getAttribute('data-correct');
-        if(ca){
-            ansEl.innerHTML='<div style="font-weight:600;color:var(--blue-700);margin-bottom:4px;"><i class="fa-solid fa-check-circle" style="margin-right:4px;"></i>正确答案：'+renderMd(ca)+'</div>';
-            ansEl.classList.add('show');
-        }
-        // show explanation
-        const explEl=document.getElementById('expl_'+eid);
-        if(explEl.getAttribute('data-empty')){
-            explEl.innerHTML='<div style="color:var(--gray-400);font-style:italic;">暂无解析</div>';
-        }else{
-            const raw=explEl.getAttribute('data-raw');
-            explEl.innerHTML='<div style="font-weight:600;color:#15803d;margin-bottom:4px;"><i class="fa-solid fa-lightbulb" style="margin-right:4px;"></i>AI 解析：</div><div>'+renderMd(raw)+'</div>';
-        }
-        explEl.classList.add('show');
-        item.classList.add('graded');
-    });
-    // show result banner
-    const objTotal=total-skip;
-    const banner=document.getElementById('resultBanner');
-    banner.classList.add('show');
-    document.getElementById('resultScore').textContent=correct+' / '+objTotal+' 正确';
-    const subjCount=document.querySelectorAll('.q-item[data-type="简答"],.q-item[data-type="计算"],.q-item[data-type="画图"]').length;
-    document.getElementById('resultDetail').textContent='客观题共 '+objTotal+' 道，正确 '+correct+' 道，错误 '+wrong+' 道，未作答 '+(skip-subjCount)+' 道，主观题 '+subjCount+' 道';
-    // swap bars
-    document.getElementById('submitBar').style.display='none';
-    document.getElementById('afterBar').style.display='block';
-    window.scrollTo({top:0,behavior:'smooth'});
+function confirmSubmit(){
+    if(submitted) return false;
+    submitted=true;
+    return true;
 }
 </script>
 {% endblock %}

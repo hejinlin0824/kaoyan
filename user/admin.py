@@ -4,7 +4,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils import timezone
 
-from .models import User, PendingRegistration
+from .models import User, CoinRecord, PendingRegistration
 
 
 @admin.action(description="开通VIP 7天")
@@ -97,21 +97,68 @@ def cancel_vip(modeladmin, request, queryset):
     modeladmin.message_user(request, f"已取消 {queryset.count()} 个用户的VIP", messages.WARNING)
 
 
+@admin.action(description="设置点数为 0")
+def reset_coins(modeladmin, request, queryset):
+    from .coin_utils import set_coins
+    for user in queryset:
+        set_coins(user, 0, description="管理员批量重置为0")
+    modeladmin.message_user(request, f"已将 {queryset.count()} 个用户的点数重置为0", messages.SUCCESS)
+
+
+@admin.action(description="增加 100 点数")
+def add_coins_100(modeladmin, request, queryset):
+    from .coin_utils import add_coins
+    for user in queryset:
+        add_coins(user, 100, reason="admin_adjust", description="管理员批量增加100点")
+    modeladmin.message_user(request, f"已为 {queryset.count()} 个用户增加100点数", messages.SUCCESS)
+
+
+@admin.action(description="增加 500 点数")
+def add_coins_500(modeladmin, request, queryset):
+    from .coin_utils import add_coins
+    for user in queryset:
+        add_coins(user, 500, reason="admin_adjust", description="管理员批量增加500点")
+    modeladmin.message_user(request, f"已为 {queryset.count()} 个用户增加500点数", messages.SUCCESS)
+
+
+@admin.action(description="增加 1000 点数")
+def add_coins_1000(modeladmin, request, queryset):
+    from .coin_utils import add_coins
+    for user in queryset:
+        add_coins(user, 1000, reason="admin_adjust", description="管理员批量增加1000点")
+    modeladmin.message_user(request, f"已为 {queryset.count()} 个用户增加1000点数", messages.SUCCESS)
+
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "email", "email_verified", "vip_level", "vip_start_date", "vip_expire_date", "is_vip_display", "is_active", "is_staff")
+    list_display = ("username", "email", "email_verified", "coins", "vip_level", "vip_start_date", "vip_expire_date", "is_vip_display", "is_active", "is_staff")
     list_filter = ("vip_level", "is_active", "is_staff")
     search_fields = ("username", "email")
-    actions = [set_vip_7_days, set_vip_30_days, set_vip_60_days, set_vip_90_days, set_vip_180_days, set_vip_365_days, cancel_vip]
+    actions = [set_vip_7_days, set_vip_30_days, set_vip_60_days, set_vip_90_days, set_vip_180_days, set_vip_365_days, cancel_vip, reset_coins, add_coins_100, add_coins_500, add_coins_1000]
     fieldsets = BaseUserAdmin.fieldsets + (
         ("VIP 信息", {"fields": ("vip_level", "vip_start_date", "vip_expire_date")}),
         ("邮箱验证", {"fields": ("email_verified", "email_token")}),
+        ("站内点数", {"fields": ("coins",)}),
     )
 
     @admin.display(boolean=True, description="VIP有效")
     def is_vip_display(self, obj):
         return obj.is_vip()
     is_vip_display.short_description = "VIP有效"
+
+
+@admin.register(CoinRecord)
+class CoinRecordAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "amount", "reason", "description", "created_at")
+    list_filter = ("reason", "created_at")
+    search_fields = ("user__username", "description")
+    readonly_fields = ("created_at",)
+    raw_id_fields = ("user",)
+    ordering = ["-created_at"]
+
+    def has_add_permission(self, request, obj=None):
+        # 禁止手动添加记录，所有点数变动应通过 coin_utils 操作
+        return False
 
 
 @admin.register(PendingRegistration)

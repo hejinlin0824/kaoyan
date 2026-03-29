@@ -1,0 +1,268 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}资源中心 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .res-filters {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+    .res-filters label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-500);
+        margin-right: 4px;
+    }
+    .res-filters select, .res-filters input[type="text"] {
+        padding: 7px 12px;
+        border: 1px solid var(--gray-300);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--gray-700);
+        background: var(--white);
+        outline: none;
+    }
+    .res-filters select:focus, .res-filters input:focus {
+        border-color: var(--blue-500);
+    }
+    .res-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .res-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    .res-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+    .res-card-cover {
+        width: 100%;
+        height: 160px;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .res-card-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .res-card-cover .placeholder-icon {
+        font-size: 48px;
+        color: var(--gray-300);
+    }
+    .res-card-body {
+        padding: 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .res-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .res-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    .res-card-meta .badge {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+    .res-card-footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .res-price {
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .res-price.free { color: #16a34a; }
+    .res-price.paid { color: #d97706; }
+    .res-price i { font-size: 12px; }
+    .res-card-stat {
+        font-size: 12px;
+        color: var(--gray-400);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .res-owned {
+        font-size: 11px;
+        background: #f0fdf4;
+        color: #16a34a;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .filter-btn {
+        padding: 7px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.15s;
+    }
+    .filter-btn-primary { background: var(--blue-600); color: var(--white); }
+    .filter-btn-primary:hover { background: var(--blue-700); }
+    .filter-btn-ghost { background: var(--gray-100); color: var(--gray-600); }
+    .filter-btn-ghost:hover { background: var(--gray-200); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-store"></i> 资源中心</h1>
+            <p class="page-subtitle">优质考研资料，助力上岸</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+            {% if user.is_authenticated %}
+            <a href="{% url 'res_center:my_purchases' %}" class="btn btn-outline">
+                <i class="fa-solid fa-bag-shopping"></i> 已购资源
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# ── 筛选栏 ── #}
+<form class="res-filters" method="get">
+    <label><i class="fa-solid fa-filter"></i> 筛选</label>
+    <select name="category">
+        <option value="">全部分类</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"s" %}selected{% endif %}>
+            {{ cat.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <select name="school">
+        <option value="">全部学校</option>
+        {% for s in schools %}
+        <option value="{{ s.id }}" {% if current_school == s.id|stringformat:"s" %}selected{% endif %}>
+            {{ s.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <select name="subject">
+        <option value="">全部专业课</option>
+        {% for sub in subjects %}
+        <option value="{{ sub.id }}" {% if current_subject == sub.id|stringformat:"s" %}selected{% endif %}>
+            {{ sub.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" placeholder="搜索标题..." value="{{ current_q }}"
+           style="width:160px;">
+    <button type="submit" class="filter-btn filter-btn-primary">
+        <i class="fa-solid fa-magnifying-glass"></i> 搜索
+    </button>
+    {% if current_category or current_school or current_subject or current_q %}
+    <a href="{% url 'res_center:list' %}" class="filter-btn filter-btn-ghost">
+        <i class="fa-solid fa-xmark"></i> 清除
+    </a>
+    {% endif %}
+</form>
+
+{# ── 资源卡片网格 ── #}
+{% if page_obj.object_list %}
+<div class="res-grid">
+    {% for res in page_obj.object_list %}
+    <a href="{% url 'res_center:detail' res.pk %}" class="res-card" style="text-decoration:none;color:inherit;">
+        <div class="res-card-cover">
+            {% if res.cover %}
+            <img src="{{ res.cover.url }}" alt="{{ res.title }}">
+            {% else %}
+            <i class="fa-solid {{ res.category.icon }} placeholder-icon"></i>
+            {% endif %}
+        </div>
+        <div class="res-card-body">
+            <div class="res-card-title">{{ res.title }}</div>
+            <div class="res-card-meta">
+                <span class="badge badge-blue"><i class="fa-solid {{ res.category.icon }}" style="margin-right:3px;font-size:10px;"></i>{{ res.category.name }}</span>
+                {% if res.school %}
+                <span class="badge badge-gray"><i class="fa-solid fa-school" style="margin-right:3px;font-size:10px;"></i>{{ res.school.name }}</span>
+                {% endif %}
+                {% if res.subject %}
+                <span class="badge badge-gray"><i class="fa-solid fa-book" style="margin-right:3px;font-size:10px;"></i>{{ res.subject.name }}</span>
+                {% endif %}
+            </div>
+            <div class="res-card-footer">
+                {% if res.price == 0 %}
+                <span class="res-price free"><i class="fa-solid fa-gift"></i> 免费</span>
+                {% else %}
+                <span class="res-price paid"><i class="fa-solid fa-coins"></i> {{ res.price }}</span>
+                {% endif %}
+                {% if res.id in purchased_ids %}
+                <span class="res-owned"><i class="fa-solid fa-check" style="font-size:10px;"></i> 已获取</span>
+                {% else %}
+                <span class="res-card-stat"><i class="fa-solid fa-download"></i> {{ res.download_count }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{# ── 分页 ── #}
+{% if page_obj.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:28px;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&{{ search_str }}" class="btn btn-outline">
+        <i class="fa-solid fa-chevron-left"></i> 上一页
+    </a>
+    {% endif %}
+    <span style="padding:10px 16px;font-size:14px;color:var(--gray-500);">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&{{ search_str }}" class="btn btn-outline">
+        下一页 <i class="fa-solid fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state" style="background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);">
+    <i class="fa-solid fa-box-open"></i>
+    <p>暂无资源，敬请期待</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -46,17 +46,23 @@ class AIGeneratedQuestion(models.Model):
 class AIExam(models.Model):
     """AI组卷生成的异步试卷记录"""
     STATUS_CHOICES = [
-        ("pending", "进行中"),
-        ("completed", "已完成"),
+        ("pending", "生成中"),
+        ("completed", "待练习"),
+        ("taking", "作答中"),
+        ("submitted", "已提交"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="用户")
     subject = models.ForeignKey("kaoyan_app.Subject", on_delete=models.CASCADE, verbose_name="专业课")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="生成状态")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="状态")
     task_id = models.CharField(max_length=100, null=True, blank=True, verbose_name="异步任务ID")
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="完成时间")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="生成完成时间")
+    started_at = models.DateTimeField(null=True, blank=True, verbose_name="开始作答时间")
+    duration_seconds = models.IntegerField(default=0, verbose_name="作答时长(秒)")
+    score = models.IntegerField(default=0, verbose_name="客观题得分")
+    total_objective_score = models.IntegerField(default=0, verbose_name="客观题总分")
 
     # 用户提交的组卷需求快照，交由异步任务执行抽题改写
     choice_count = models.IntegerField(default=0, verbose_name="选择题数量")

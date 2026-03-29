@@ -88,20 +88,106 @@ def ai_exam_status(request, pk):
 
 @vip_required
 def ai_exam_take(request, pk):
-    """
-    AI 试卷作答/练习页面：
-    交互流程与常规抽题组卷一致，但无底部的打分/提交逻辑，纯净练习。
-    """
+    """AI 变式出题作答：completed→taking(首次), taking→恢复, submitted→结果"""
     exam = get_object_or_404(AIExam, pk=pk, user=request.user)
 
     if exam.status == "pending":
         return redirect("ai_test:ai_exam_list")
+    if exam.status == "submitted":
+        return redirect("ai_test:ai_exam_result", exam.id)
+
+    if exam.status == "completed":
+        exam.status = "taking"
+        exam.started_at = timezone.now()
+        exam.save(update_fields=["status", "started_at"])
 
     eqs = exam.questions.select_related("question__school", "question__question_type").all()
+    elapsed = 0
+    if exam.started_at:
+        elapsed = int((timezone.now() - exam.started_at).total_seconds())
 
     return render(request, "ai_test/ai_exam_take.html", {
-        "exam": exam,
-        "exam_questions": eqs
+        "exam": exam, "exam_questions": eqs, "elapsed_seconds": elapsed,
+    })
+
+
+@vip_required
+def ai_exam_submit(request, pk):
+    """AI 变式出题服务端提交 + 自动阅卷"""
+    exam = get_object_or_404(AIExam, pk=pk, user=request.user)
+    if exam.status == "submitted":
+        return redirect("ai_test:ai_exam_result", exam.id)
+    if exam.status != "taking" or request.method != "POST":
+        return redirect("ai_test:ai_exam_take", exam.id)
+
+    duration = int(request.POST.get("duration_seconds", 0))
+    exam.duration_seconds = duration
+
+    eqs = list(exam.questions.select_related("question").all())
+    total_score = 0
+    total_objective = 0
+    wrong_questions = []
+
+    for eq in eqs:
+        q = eq.question
+        type_name = q.question_type.name
+        user_answer = request.POST.get(f"answer_{eq.id}", "").strip() or None
+        eq.user_answer = user_answer
+
+        if type_name not in OBJECTIVE_TYPES:
+            eq.save(update_fields=["user_answer"])
+            continue
+
+        full_score = SCORE_MAP.get(type_name, 0)
+        total_objective += full_score
+        correct_answer = (q.correct_answer or "").strip()
+        is_correct = False
+
+        if type_name == "选择":
+            is_correct = user_answer and user_answer.upper() == correct_answer.upper()
+        elif type_name == "判断":
+            is_correct = user_answer and user_answer.strip() == correct_answer.strip()
+        elif type_name == "填空":
+            if correct_answer and user_answer:
+                standard = [a.strip() for a in correct_answer.split(";") if a.strip()]
+                user_parts = [a.strip() for a in user_answer.split(";") if a.strip()]
+                if len(standard) == len(user_parts):
+                    is_correct = all(up.lower() == sp.lower() for up, sp in zip(user_parts, standard))
+                elif len(user_parts) == 1 and len(standard) == 1:
+                    is_correct = user_parts[0].lower() == standard[0].lower()
+
+        if is_correct:
+            total_score += full_score
+        else:
+            wrong_questions.append(eq)
+        eq.save(update_fields=["user_answer"])
+
+    exam.score = total_score
+    exam.total_objective_score = total_objective
+    exam.status = "submitted"
+    exam.save(update_fields=["score", "total_objective_score", "duration_seconds", "status"])
+
+    for eq in wrong_questions:
+        obj, created = AIWrongQuestion.objects.get_or_create(user=request.user, question=eq.question)
+        if not created:
+            AIWrongQuestion.objects.filter(pk=obj.pk).update(error_count=F("error_count") + 1)
+
+    total_q = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
+    from user.coin_utils import try_daily_checkin
+    try_daily_checkin(request.user, question_count=total_q, objective_score=exam.score)
+
+    return redirect("ai_test:ai_exam_result", exam.id)
+
+
+@vip_required
+def ai_exam_result(request, pk):
+    """AI 变式出题阅卷结果"""
+    exam = get_object_or_404(AIExam, pk=pk, user=request.user)
+    if exam.status != "submitted":
+        return redirect("ai_test:ai_exam_take", exam.id)
+    eqs = exam.questions.select_related("question__school", "question__question_type").all()
+    return render(request, "ai_test/ai_exam_result.html", {
+        "exam": exam, "exam_questions": eqs,
     })
 
 
@@ -307,6 +393,11 @@ def ai_practice_submit(request, pk):
         )
         if not created:
             AIWrongQuestion.objects.filter(pk=obj.pk).update(error_count=F("error_count") + 1)
+
+    # ── 每日打卡检测 ──
+    total_question_count = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
+    from user.coin_utils import try_daily_checkin
+    try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
 
     return redirect("ai_test:ai_practice_result", exam.id)
 

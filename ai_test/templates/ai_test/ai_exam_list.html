@@ -8,7 +8,9 @@
     .exam-item{padding:20px 24px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid transparent;transition:box-shadow 0.2s;}
     .exam-item:hover{box-shadow:var(--shadow);}
     .exam-item.status-pending{border-left-color:#d97706;}
-    .exam-item.status-completed{border-left-color:#16a34a;}
+    .exam-item.status-completed{border-left-color:#3b82f6;}
+    .exam-item.status-taking{border-left-color:#16a34a;}
+    .exam-item.status-submitted{border-left-color:var(--gray-400);}
     .exam-info h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--gray-800);}
     .exam-meta{font-size:13px;color:var(--gray-500);display:flex;gap:16px;flex-wrap:wrap;}
     .spinner{width:14px;height:14px;border:2px solid rgba(217,119,6,0.3);border-radius:50%;border-top-color:#d97706;animation:spin 1s ease-in-out infinite;display:inline-block;}
@@ -40,10 +42,20 @@
         <div class="exam-actions" id="actions-{{ exam.id }}">
             {% if exam.status == 'pending' %}
             <span class="badge badge-gray" style="display:inline-flex;align-items:center;gap:6px;"><span class="spinner"></span> 大模型生成中...</span>
-            {% else %}
+            {% elif exam.status == 'completed' %}
             <div style="display:flex;align-items:center;gap:12px;">
-                <span class="badge badge-green"><i class="fa-solid fa-check" style="margin-right:3px;"></i>已生成</span>
-                <a href="{% url 'ai_test:ai_exam_take' exam.id %}" class="btn btn-primary" style="padding:6px 20px;font-size:14px;">进入练习</a>
+                <span class="badge badge-blue">待练习</span>
+                <a href="{% url 'ai_test:ai_exam_take' exam.id %}" class="btn btn-primary" style="padding:6px 20px;font-size:14px;">开始练习</a>
+            </div>
+            {% elif exam.status == 'taking' %}
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="badge badge-green"><i class="fa-solid fa-pen" style="margin-right:3px;"></i>作答中</span>
+                <a href="{% url 'ai_test:ai_exam_take' exam.id %}" class="btn btn-primary" style="padding:6px 20px;font-size:14px;">继续作答</a>
+            </div>
+            {% elif exam.status == 'submitted' %}
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="badge badge-gray">已提交 · {{ exam.score }}/{{ exam.total_objective_score }}</span>
+                <a href="{% url 'ai_test:ai_exam_result' exam.id %}" class="btn btn-outline" style="padding:6px 20px;font-size:14px;">查看成绩</a>
             </div>
             {% endif %}
         </div>

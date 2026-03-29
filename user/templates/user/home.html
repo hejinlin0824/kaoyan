@@ -5,153 +5,495 @@
 
 {% block extra_style %}
 <style>
-    .home-anim{opacity:0;transform:translateY(20px);}
-    .home-stagger{opacity:0;transform:translateY(16px);}
+    .home-anim{opacity:1;transform:none;transition:opacity 0.3s;}
+    .home-stagger{opacity:1;transform:none;transition:opacity 0.3s;}
+    .home-anim.gsap-ready{opacity:0;transform:translateY(20px);}
+    .home-stagger.gsap-ready{opacity:0;transform:translateY(16px);}
+
+    /* 顶部欢迎条 */
+    .welcome-bar {
+        background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+        color: #fff; border-radius: var(--radius); padding: 28px 32px;
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    }
+    .welcome-bar .welcome-left { display: flex; align-items: center; gap: 16px; }
+    .welcome-bar .avatar {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: rgba(255,255,255,0.2); display: flex; align-items: center;
+        justify-content: center; font-size: 24px;
+    }
+    .welcome-bar .welcome-info h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .welcome-bar .welcome-info p { font-size: 13px; opacity: 0.85; }
+    .welcome-bar .welcome-tags { display: flex; gap: 8px; margin-top: 6px; }
+    .tag-vip {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #78350f; font-size: 11px; font-weight: 700;
+        padding: 2px 10px; border-radius: 4px;
+    }
+    .tag-coins {
+        background: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600;
+        padding: 2px 10px; border-radius: 4px;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .welcome-bar .welcome-right { display: flex; gap: 10px; }
+    .welcome-bar .welcome-right .btn-w {
+        background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+        text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .welcome-bar .welcome-right .btn-w:hover { background: rgba(255,255,255,0.25); }
+
+    /* 未登录欢迎 */
+    .welcome-ghost {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); padding: 40px 32px; margin-bottom: 24px;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .welcome-ghost .wg-left { display: flex; align-items: center; gap: 20px; }
+    .welcome-ghost .wg-left img { height: 56px; }
+    .welcome-ghost .wg-left h2 { font-size: 20px; font-weight: 700; color: var(--gray-800); }
+    .welcome-ghost .wg-left p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+    .welcome-ghost .wg-right { display: flex; gap: 10px; }
+
+    /* 统计条 */
+    .stats-strip {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 12px; margin-bottom: 24px;
+    }
+    .stats-strip .stat-item {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); padding: 16px 20px;
+        display: flex; align-items: center; gap: 14px;
+    }
+    .stats-strip .stat-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .stats-strip .stat-icon.blue { background: var(--blue-50); color: var(--blue-600); }
+    .stats-strip .stat-icon.green { background: #f0fdf4; color: #16a34a; }
+    .stats-strip .stat-icon.amber { background: #fffbeb; color: #d97706; }
+    .stats-strip .stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
+    .stats-strip .stat-text .sv { font-size: 22px; font-weight: 700; color: var(--gray-800); }
+    .stats-strip .stat-text .sl { font-size: 12px; color: var(--gray-500); }
+
+    /* Tab 切换 */
+    .tab-container {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); overflow: hidden;
+    }
+    .tab-nav {
+        display: flex; border-bottom: 2px solid var(--gray-100);
+        padding: 0; background: var(--gray-50);
+    }
+    .tab-btn {
+        flex: 1; padding: 14px 20px; border: none; background: transparent;
+        font-size: 14px; font-weight: 600; color: var(--gray-500);
+        cursor: pointer; transition: all 0.2s; display: flex;
+        align-items: center; justify-content: center; gap: 8px;
+        border-bottom: 2px solid transparent; margin-bottom: -2px;
+        font-family: inherit;
+    }
+    .tab-btn:hover { color: var(--gray-700); background: var(--white); }
+    .tab-btn.active {
+        color: var(--blue-600); background: var(--white);
+        border-bottom-color: var(--blue-600);
+    }
+    .tab-btn .tab-icon { font-size: 15px; }
+    .tab-btn .tab-count {
+        font-size: 11px; font-weight: 600; padding: 1px 7px;
+        border-radius: 10px; background: var(--gray-200); color: var(--gray-600);
+    }
+    .tab-btn.active .tab-count { background: var(--blue-50); color: var(--blue-700); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* 功能列表 */
+    .feature-list { list-style: none; padding: 0; margin: 0; }
+    .feature-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 24px; border-bottom: 1px solid var(--gray-50);
+        transition: background 0.15s; text-decoration: none; color: inherit;
+    }
+    .feature-item:last-child { border-bottom: none; }
+    .feature-item:hover { background: var(--blue-50); }
+    .feature-item .fi-left { display: flex; align-items: center; gap: 16px; }
+    .feature-item .fi-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; flex-shrink: 0;
+    }
+    .feature-item .fi-text h4 { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
+    .feature-item .fi-text p { font-size: 12px; color: var(--gray-500); }
+    .feature-item .fi-right { display: flex; align-items: center; gap: 10px; }
+    .feature-item .fi-tag {
+        font-size: 11px; font-weight: 600; padding: 3px 10px;
+        border-radius: 4px; white-space: nowrap;
+    }
+    .fi-tag-free { background: #f0fdf4; color: #15803d; }
+    .fi-tag-vip { background: #fffbeb; color: #b45309; }
+    .fi-tag-limit { background: #fef3c7; color: #92400e; }
+    .fi-tag-new { background: var(--blue-50); color: var(--blue-700); }
+    .fi-tag-soon { background: var(--gray-100); color: var(--gray-500); }
+    .fi-tag-login { background: #fef2f2; color: #dc2626; }
+    .feature-item .fi-arrow { color: var(--gray-400); font-size: 13px; }
+    .feature-item:hover .fi-arrow { color: var(--blue-500); }
+
+    /* 锁定项 */
+    .feature-item.locked { opacity: 0.7; }
+    .feature-item.locked:hover { opacity: 0.9; }
+    .feature-item.locked .fi-icon { filter: grayscale(0.3); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header home-anim">
-    <h1 class="page-title"><i class="fa-solid fa-house"></i> 首页</h1>
-</div>
+<div class="home-anim" style="margin-bottom:0;">
 
-{% if not user.is_authenticated %}
-<div class="card home-stagger" style="text-align:center; padding:60px 40px; margin-bottom:28px;">
-    <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:72px;width:auto;margin-bottom:16px;">
-    <p style="font-size:15px; color:var(--gray-500); margin-bottom:32px;">你离上岸只差这一厘米，我们帮你！</p>
-    <div style="display:flex; gap:12px; justify-content:center;">
-        <a href="{% url 'user:register' %}" class="btn btn-primary btn-lg"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
-        <a href="{% url 'user:login' %}" class="btn btn-outline btn-lg"><i class="fa-solid fa-right-to-bracket"></i> 已有账号，去登录</a>
-    </div>
-</div>
-{% endif %}
-
-{% if user.is_authenticated %}
-    {% if is_vip %}
-    <div class="card home-stagger" style="background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%); color:#fff; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                <i class="fa-solid fa-crown" style="font-size:20px; color:#fbbf24;"></i>
-                <span style="font-size:18px; font-weight:700;">{{ vip_label }}</span>
+    {% if user.is_authenticated %}
+    <!-- ========== 已登录：欢迎条 ========== -->
+    <div class="welcome-bar home-stagger">
+        <div class="welcome-left">
+            <div class="avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="welcome-info">
+                <h2>{{ user.username }}，欢迎回来 👋</h2>
+                <p>今天也要坚持学习哦，每日打卡赢取点数！</p>
+                <div class="welcome-tags">
+                    {% if is_vip %}
+                    <span class="tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+                    {% else %}
+                    <span class="tag-vip" style="background:rgba(255,255,255,0.15);color:#fff;"><i class="fa-solid fa-user"></i> 普通用户</span>
+                    {% endif %}
+                    <span class="tag-coins"><i class="fa-solid fa-coins"></i> {{ user_coins }} 点数</span>
+                </div>
             </div>
-            <p style="font-size:13px; opacity:0.85;">开通时间：{{ user.vip_start_date|date:"Y年m月d日 H:i" }} &nbsp;|&nbsp; 到期时间：{{ user.vip_expire_date|date:"Y年m月d日 H:i" }}</p>
         </div>
-        <a href="{% url 'user:vip' %}" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4);">续费 VIP</a>
+        <div class="welcome-right">
+            <a href="{% url 'user:checkin_calendar' %}" class="btn-w"><i class="fa-solid fa-calendar-check"></i> 打卡日历</a>
+            {% if not is_vip %}
+            <a href="{% url 'user:vip' %}" class="btn-w" style="background:rgba(251,191,36,0.3);border-color:rgba(251,191,36,0.5);"><i class="fa-solid fa-crown"></i> 开通 VIP</a>
+            {% else %}
+            <a href="{% url 'user:vip' %}" class="btn-w"><i class="fa-solid fa-crown"></i> 续费 VIP</a>
+            {% endif %}
+        </div>
     </div>
+
+    <!-- 数据统计 -->
+    <div class="stats-strip home-stagger">
+        <div class="stat-item">
+            <div class="stat-icon blue"><i class="fa-solid fa-book-open"></i></div>
+            <div class="stat-text"><div class="sv">{{ total_questions }}</div><div class="sl">真题总量</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon green"><i class="fa-solid fa-building-columns"></i></div>
+            <div class="stat-text"><div class="sv">{{ total_schools }}</div><div class="sl">院校覆盖</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon amber"><i class="fa-solid fa-coins"></i></div>
+            <div class="stat-text"><div class="sv">{{ user_coins }}</div><div class="sl">我的点数</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon purple"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-text"><div class="sv">{{ streak }}</div><div class="sl">连续打卡</div></div>
+        </div>
+    </div>
+
+    <!-- Tab 功能区 -->
+    <div class="tab-container home-stagger">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('zt', this)">
+                <i class="tab-icon fa-solid fa-book-open"></i> 真题练习
+                <span class="tab-count">3</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('ai', this)">
+                <i class="tab-icon fa-solid fa-wand-magic-sparkles"></i> AI 练习
+                <span class="tab-count">5</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tool', this)">
+                <i class="tab-icon fa-solid fa-toolbox"></i> 学习工具
+                <span class="tab-count">4</span>
+            </button>
+        </div>
+
+        <!-- 真题练习 -->
+        <div id="tab-zt" class="tab-panel active">
+            <ul class="feature-list">
+                <a href="{% url 'kaoyan:question_list' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <div class="fi-text"><h4>真题题库</h4><p>按年份、院校、题型筛选浏览历年真题</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-free">免费</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'zu_juan:exam_create' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-file-pen"></i></div>
+                        <div class="fi-text"><h4>真题组卷</h4><p>随机抽题组卷，在线作答，自动阅卷评分</p></div>
+                    </div>
+                    <div class="fi-right">
+                        {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">每日1套</span>{% endif %}
+                        <i class="fa-solid fa-chevron-right fi-arrow"></i>
+                    </div>
+                </a>
+                <a href="{% url 'zu_juan:wrong_book' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fef2f2;color:#dc2626;"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="fi-text"><h4>真题错题本</h4><p>自动收录错题，查漏补缺，支持导出打印</p></div>
+                    </div>
+                    <div class="fi-right">
+                        {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">限10题</span>{% endif %}
+                        <i class="fa-solid fa-chevron-right fi-arrow"></i>
+                    </div>
+                </a>
+            </ul>
+        </div>
+
+        <!-- AI 练习 -->
+        <div id="tab-ai" class="tab-panel">
+            <ul class="feature-list">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_practice_create' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fa-solid fa-shuffle"></i></div>
+                        <div class="fi-text"><h4>AI 题库组卷 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>从 AI 生成题库中抽题组卷，自动阅卷，错题记录</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_create' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f0fdf4;color:#059669;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="fi-text"><h4>AI 变式出题 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>基于真题 AI 改写，同义改写、考法变式、思维拓展</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% if is_vip %}{% url 'ai_test:ai_question_list' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fffbeb;color:#d97706;"><i class="fa-solid fa-robot"></i></div>
+                        <div class="fi-text"><h4>AI 题库浏览 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>浏览所有 AI 生成的变式题目，按科目分类</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_list' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fef3c7;color:#b45309;"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="fi-text"><h4>我的 AI 试卷 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>查看 AI 变式出题任务进度与历史练习记录</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% if is_vip %}{% url 'ai_test:ai_wrong_book' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fff1f2;color:#e11d48;"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div class="fi-text"><h4>AI 错题本 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>AI 练习错题汇总，针对性复习薄弱知识点</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+            </ul>
+        </div>
+
+        <!-- 学习工具 -->
+        <div id="tab-tool" class="tab-panel">
+            <ul class="feature-list">
+                <a href="{% url 'user:my_exams' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <div class="fi-text"><h4>我的考试</h4><p>查看所有考试记录，中途退出可随时回来继续</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">新功能</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:checkin_calendar' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="fi-text"><h4>打卡日历</h4><p>查看打卡记录，坚持每日练习赢取点数</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">打卡+100</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'res_center:list' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#eff6ff;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+                        <div class="fi-text"><h4>资源中心</h4><p>用点数兑换学习资料、真题解析、笔记等</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">已上线</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'res_center:my_purchases' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <div class="fi-text"><h4>我的资源</h4><p>查看已获取的资源，随时访问下载</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">新功能</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+            </ul>
+        </div>
+    </div>
+
     {% else %}
-    <div class="card home-stagger" style="background:linear-gradient(135deg, var(--gray-400) 0%, var(--gray-600) 100%); color:#fff; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                <i class="fa-solid fa-user" style="font-size:18px;"></i>
-                <span style="font-size:18px; font-weight:700;">普通用户</span>
+    <!-- ========== 未登录：欢迎 + 全部功能展示 ========== -->
+    <div class="welcome-ghost home-stagger">
+        <div class="wg-left">
+            <img src="{% static 'images/CM.png' %}" alt="厘米考研">
+            <div>
+                <h2>欢迎来到厘米考研 🎓</h2>
+                <p>你离上岸只差这一厘米，我们帮你！注册即可开始练习</p>
             </div>
-            <p style="font-size:13px; opacity:0.85;">升级 VIP 解锁更多专属权益</p>
         </div>
-        <a href="{% url 'user:vip' %}" class="btn" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4);">充值开通 VIP</a>
+        <div class="wg-right">
+            <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
+            <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 登录</a>
+        </div>
+    </div>
+
+    <div class="stats-strip home-stagger">
+        <div class="stat-item">
+            <div class="stat-icon blue"><i class="fa-solid fa-book-open"></i></div>
+            <div class="stat-text"><div class="sv">{{ total_questions }}</div><div class="sl">真题总量</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon green"><i class="fa-solid fa-building-columns"></i></div>
+            <div class="stat-text"><div class="sv">{{ total_schools }}</div><div class="sl">院校覆盖</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon amber"><i class="fa-solid fa-robot"></i></div>
+            <div class="stat-text"><div class="sv">AI</div><div class="sl">智能出题</div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon purple"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="stat-text"><div class="sv">智能</div><div class="sl">错题分析</div></div>
+        </div>
+    </div>
+
+    <!-- Tab 功能区（未登录也能看到所有功能） -->
+    <div class="tab-container home-stagger">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('zt', this)">
+                <i class="tab-icon fa-solid fa-book-open"></i> 真题练习
+                <span class="tab-count">3</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('ai', this)">
+                <i class="tab-icon fa-solid fa-wand-magic-sparkles"></i> AI 练习
+                <span class="tab-count">5</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tool', this)">
+                <i class="tab-icon fa-solid fa-toolbox"></i> 学习工具
+                <span class="tab-count">3</span>
+            </button>
+        </div>
+
+        <!-- 真题练习 -->
+        <div id="tab-zt" class="tab-panel active">
+            <ul class="feature-list">
+                <a href="{% url 'user:login' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <div class="fi-text"><h4>真题题库</h4><p>按年份、院校、题型筛选浏览历年真题</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:login' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-file-pen"></i></div>
+                        <div class="fi-text"><h4>真题组卷</h4><p>随机抽题组卷，在线作答，自动阅卷评分</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:login' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fef2f2;color:#dc2626;"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="fi-text"><h4>真题错题本</h4><p>自动收录错题，查漏补缺，支持导出打印</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+            </ul>
+        </div>
+
+        <!-- AI 练习 -->
+        <div id="tab-ai" class="tab-panel">
+            <ul class="feature-list">
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fa-solid fa-shuffle"></i></div>
+                        <div class="fi-text"><h4>AI 题库组卷</h4><p>从 AI 生成题库中抽题组卷，自动阅卷，错题记录</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f0fdf4;color:#059669;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="fi-text"><h4>AI 变式出题</h4><p>基于真题 AI 改写，同义改写、考法变式、思维拓展</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fffbeb;color:#d97706;"><i class="fa-solid fa-robot"></i></div>
+                        <div class="fi-text"><h4>AI 题库浏览</h4><p>浏览所有 AI 生成的变式题目，按科目分类</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fef3c7;color:#b45309;"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="fi-text"><h4>我的 AI 试卷</h4><p>查看 AI 变式出题任务进度与历史练习记录</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#fff1f2;color:#e11d48;"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div class="fi-text"><h4>AI 错题本</h4><p>AI 练习错题汇总，针对性复习薄弱知识点</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+            </ul>
+        </div>
+
+        <!-- 学习工具 -->
+        <div id="tab-tool" class="tab-panel">
+            <ul class="feature-list">
+                <a href="{% url 'user:register' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="fi-text"><h4>打卡日历</h4><p>每日完成试卷打卡赢取点数，可视化打卡记录</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">打卡+100</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+                <a href="{% url 'res_center:list' %}" class="feature-item">
+                    <div class="fi-left">
+                        <div class="fi-icon" style="background:#eff6ff;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+                        <div class="fi-text"><h4>资源中心</h4><p>用点数兑换学习资料、真题解析、笔记等</p></div>
+                    </div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-new">已上线</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                </a>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 底部注册引导 -->
+    <div class="home-stagger" style="text-align:center; margin-top:28px; padding:24px; background:var(--blue-50); border:1px solid var(--blue-200); border-radius:var(--radius);">
+        <p style="font-size:15px; color:var(--gray-700); margin-bottom:16px;">💡 注册即可免费使用真题练习功能，每日打卡赢点数兑换资源，开通 VIP 解锁更多</p>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 免费注册</a>
+            <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 已有账号，去登录</a>
+        </div>
     </div>
     {% endif %}
-{% endif %}
-
-{% if user.is_authenticated %}
-<div class="home-stagger" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;">
-    <a href="{% url 'zu_juan:exam_create' %}" style="display:flex; align-items:center; gap:16px; background:var(--blue-600); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;position:relative;">
-        <i class="fa-solid fa-file-pen" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">真题组卷{% if not is_vip %}<span style="font-size:11px;background:#fbbf24;color:#92400e;padding:2px 8px;border-radius:4px;margin-left:8px;">每日1套</span>{% endif %}</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">随机抽题 / 在线作答 / 自动阅卷</div>
-        </div>
-    </a>
-    <a href="{% url 'zu_juan:wrong_book' %}" style="display:flex; align-items:center; gap:16px; background:#dc2626; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
-        <i class="fa-solid fa-rotate-left" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">错题本{% if not is_vip %}<span style="font-size:11px;background:#fbbf24;color:#92400e;padding:2px 8px;border-radius:4px;margin-left:8px;">限10题</span>{% endif %}</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">查漏补缺 / 错误次数统计</div>
-        </div>
-    </a>
-    {% if is_vip %}
-    <a href="{% url 'ai_test:ai_exam_create' %}" style="display:flex; align-items:center; gap:16px; background:#059669; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
-        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 变式出题</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">同义改写 / 考法变式 / 思维拓展</div>
-        </div>
-    </a>
-    <a href="{% url 'ai_test:ai_exam_list' %}" style="display:flex; align-items:center; gap:16px; background:#d97706; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
-        <i class="fa-solid fa-list-check" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">我的 AI 试卷</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">任务进度 / 历史纯净练习</div>
-        </div>
-    </a>
-    <a href="{% url 'ai_test:ai_practice_create' %}" style="display:flex; align-items:center; gap:16px; background:#7c3aed; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
-        <i class="fa-solid fa-shuffle" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 题库组卷</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">AI题库抽题 / 自动阅卷 / 错题记录</div>
-        </div>
-    </a>
-    <a href="{% url 'ai_test:ai_wrong_book' %}" style="display:flex; align-items:center; gap:16px; background:#be123c; color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s;">
-        <i class="fa-solid fa-robot" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 错题本</div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">AI练习错题 / 查漏补缺</div>
-        </div>
-    </a>
-    {% else %}
-    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#059669,#065f46); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
-        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 变式出题 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
-        </div>
-    </a>
-    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#d97706,#92400e); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
-        <i class="fa-solid fa-list-check" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">我的 AI 试卷 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
-        </div>
-    </a>
-    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
-        <i class="fa-solid fa-shuffle" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 题库组卷 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
-        </div>
-    </a>
-    <a href="{% url 'user:vip' %}?from=home" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#be123c,#881337); color:#fff; padding:24px; border-radius:var(--radius); text-decoration:none; transition:opacity 0.2s; opacity:0.85;">
-        <i class="fa-solid fa-robot" style="font-size:28px; opacity:0.9;"></i>
-        <div>
-            <div style="font-weight:600; font-size:16px;">AI 错题本 <i class="fa-solid fa-lock" style="font-size:12px;color:#fbbf24;"></i></div>
-            <div style="font-size:13px; opacity:0.8; margin-top:4px;">升级 VIP 解锁</div>
-        </div>
-    </a>
-    {% endif %}
 </div>
-{% endif %}
 
-<div class="home-stagger" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
-    <a href="{% url 'kaoyan:question_list' %}" class="card" style="text-align:center; padding:32px 20px; text-decoration:none; transition:box-shadow 0.2s;">
-        <i class="fa-solid fa-book-open" style="font-size:32px; color:var(--blue-500); margin-bottom:14px;"></i>
-        <h3 style="font-size:16px; font-weight:600; color:var(--gray-800); margin-bottom:6px;">题库浏览</h3>
-        <p style="font-size:13px; color:var(--gray-500);">按年份学校筛选题目</p>
-    </a>
-    <a href="{% url 'zu_juan:exam_create' %}" class="card" style="text-align:center; padding:32px 20px; text-decoration:none; transition:box-shadow 0.2s;">
-        <i class="fa-solid fa-file-pen" style="font-size:32px; color:var(--blue-500); margin-bottom:14px;"></i>
-        <h3 style="font-size:16px; font-weight:600; color:var(--gray-800); margin-bottom:6px;">智能组卷{% if not is_vip %}<span style="font-size:10px;background:#fef3c7;color:#b45309;padding:2px 6px;border-radius:4px;margin-left:6px;">每日1套</span>{% endif %}</h3>
-        <p style="font-size:13px; color:var(--gray-500);">随机抽题，在线答题</p>
-    </a>
-    <div class="card" style="text-align:center; padding:32px 20px; opacity:0.5;">
-        <i class="fa-solid fa-video" style="font-size:32px; color:var(--gray-400); margin-bottom:14px;"></i>
-        <h3 style="font-size:16px; font-weight:600; color:var(--gray-500); margin-bottom:6px;">视频课程</h3>
-        <p style="font-size:13px; color:var(--gray-400);"><i class="fa-solid fa-lock" style="margin-right:4px;"></i>即将上线</p>
-    </div>
-</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
+// Tab 切换逻辑
+function switchTab(tabId, btn) {
+    // 隐藏所有 panel
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    // 取消所有 button active
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    // 激活目标
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+// GSAP 入场动画
 document.addEventListener('DOMContentLoaded', function() {
-    gsap.to('.home-anim', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
-    gsap.to('.home-stagger', { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, delay: 0.15, ease: 'power2.out' });
+    if (typeof gsap !== 'undefined') {
+        gsap.to('.home-anim', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+        gsap.to('.home-stagger', { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 0.15, ease: 'power2.out' });
+    }
 });
 </script>
 {% endblock %}

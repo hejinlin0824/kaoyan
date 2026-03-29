@@ -94,7 +94,7 @@ def _guess_model(view_func):
 
 def vip_context(request):
     """
-    全局模板上下文处理器：注入 is_vip / vip_label / is_free_user。
+    全局模板上下文处理器：注入 is_vip / vip_label / is_free_user / user_coins。
     在 settings.py TEMPLATES → OPTIONS → context_processors 中注册即可。
     """
     user = request.user
@@ -105,9 +105,11 @@ def vip_context(request):
             "is_vip": is_vip,
             "vip_label": vip_label,
             "is_free_user": not is_vip,
+            "user_coins": user.coins,
         }
     return {
         "is_vip": False,
         "vip_label": "",
         "is_free_user": True,
+        "user_coins": 0,
     }

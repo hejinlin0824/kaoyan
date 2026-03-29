@@ -14,8 +14,12 @@ urlpatterns = [
     # 异步任务状态轮询接口 (供前端 AJAX 调用，返回 JSON)
     path("status/<int:pk>/", views.ai_exam_status, name="ai_exam_status"),
 
-    # AI 试卷作答/练习页面 (无打分逻辑，纯净练习模式)
+    # AI 试卷作答页面
     path("take/<int:pk>/", views.ai_exam_take, name="ai_exam_take"),
+    # AI 试卷提交阅卷
+    path("submit/<int:pk>/", views.ai_exam_submit, name="ai_exam_submit"),
+    # AI 试卷阅卷结果
+    path("result/<int:pk>/", views.ai_exam_result, name="ai_exam_result"),
 
     # AI 题库浏览（与真题题库并行，展示所有 AI 变式题目）
     path("questions/", views.ai_question_list, name="ai_question_list"),

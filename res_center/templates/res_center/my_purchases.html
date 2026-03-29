@@ -1,0 +1,107 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}已购资源 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .purchase-item {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.15s;
+    }
+    .purchase-item:hover { box-shadow: var(--shadow-sm); border-color: var(--blue-200); }
+    .purchase-icon {
+        width: 56px; height: 56px; background: var(--blue-50); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .purchase-icon i { font-size: 22px; color: var(--blue-500); }
+    .purchase-info { flex: 1; min-width: 0; }
+    .purchase-title {
+        font-size: 15px; font-weight: 600; color: var(--gray-800); margin-bottom: 4px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .purchase-meta {
+        font-size: 13px; color: var(--gray-400); display: flex; flex-wrap: wrap; gap: 12px;
+    }
+    .purchase-meta span { display: flex; align-items: center; gap: 4px; }
+    .purchase-meta i { font-size: 11px; }
+    .purchase-actions { flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-bag-shopping"></i> 已购资源</h1>
+            <p class="page-subtitle">您已获取的所有资源</p>
+        </div>
+        <a href="{% url 'res_center:list' %}" class="btn btn-outline">
+            <i class="fa-solid fa-store"></i> 资源中心
+        </a>
+    </div>
+</div>
+
+{% if page_obj.object_list %}
+{% for p in page_obj.object_list %}
+<div class="purchase-item">
+    <div class="purchase-icon">
+        <i class="fa-solid {{ p.resource.category.icon }}"></i>
+    </div>
+    <div class="purchase-info">
+        <div class="purchase-title">
+            <a href="{% url 'res_center:detail' p.resource.pk %}" style="color:var(--gray-800);text-decoration:none;">
+                {{ p.resource.title }}
+            </a>
+        </div>
+        <div class="purchase-meta">
+            <span><i class="fa-solid fa-tag"></i> {{ p.resource.category.name }}</span>
+            {% if p.resource.school %}<span><i class="fa-solid fa-school"></i> {{ p.resource.school.name }}</span>{% endif %}
+            {% if p.resource.subject %}<span><i class="fa-solid fa-book"></i> {{ p.resource.subject.name }}</span>{% endif %}
+            <span><i class="fa-solid fa-clock"></i> {{ p.created_at|date:"Y-m-d" }}</span>
+            <span><i class="fa-solid fa-coins"></i> {% if p.coins_paid == 0 %}免费{% else %}{{ p.coins_paid }} 点{% endif %}</span>
+        </div>
+    </div>
+    <div class="purchase-actions">
+        <a href="{{ p.resource.link }}" target="_blank" class="btn btn-outline" rel="noopener">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> 查看
+        </a>
+    </div>
+</div>
+{% endfor %}
+
+{% if page_obj.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:28px;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">
+        <i class="fa-solid fa-chevron-left"></i> 上一页
+    </a>
+    {% endif %}
+    <span style="padding:10px 16px;font-size:14px;color:var(--gray-500);">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">
+        下一页 <i class="fa-solid fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state" style="background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);">
+    <i class="fa-solid fa-bag-shopping"></i>
+    <p>还没有获取过任何资源</p>
+    <a href="{% url 'res_center:list' %}" class="btn btn-primary" style="margin-top:16px;">
+        <i class="fa-solid fa-store"></i> 去资源中心看看
+    </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -180,6 +180,11 @@ def exam_submit(request, pk):
         if not created:
             WrongQuestion.objects.filter(pk=obj.pk).update(error_count=F("error_count") + 1)
 
+    # ── 每日打卡检测 ──
+    total_question_count = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
+    from user.coin_utils import try_daily_checkin
+    try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
+
     return redirect("zu_juan:exam_result", exam.id)
 
 

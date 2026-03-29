@@ -1,0 +1,181 @@
+{% extends "user/base.html" %}
+
+{% block title %}我的考试 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .exam-section { margin-bottom: 32px; }
+    .exam-section-title {
+        font-size: 16px; font-weight: 700; color: var(--gray-800);
+        display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+        padding-bottom: 12px; border-bottom: 2px solid var(--gray-100);
+    }
+    .exam-section-title i { font-size: 14px; }
+    .exam-section-title .count {
+        font-size: 12px; font-weight: 600; background: var(--gray-100);
+        color: var(--gray-600); padding: 2px 8px; border-radius: 10px;
+    }
+
+    .exam-card {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); padding: 20px 24px;
+        margin-bottom: 12px; display: flex; align-items: center;
+        justify-content: space-between; transition: all 0.2s;
+    }
+    .exam-card:hover { border-color: var(--blue-300); box-shadow: var(--shadow-sm); }
+
+    .exam-card .ec-left { display: flex; align-items: center; gap: 16px; flex: 1; }
+    .exam-card .ec-type-icon {
+        width: 44px; height: 44px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; flex-shrink: 0;
+    }
+    .exam-card .ec-info h4 {
+        font-size: 15px; font-weight: 600; color: var(--gray-800); margin-bottom: 4px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .exam-card .ec-info p { font-size: 13px; color: var(--gray-500); }
+
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+    }
+    .status-taking { background: #dbeafe; color: #1d4ed8; }
+    .status-preview { background: #fef3c7; color: #92400e; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-submitted { background: #f0fdf4; color: #15803d; }
+    .status-completed { background: #f0fdf4; color: #15803d; }
+
+    .exam-card .ec-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .exam-card .ec-score {
+        font-size: 14px; font-weight: 700; color: var(--gray-700);
+    }
+    .exam-card .ec-score span { color: var(--blue-600); }
+
+    .exam-card .ec-progress {
+        font-size: 12px; color: var(--gray-500); white-space: nowrap;
+    }
+
+    .pulsing-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: var(--blue-600);
+        display: inline-block; animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    .tip-banner {
+        background: var(--blue-50); border: 1px solid var(--blue-200);
+        border-radius: var(--radius); padding: 14px 20px; margin-bottom: 24px;
+        font-size: 13px; color: var(--blue-700); display: flex;
+        align-items: center; gap: 10px;
+    }
+    .tip-banner i { font-size: 16px; color: var(--blue-500); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title"><i class="fa-solid fa-clipboard-list"></i> 我的考试</div>
+    <p class="page-subtitle">查看所有考试记录，中途退出的考试可以随时回来继续</p>
+</div>
+
+{% if has_active %}
+<div class="tip-banner">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>你有正在进行的考试，点击「继续作答」即可回到之前的进度</span>
+</div>
+{% endif %}
+
+{# ═══ 进行中 ═══ #}
+<div class="exam-section">
+    <div class="exam-section-title">
+        <i class="fa-solid fa-spinner" style="color:var(--blue-500);"></i>
+        进行中的考试
+        <span class="count">{{ in_progress|length }}</span>
+    </div>
+
+    {% if in_progress %}
+        {% for e in in_progress %}
+        <div class="exam-card">
+            <div class="ec-left">
+                <div class="ec-type-icon" style="background:{{ e.type_bg }};color:{{ e.type_color }};">
+                    <i class="fa-solid {{ e.type_icon }}"></i>
+                </div>
+                <div class="ec-info">
+                    <h4>
+                        {{ e.type }}
+                        <span class="status-badge status-{{ e.status }}">
+                            {% if e.status == "taking" %}<span class="pulsing-dot"></span>{% endif %}
+                            {{ e.status_label }}
+                        </span>
+                    </h4>
+                    <p>{{ e.created_at|date:"Y-m-d H:i" }} · {{ e.q_count }}题{% if e.answered is not None %} · 已答{{ e.answered }}题{% endif %}</p>
+                </div>
+            </div>
+            <div class="ec-right">
+                {% if e.resume_url %}
+                <a href="{{ e.resume_url }}" class="btn btn-primary" style="padding:8px 20px;font-size:13px;">
+                    {% if e.status == "taking" %}<i class="fa-solid fa-play"></i>{% endif %}
+                    {{ e.resume_label }}
+                </a>
+                {% else %}
+                <span class="btn btn-outline" style="padding:8px 20px;font-size:13px;opacity:0.6;cursor:default;">
+                    <i class="fa-solid fa-clock"></i> {{ e.resume_label }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state" style="padding:40px;">
+            <i class="fa-solid fa-inbox" style="font-size:36px;"></i>
+            <p>暂无进行中的考试</p>
+        </div>
+    {% endif %}
+</div>
+
+{# ═══ 已完成 ═══ #}
+<div class="exam-section">
+    <div class="exam-section-title">
+        <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
+        已完成的考试
+        <span class="count">{{ completed|length }}</span>
+    </div>
+
+    {% if completed %}
+        {% for e in completed %}
+        <div class="exam-card">
+            <div class="ec-left">
+                <div class="ec-type-icon" style="background:{{ e.type_bg }};color:{{ e.type_color }};">
+                    <i class="fa-solid {{ e.type_icon }}"></i>
+                </div>
+                <div class="ec-info">
+                    <h4>
+                        {{ e.type }}
+                        <span class="status-badge status-{{ e.status }}">{{ e.status_label }}</span>
+                    </h4>
+                    <p>{{ e.created_at|date:"Y-m-d H:i" }} · {{ e.q_count }}题</p>
+                </div>
+            </div>
+            <div class="ec-right">
+                {% if e.score is not None %}
+                <div class="ec-score"><span>{{ e.score }}</span> / {{ e.total_score }}</div>
+                {% endif %}
+                {% if e.resume_url %}
+                <a href="{{ e.resume_url }}" class="btn btn-outline" style="padding:8px 20px;font-size:13px;">
+                    {{ e.resume_label }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state" style="padding:40px;">
+            <i class="fa-solid fa-inbox" style="font-size:36px;"></i>
+            <p>暂无已完成的考试</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

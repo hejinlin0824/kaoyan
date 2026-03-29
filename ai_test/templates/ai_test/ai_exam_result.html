@@ -1,0 +1,113 @@
+{% extends "user/base.html" %}
+
+{% block title %}AI 变式练习结果 - 考研平台{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+    .result-header{background:var(--white);border-radius:var(--radius);padding:24px 32px;margin-bottom:24px;border:1px solid var(--gray-200);text-align:center;}
+    .result-score{font-size:36px;font-weight:700;color:var(--blue-600);}
+    .result-detail{font-size:14px;color:var(--gray-500);margin-top:8px;}
+    .result-stats{display:flex;justify-content:center;gap:24px;margin-top:16px;}
+    .stat-item{text-align:center;}
+    .stat-num{font-size:20px;font-weight:700;}
+    .stat-label{font-size:12px;color:var(--gray-400);margin-top:2px;}
+    .q-section{margin-bottom:24px;}
+    .q-section-title{font-size:16px;font-weight:600;color:var(--blue-700);margin-bottom:12px;padding-left:12px;border-left:3px solid var(--blue-500);}
+    .q-item{padding:20px 24px;margin-bottom:10px;}
+    .q-item.correct{border-left:3px solid #22c55e;}
+    .q-item.wrong{border-left:3px solid #ef4444;}
+    .q-item.skip{border-left:3px solid var(--gray-300);}
+    .q-num{font-weight:600;color:var(--blue-600);margin-right:8px;}
+    .q-content{font-size:15px;line-height:1.8;}
+    .q-meta{font-size:12px;color:var(--gray-400);margin-top:12px;padding-top:8px;border-top:1px dashed var(--gray-200);}
+    .result-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-left:8px;}
+    .result-tag-correct{background:#dcfce7;color:#15803d;}
+    .result-tag-wrong{background:#fee2e2;color:#dc2626;}
+    .result-tag-skip{background:var(--gray-100);color:var(--gray-500);}
+    .answer-reveal{margin-top:8px;padding:14px 16px;background:var(--blue-50);border-left:3px solid var(--blue-500);border-radius:0 8px 8px 0;font-size:14px;line-height:1.8;}
+    .explanation-reveal{margin-top:8px;padding:14px 16px;background:#f0fdf4;border-left:3px solid #22c55e;border-radius:0 8px 8px 0;font-size:14px;line-height:1.8;color:var(--gray-700);}
+    .user-answer{margin-top:8px;padding:10px 14px;background:var(--gray-50);border-radius:8px;font-size:14px;color:var(--gray-600);}
+    .btn-bar{text-align:center;margin:24px 0 60px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<div class="result-header">
+    <div style="font-size:16px;color:var(--gray-500);margin-bottom:8px;">AI 变式练习 · 阅卷结果</div>
+    <div class="result-score">{{ exam.score }} / {{ exam.total_objective_score }}</div>
+    <div class="result-detail">客观题得分 · 用时 {{ exam.duration_seconds|default:0 }} 秒</div>
+    <div class="result-stats">
+        <div class="stat-item">
+            <div class="stat-num" style="color:#22c55e;">{{ exam_questions|length }}</div>
+            <div class="stat-label">总题数</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" style="color:var(--blue-600);">{{ exam.score }}</div>
+            <div class="stat-label">得分</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" style="color:var(--gray-500);">{{ exam.duration_seconds|default:0 }}s</div>
+            <div class="stat-label">用时</div>
+        </div>
+    </div>
+</div>
+
+{% regroup exam_questions by question.question_type.name as sections %}
+{% for section in sections %}
+<div class="q-section">
+    <div class="q-section-title">{{ section.grouper }}题（共 {{ section.list|length }} 道）</div>
+    {% for eq in section.list %}
+    {% with type_name=section.grouper correct_answer=eq.question.correct_answer user_ans=eq.user_answer %}
+    {% if type_name in "选择,判断,填空" %}
+        {% if user_ans and correct_answer and user_ans|striptags == correct_answer|striptags %}
+        <div class="card q-item correct">
+        {% else %}
+        <div class="card q-item {% if user_ans %}wrong{% else %}skip{% endif %}">
+        {% endif %}
+    {% else %}
+        <div class="card q-item skip">
+    {% endif %}
+        <div class="q-content">
+            <span class="q-num">{{ forloop.counter }}.</span>
+            <span data-raw="{{ eq.question.content|escape }}"></span>
+        </div>
+
+        {% if user_ans %}
+        <div class="user-answer"><strong>你的答案：</strong>{{ user_ans }}</div>
+        {% else %}
+        <div class="user-answer" style="color:var(--gray-400);"><strong>未作答</strong></div>
+        {% endif %}
+
+        {% if correct_answer %}
+        <div class="answer-reveal" data-raw="{{ correct_answer|escape }}"></div>
+        {% endif %}
+
+        {% if eq.question.explanation %}
+        <div class="explanation-reveal" data-raw="{{ eq.question.explanation|escape }}"></div>
+        {% endif %}
+
+        <div class="q-meta">
+            <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i>变式溯源：由 {{ eq.question.year }}年 {{ eq.question.school.name }} 真题 [{{ eq.question.knowledge_point }}] 改写
+        </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="btn-bar">
+    <a href="{% url 'user:my_exams' %}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> 返回我的考试</a>
+</div>
+
+<script>
+const PURIFY_CFG={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function wrapLatex(t){if(!t)return t;const parts=t.split(/(\$[^$]+?\$|\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/);return parts.map((part,idx)=>{if(idx%2===1)return part;return part.replace(/(\\[a-zA-Z]+(?:\s*\^{[^}]*}|\s*_{[^}]*}|\s*\^{[^{][^}]*}|\s*_{[^{][^}]*}|\s*\([^)]*\))*)+/g,'$$$1$$');}).join('');}
+function renderMd(t){if(!t)return '';t=wrapLatex(t);const m=[];let i=0;function h(c,d){const p=`\x00L${i}\x00`;m.push({p,c:c.trim(),d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(x=>{try{html=html.split(x.p).join(katex.renderToString(x.c,{displayMode:x.d,throwOnError:false}));}catch(e){html=html.split(x.p).join(x.c);}});return DOMPurify.sanitize(html,PURIFY_CFG);}
+document.querySelectorAll('[data-raw]').forEach(el=>{const r=el.getAttribute('data-raw');if(r)el.innerHTML=renderMd(r);});
+</script>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}{{ resource.title }} - 资源中心 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+    }
+    @media (max-width: 800px) {
+        .detail-layout { grid-template-columns: 1fr; }
+    }
+    .detail-main {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+    .detail-cover {
+        width: 100%;
+        max-height: 360px;
+        background: var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .detail-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .detail-cover .placeholder-icon {
+        font-size: 80px;
+        color: var(--gray-300);
+        padding: 60px 0;
+    }
+    .detail-body {
+        padding: 28px 32px;
+    }
+    .detail-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 12px;
+    }
+    .detail-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 20px;
+    }
+    .detail-tags .badge {
+        font-size: 12px;
+        padding: 3px 10px;
+    }
+    .detail-desc {
+        font-size: 15px;
+        color: var(--gray-700);
+        line-height: 1.8;
+    }
+    .detail-desc img { max-width: 100%; border-radius: 6px; }
+    .detail-desc pre {
+        background: var(--gray-100);
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 14px;
+    }
+    .detail-desc code {
+        background: var(--gray-100);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+    .detail-desc pre code { background: none; padding: 0; }
+    .detail-desc table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+    }
+    .detail-desc th, .detail-desc td {
+        border: 1px solid var(--gray-200);
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    .detail-desc th { background: var(--gray-50); font-weight: 600; }
+
+    /* Sidebar */
+    .detail-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .sidebar-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 24px;
+    }
+    .sidebar-price {
+        font-size: 28px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+    }
+    .sidebar-price.free { color: #16a34a; }
+    .sidebar-price.paid { color: #d97706; }
+    .sidebar-price i { font-size: 20px; }
+    .sidebar-price-label {
+        font-size: 13px;
+        color: var(--gray-400);
+        margin-bottom: 16px;
+    }
+    .sidebar-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+    .sidebar-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sidebar-info-item i {
+        width: 18px;
+        text-align: center;
+        color: var(--gray-400);
+    }
+    .sidebar-actions { display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-actions .btn { justify-content: center; }
+
+    .error-msg {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:20px;">
+    <a href="{% url 'res_center:list' %}" class="btn btn-ghost" style="padding:6px 12px;font-size:13px;">
+        <i class="fa-solid fa-arrow-left"></i> 返回资源中心
+    </a>
+</div>
+
+<div class="detail-layout">
+    <!-- Main -->
+    <div class="detail-main">
+        <div class="detail-cover">
+            {% if resource.cover %}
+            <img src="{{ resource.cover.url }}" alt="{{ resource.title }}">
+            {% else %}
+            <i class="fa-solid {{ resource.category.icon }} placeholder-icon"></i>
+            {% endif %}
+        </div>
+        <div class="detail-body">
+            <h1 class="detail-title">{{ resource.title }}</h1>
+            <div class="detail-tags">
+                <span class="badge badge-blue"><i class="fa-solid {{ resource.category.icon }}" style="margin-right:3px;font-size:10px;"></i> {{ resource.category.name }}</span>
+                {% if resource.school %}
+                <span class="badge badge-gray"><i class="fa-solid fa-school" style="margin-right:3px;font-size:10px;"></i> {{ resource.school.name }}</span>
+                {% endif %}
+                {% if resource.subject %}
+                <span class="badge badge-gray"><i class="fa-solid fa-book" style="margin-right:3px;font-size:10px;"></i> {{ resource.subject.name }}</span>
+                {% endif %}
+            </div>
+            <div class="detail-desc" id="desc-content">{{ resource.description|escape }}</div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="detail-sidebar">
+        <div class="sidebar-card">
+            {% if resource.price == 0 %}
+            <div class="sidebar-price free"><i class="fa-solid fa-gift"></i> 免费</div>
+            {% else %}
+            <div class="sidebar-price paid"><i class="fa-solid fa-coins"></i> {{ resource.price }}</div>
+            {% endif %}
+            <div class="sidebar-price-label">点数价格</div>
+
+            <div class="sidebar-info">
+                <div class="sidebar-info-item">
+                    <i class="fa-solid fa-download"></i>
+                    <span>已获取 {{ resource.download_count }} 次</span>
+                </div>
+                <div class="sidebar-info-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>{{ resource.created_at|date:"Y-m-d" }}</span>
+                </div>
+                {% if resource.uploaded_by %}
+                <div class="sidebar-info-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>{{ resource.uploaded_by.username }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if error %}
+            <div class="error-msg">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="sidebar-actions">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'user:login' %}" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-right-to-bracket"></i> 登录后获取
+                    </a>
+                {% elif can_access %}
+                    {% if resource.price == 0 %}
+                    <form method="post" action="{% url 'res_center:purchase' resource.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-download"></i> 免费获取
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{{ resource.link }}" target="_blank" class="btn btn-primary btn-block" rel="noopener">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> 查看资源
+                    </a>
+                    {% endif %}
+                    {% if user.is_staff %}
+                    <a href="{% url 'res_center:edit' resource.pk %}" class="btn btn-outline btn-block">
+                        <i class="fa-solid fa-pen"></i> 编辑
+                    </a>
+                    {% endif %}
+                {% elif is_vip %}
+                    <form method="post" action="{% url 'res_center:purchase' resource.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-crown"></i> VIP 免费获取
+                        </button>
+                    </form>
+                {% elif purchased %}
+                    <a href="{{ resource.link }}" target="_blank" class="btn btn-primary btn-block" rel="noopener">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> 查看资源
+                    </a>
+                {% else %}
+                    <form method="post" action="{% url 'res_center:purchase' resource.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-block"
+                                onclick="return confirm('确认花费 {{ resource.price }} 点数购买此资源？')">
+                            <i class="fa-solid fa-coins"></i> 花费 {{ resource.price }} 点数购买
+                        </button>
+                    </form>
+                    <div style="font-size:12px;color:var(--gray-400);text-align:center;">
+                        当前余额: {{ user.coins }} 点
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if is_vip %}
+        <div class="sidebar-card" style="text-align:center;">
+            <i class="fa-solid fa-crown" style="font-size:24px;color:#d97706;margin-bottom:8px;"></i>
+            <div style="font-size:14px;font-weight:600;color:#d97706;">VIP 用户</div>
+            <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">所有资源免费获取</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('desc-content');
+    if (el && typeof marked !== 'undefined') {
+        el.innerHTML = marked.parse(el.textContent);
+    }
+    // KaTeX auto-render
+    if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.getElementById('desc-content'), {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ]
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'zu_juan',
     'user',
     'ai_test',  # 新增 AI 出题模块
+    'res_center',  # 资源中心
 ]
 
 MIDDLEWARE = [

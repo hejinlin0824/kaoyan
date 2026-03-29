@@ -332,16 +332,38 @@
                 </div>
             </div>
 
+            {# ── 资源中心 ── #}
+            <a href="{% url 'res_center:list' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 16px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:5px;">
+                <i class="fa-solid fa-store" style="color:var(--blue-500);"></i> 资源中心
+            </a>
+
+            {# ── 管理员 下拉菜单（仅管理员可见）── #}
             {% if user.is_authenticated and user.is_staff %}
-                <div class="nav-divider"></div>
-                <a href="{% url 'kaoyan:question_add' %}"><i class="fa-solid fa-plus" style="margin-right:4px;"></i>录入题目</a>
+            <div class="nav-dropdown" onclick="this.classList.toggle('open')">
+                <button class="nav-dropdown-toggle">
+                    <i class="fa-solid fa-shield-halved"></i> 管理员 <i class="fa-solid fa-chevron-down caret"></i>
+                </button>
+                <div class="nav-dropdown-menu" onclick="event.stopPropagation()">
+                    <a href="{% url 'kaoyan:question_add' %}"><i class="fa-solid fa-plus"></i> 录入题目</a>
+                    <a href="{% url 'res_center:upload' %}"><i class="fa-solid fa-cloud-arrow-up"></i> 上传资源</a>
+                </div>
+            </div>
             {% endif %}
             {% if user.is_authenticated %}
                 <div class="nav-divider"></div>
+                <a href="{% url 'user:my_exams' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 12px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fa-solid fa-clipboard-list" style="color:var(--blue-600);"></i> 我的考试
+                </a>
+                <a href="{% url 'user:checkin_calendar' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 12px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fa-solid fa-calendar-check" style="color:#16a34a;"></i> 打卡
+                </a>
                 <div class="nav-user">
                     <i class="fa-solid fa-circle-user"></i>
                     {{ user.username }}
                     {% if is_vip %}<span class="vip-tag">{{ vip_label }}</span>{% endif %}
+                    <span class="coin-tag" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;">
+                        <i class="fa-solid fa-coins" style="font-size:10px;"></i> {{ user_coins }}
+                    </span>
                 </div>
                 <a href="{% url 'user:logout' %}" class="btn-ghost"><i class="fa-solid fa-right-from-bracket"></i></a>
             {% else %}

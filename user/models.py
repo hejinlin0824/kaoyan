@@ -25,6 +25,26 @@ class User(AbstractUser):
     # ── 站内点数 ──
     coins = models.IntegerField(default=0, verbose_name="站内点数")
 
+    # ── 个人主页 ──
+    avatar = models.ImageField(upload_to="avatars/", default="avatars/default.png", verbose_name="头像")
+    bio = models.TextField(max_length=300, blank=True, default="", verbose_name="个人简介")
+
+    # ── 学习目标 ──
+    target_school = models.ForeignKey(
+        "kaoyan_app.School", on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name="目标院校"
+    )
+    KAOYAN_SESSION_CHOICES = [
+        (27, "第27届考研（2026年12月）"),
+        (28, "第28届考研（2027年12月）"),
+        (29, "第29届考研（2028年12月）"),
+        (30, "第30届考研（2029年12月）"),
+    ]
+    kaoyan_session = models.IntegerField(
+        choices=KAOYAN_SESSION_CHOICES, null=True, blank=True, verbose_name="考研届次"
+    )
+    study_start_date = models.DateField(null=True, blank=True, verbose_name="学习开始日期")
+
     class Meta:
         verbose_name = "用户"
         verbose_name_plural = "用户"
@@ -66,6 +86,47 @@ class CoinRecord(models.Model):
     def __str__(self):
         sign = "+" if self.amount >= 0 else ""
         return f"{self.user.username} {sign}{self.amount} ({self.get_reason_display()})"
+
+
+class Achievement(models.Model):
+    """成就系统"""
+    ACHIEVEMENT_CHOICES = [
+        ("first_checkin", "初来乍到", "fa-star", "完成第一次打卡"),
+        ("streak_3", "坚持不懈", "fa-fire", "连续打卡3天"),
+        ("streak_7", "一周达人", "fa-fire", "连续打卡7天"),
+        ("streak_30", "月度之星", "fa-fire-flame-curved", "连续打卡30天"),
+        ("streak_100", "百日传奇", "fa-fire-flame-curved", "连续打卡100天"),
+        ("checkin_10", "初露锋芒", "fa-medal", "累计打卡10天"),
+        ("checkin_50", "勤学苦练", "fa-medal", "累计打卡50天"),
+        ("checkin_100", "百日打卡", "fa-trophy", "累计打卡100天"),
+        ("exam_1", "初试牛刀", "fa-file-pen", "完成第1套试卷"),
+        ("exam_5", "小试牛刀", "fa-graduation-cap", "完成5套试卷"),
+        ("exam_20", "练习达人", "fa-graduation-cap", "完成20套试卷"),
+        ("exam_50", "题海战神", "fa-graduation-cap", "完成50套试卷"),
+        ("vip_member", "尊贵会员", "fa-crown", "开通VIP会员"),
+        ("first_purchase", "资源新手", "fa-bag-shopping", "首次获取资源"),
+        ("purchase_10", "资源达人", "fa-bag-shopping", "获取10个资源"),
+        ("study_30", "学海无涯", "fa-book-open", "坚持学习30天"),
+        ("study_100", "百尺竿头", "fa-book-open", "坚持学习100天"),
+        ("study_365", "考研一年", "fa-calendar-check", "坚持学习365天"),
+        ("set_target", "明确目标", "fa-bullseye", "设置目标院校"),
+    ]
+
+    code = models.CharField(max_length=30, verbose_name="成就代码")
+    name = models.CharField(max_length=30, verbose_name="成就名称")
+    icon = models.CharField(max_length=30, verbose_name="图标")
+    description = models.CharField(max_length=100, verbose_name="描述")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="achievements", verbose_name="用户")
+    earned_at = models.DateTimeField(auto_now_add=True, verbose_name="获得时间")
+
+    class Meta:
+        verbose_name = "成就"
+        verbose_name_plural = "成就"
+        unique_together = ("user", "code")
+        ordering = ["-earned_at"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
 
 
 class PendingRegistration(models.Model):

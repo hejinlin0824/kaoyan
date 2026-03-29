@@ -137,6 +137,12 @@
         <a href="{% url 'user:vip' %}?from=ai_question_list" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">升级 VIP</a>
     </div>
     {% endif %}
+    {# ── 讨论按钮 ── #}
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+        <a href="{% url 'community:ai_question_discuss' q.id %}" class="btn btn-outline" style="font-size:13px;padding:6px 14px;">
+            <i class="fa-solid fa-comments"></i> 讨论
+        </a>
+    </div>
 </div>
 {% endfor %}
 

@@ -5,17 +5,55 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import LoginForm, RegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm
-from .models import User, PendingRegistration
+from .forms import LoginForm, RegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm, ProfileEditForm
+from .models import User, PendingRegistration, CoinRecord
 
 
 def home(request):
     from kaoyan_app.models import Question, School, QuestionType
+    from django.utils import timezone
+    from datetime import date
+
     user = request.user
     is_vip = user.is_vip() if user.is_authenticated else False
     vip_label = dict(user.VIP_CHOICES).get(user.vip_level, "") if user.is_authenticated else ""
+
+    # 登录用户的扩展数据
+    target_school_name = ""
+    kaoyan_countdown = None
+    kaoyan_session_label = ""
+    study_days = 0
+    streak = 0
+    user_coins = 0
+
+    if user.is_authenticated:
+        user_coins = user.coins
+        # 目标院校
+        if user.target_school:
+            target_school_name = user.target_school.name
+        # 考研倒计时
+        if user.kaoyan_session:
+            session_dates = {27: date(2026, 12, 26), 28: date(2027, 12, 25), 29: date(2028, 12, 24), 30: date(2029, 12, 23)}
+            target_date = session_dates.get(user.kaoyan_session)
+            if target_date:
+                delta = (target_date - timezone.now().date()).days
+                kaoyan_countdown = max(delta, 0)
+                kaoyan_session_label = f"第{user.kaoyan_session}届考研"
+        # 学习天数
+        if user.study_start_date:
+            study_days = (timezone.now().date() - user.study_start_date).days + 1
+        # 连续打卡
+        check_date = timezone.now().date()
+        while True:
+            if CoinRecord.objects.filter(user=user, reason="daily_checkin", created_at__date=check_date).exists():
+                streak += 1
+                from datetime import timedelta
+                check_date -= timedelta(days=1)
+            else:
+                break
+
     return render(request, "user/home.html", {
         "user": user,
         "is_vip": is_vip,
@@ -23,6 +61,12 @@ def home(request):
         "total_questions": Question.objects.count(),
         "total_schools": School.objects.count(),
         "total_types": QuestionType.objects.count(),
+        "user_coins": user_coins,
+        "target_school_name": target_school_name,
+        "kaoyan_countdown": kaoyan_countdown,
+        "kaoyan_session_label": kaoyan_session_label,
+        "study_days": study_days,
+        "streak": streak,
     })
 
 
@@ -408,4 +452,300 @@ def my_exams(request):
         "in_progress": in_progress,
         "completed": completed,
         "has_active": any(e["status"] == "taking" for e in in_progress),
+    })
+
+
+@login_required
+def profile(request, pk=None):
+    """个人主页：查看自己或他人的资料"""
+    from django.utils import timezone
+
+    if pk is None:
+        user = request.user
+    else:
+        user = get_object_or_404(User, pk=pk)
+    is_owner = (user == request.user)
+
+    # 统计数据
+    # 连续打卡天数
+    streak = 0
+    check_date = timezone.now().date()
+    while True:
+        if CoinRecord.objects.filter(
+            user=user, reason="daily_checkin", created_at__date=check_date,
+        ).exists():
+            streak += 1
+            from datetime import timedelta
+            check_date -= timedelta(days=1)
+        else:
+            break
+
+    # 总打卡天数
+    total_checkins = CoinRecord.objects.filter(user=user, reason="daily_checkin").count()
+
+    # 考试数
+    from zu_juan.models import Exam
+    from ai_test.models import AIPracticeExam, AIExam
+    total_exams = (
+        Exam.objects.filter(user=user).count()
+        + AIPracticeExam.objects.filter(user=user).count()
+        + AIExam.objects.filter(user=user, status__in=["completed", "taking", "submitted"]).count()
+    )
+
+    # 资源购买数
+    from res_center.models import ResourcePurchase
+    total_purchases = ResourcePurchase.objects.filter(user=user).count()
+
+    # 注册天数
+    from datetime import timedelta
+    days_since_join = (timezone.now().date() - user.date_joined.date()).days + 1
+
+    # 学习天数（从学习开始日期算起）
+    study_days = 0
+    if user.study_start_date:
+        study_days = (timezone.now().date() - user.study_start_date).days + 1
+
+    # 考研倒计时
+    kaoyan_countdown = None
+    kaoyan_session_label = ""
+    if user.kaoyan_session:
+        from datetime import date
+        session_dates = {27: date(2026, 12, 26), 28: date(2027, 12, 25), 29: date(2028, 12, 24), 30: date(2029, 12, 23)}
+        target_date = session_dates.get(user.kaoyan_session)
+        if target_date:
+            delta = (target_date - timezone.now().date()).days
+            kaoyan_countdown = max(delta, 0)
+            kaoyan_session_label = f"第{user.kaoyan_session}届考研"
+
+    # 目标院校名称
+    target_school_name = ""
+    if user.target_school:
+        target_school_name = user.target_school.name
+
+    # 成就系统 - 计算已获得的成就
+    from .models import Achievement
+    earned_codes = set(Achievement.objects.filter(user=user).values_list("code", flat=True))
+
+    # 检查并授予成就
+    def grant_achievement(code, name, icon, desc):
+        if code not in earned_codes:
+            Achievement.objects.get_or_create(user=user, code=code, defaults={"name": name, "icon": icon, "description": desc})
+            earned_codes.add(code)
+
+    # 打卡成就
+    if total_checkins >= 1:
+        grant_achievement("first_checkin", "初来乍到", "fa-star", "完成第一次打卡")
+    if streak >= 3:
+        grant_achievement("streak_3", "坚持不懈", "fa-fire", "连续打卡3天")
+    if streak >= 7:
+        grant_achievement("streak_7", "一周达人", "fa-fire", "连续打卡7天")
+    if streak >= 30:
+        grant_achievement("streak_30", "月度之星", "fa-fire-flame-curved", "连续打卡30天")
+    if streak >= 100:
+        grant_achievement("streak_100", "百日传奇", "fa-fire-flame-curved", "连续打卡100天")
+    if total_checkins >= 10:
+        grant_achievement("checkin_10", "初露锋芒", "fa-medal", "累计打卡10天")
+    if total_checkins >= 50:
+        grant_achievement("checkin_50", "勤学苦练", "fa-medal", "累计打卡50天")
+    if total_checkins >= 100:
+        grant_achievement("checkin_100", "百日打卡", "fa-trophy", "累计打卡100天")
+    # 考试成就
+    if total_exams >= 1:
+        grant_achievement("exam_1", "初试牛刀", "fa-file-pen", "完成第1套试卷")
+    if total_exams >= 5:
+        grant_achievement("exam_5", "小试牛刀", "fa-graduation-cap", "完成5套试卷")
+    if total_exams >= 20:
+        grant_achievement("exam_20", "练习达人", "fa-graduation-cap", "完成20套试卷")
+    if total_exams >= 50:
+        grant_achievement("exam_50", "题海战神", "fa-graduation-cap", "完成50套试卷")
+    # VIP成就
+    if user.is_vip():
+        grant_achievement("vip_member", "尊贵会员", "fa-crown", "开通VIP会员")
+    # 资源购买成就
+    if total_purchases >= 1:
+        grant_achievement("first_purchase", "资源新手", "fa-bag-shopping", "首次获取资源")
+    if total_purchases >= 10:
+        grant_achievement("purchase_10", "资源达人", "fa-bag-shopping", "获取10个资源")
+    # 学习天数成就
+    if study_days >= 30:
+        grant_achievement("study_30", "学海无涯", "fa-book-open", "坚持学习30天")
+    if study_days >= 100:
+        grant_achievement("study_100", "百尺竿头", "fa-book-open", "坚持学习100天")
+    if study_days >= 365:
+        grant_achievement("study_365", "考研一年", "fa-calendar-check", "坚持学习365天")
+    # 目标院校成就
+    if user.target_school:
+        grant_achievement("set_target", "明确目标", "fa-bullseye", "设置目标院校")
+
+    # 所有成就定义（用于展示未获得的）
+    all_achievements = [
+        ("first_checkin", "初来乍到", "fa-star", "完成第一次打卡"),
+        ("streak_3", "坚持不懈", "fa-fire", "连续打卡3天"),
+        ("streak_7", "一周达人", "fa-fire", "连续打卡7天"),
+        ("streak_30", "月度之星", "fa-fire-flame-curved", "连续打卡30天"),
+        ("streak_100", "百日传奇", "fa-fire-flame-curved", "连续打卡100天"),
+        ("checkin_10", "初露锋芒", "fa-medal", "累计打卡10天"),
+        ("checkin_50", "勤学苦练", "fa-medal", "累计打卡50天"),
+        ("checkin_100", "百日打卡", "fa-trophy", "累计打卡100天"),
+        ("exam_1", "初试牛刀", "fa-file-pen", "完成第1套试卷"),
+        ("exam_5", "小试牛刀", "fa-graduation-cap", "完成5套试卷"),
+        ("exam_20", "练习达人", "fa-graduation-cap", "完成20套试卷"),
+        ("exam_50", "题海战神", "fa-graduation-cap", "完成50套试卷"),
+        ("vip_member", "尊贵会员", "fa-crown", "开通VIP会员"),
+        ("first_purchase", "资源新手", "fa-bag-shopping", "首次获取资源"),
+        ("purchase_10", "资源达人", "fa-bag-shopping", "获取10个资源"),
+        ("study_30", "学海无涯", "fa-book-open", "坚持学习30天"),
+        ("study_100", "百尺竿头", "fa-book-open", "坚持学习100天"),
+        ("study_365", "考研一年", "fa-calendar-check", "坚持学习365天"),
+        ("set_target", "明确目标", "fa-bullseye", "设置目标院校"),
+    ]
+
+    earned_count = len(earned_codes)
+    total_count = len(all_achievements)
+
+    return render(request, "user/profile.html", {
+        "profile_user": user,
+        "is_owner": is_owner,
+        "streak": streak,
+        "total_checkins": total_checkins,
+        "total_exams": total_exams,
+        "total_purchases": total_purchases,
+        "days_since_join": days_since_join,
+        "study_days": study_days,
+        "kaoyan_countdown": kaoyan_countdown,
+        "kaoyan_session_label": kaoyan_session_label,
+        "target_school_name": target_school_name,
+        "is_vip": user.is_vip(),
+        "vip_label": dict(user.VIP_CHOICES).get(user.vip_level, ""),
+        "all_achievements": all_achievements,
+        "earned_codes": earned_codes,
+        "earned_count": earned_count,
+        "total_achievement_count": total_count,
+    })
+
+
+@login_required
+def achievements_page(request):
+    """成就系统独立页面：展示所有成就、达成要求、进度条"""
+    from django.utils import timezone
+    from .models import Achievement
+
+    user = request.user
+
+    # ── 统计数据 ──
+    # 连续打卡天数
+    streak = 0
+    check_date = timezone.now().date()
+    while True:
+        if CoinRecord.objects.filter(
+            user=user, reason="daily_checkin", created_at__date=check_date,
+        ).exists():
+            streak += 1
+            from datetime import timedelta
+            check_date -= timedelta(days=1)
+        else:
+            break
+
+    # 总打卡天数
+    total_checkins = CoinRecord.objects.filter(user=user, reason="daily_checkin").count()
+
+    # 考试数
+    from zu_juan.models import Exam
+    from ai_test.models import AIPracticeExam, AIExam
+    total_exams = (
+        Exam.objects.filter(user=user).count()
+        + AIPracticeExam.objects.filter(user=user).count()
+        + AIExam.objects.filter(user=user, status__in=["completed", "taking", "submitted"]).count()
+    )
+
+    # 资源购买数
+    from res_center.models import ResourcePurchase
+    total_purchases = ResourcePurchase.objects.filter(user=user).count()
+
+    # 学习天数
+    study_days = 0
+    if user.study_start_date:
+        study_days = (timezone.now().date() - user.study_start_date).days + 1
+
+    # 已获得成就的 code 集合
+    earned_codes = set(Achievement.objects.filter(user=user).values_list("code", flat=True))
+
+    # ── 成就定义 + 进度计算 ──
+    # 每个成就: (code, name, icon, description, category, current_value, target_value)
+    achievement_defs = [
+        # 打卡类
+        ("first_checkin", "初来乍到", "fa-star", "完成第一次打卡", "打卡", total_checkins, 1),
+        ("streak_3", "坚持不懈", "fa-fire", "连续打卡3天", "打卡", streak, 3),
+        ("streak_7", "一周达人", "fa-fire", "连续打卡7天", "打卡", streak, 7),
+        ("streak_30", "月度之星", "fa-fire-flame-curved", "连续打卡30天", "打卡", streak, 30),
+        ("streak_100", "百日传奇", "fa-fire-flame-curved", "连续打卡100天", "打卡", streak, 100),
+        ("checkin_10", "初露锋芒", "fa-medal", "累计打卡10天", "打卡", total_checkins, 10),
+        ("checkin_50", "勤学苦练", "fa-medal", "累计打卡50天", "打卡", total_checkins, 50),
+        ("checkin_100", "百日打卡", "fa-trophy", "累计打卡100天", "打卡", total_checkins, 100),
+        # 考试类
+        ("exam_1", "初试牛刀", "fa-file-pen", "完成第1套试卷", "考试", total_exams, 1),
+        ("exam_5", "小试牛刀", "fa-graduation-cap", "完成5套试卷", "考试", total_exams, 5),
+        ("exam_20", "练习达人", "fa-graduation-cap", "完成20套试卷", "考试", total_exams, 20),
+        ("exam_50", "题海战神", "fa-graduation-cap", "完成50套试卷", "考试", total_exams, 50),
+        # VIP类
+        ("vip_member", "尊贵会员", "fa-crown", "开通VIP会员", "其他", 1 if user.is_vip() else 0, 1),
+        # 资源类
+        ("first_purchase", "资源新手", "fa-bag-shopping", "首次获取资源", "资源", total_purchases, 1),
+        ("purchase_10", "资源达人", "fa-bag-shopping", "获取10个资源", "资源", total_purchases, 10),
+        # 学习天数类
+        ("study_30", "学海无涯", "fa-book-open", "坚持学习30天", "学习", study_days, 30),
+        ("study_100", "百尺竿头", "fa-book-open", "坚持学习100天", "学习", study_days, 100),
+        ("study_365", "考研一年", "fa-calendar-check", "坚持学习365天", "学习", study_days, 365),
+        # 目标类
+        ("set_target", "明确目标", "fa-bullseye", "设置目标院校", "其他", 1 if user.target_school else 0, 1),
+    ]
+
+    # 按分类分组
+    categories = {}
+    for code, name, icon, desc, cat, current, target in achievement_defs:
+        earned = code in earned_codes
+        progress = min(100, int(current / target * 100)) if target > 0 else 0
+        if earned:
+            progress = 100
+            current = target  # 已获得则显示满
+        categories.setdefault(cat, []).append({
+            "code": code,
+            "name": name,
+            "icon": icon,
+            "description": desc,
+            "earned": earned,
+            "current": current,
+            "target": target,
+            "progress": progress,
+        })
+
+    # 总计
+    earned_count = len(earned_codes)
+    total_count = len(achievement_defs)
+
+    return render(request, "user/achievements.html", {
+        "categories": categories,
+        "earned_count": earned_count,
+        "total_count": total_count,
+        "streak": streak,
+        "total_checkins": total_checkins,
+        "total_exams": total_exams,
+        "total_purchases": total_purchases,
+        "study_days": study_days,
+    })
+
+
+@login_required
+def profile_edit(request):
+    """编辑个人资料"""
+    if request.method == "POST":
+        form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("user:profile")
+    else:
+        form = ProfileEditForm(instance=request.user)
+
+    return render(request, "user/profile_edit.html", {
+        "form": form,
     })

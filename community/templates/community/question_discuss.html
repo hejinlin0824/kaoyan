@@ -1,0 +1,449 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}题目讨论 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<!-- Marked.js + KaTeX for Markdown/LaTeX rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<style>
+    .discuss-page { max-width: 860px; margin: 0 auto; }
+
+    /* 题目卡片 */
+    .q-card {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px;
+    }
+    .q-card .q-meta {
+        display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+    }
+    .q-card .q-meta .qm {
+        font-size: 12px; font-weight: 600; padding: 3px 10px;
+        border-radius: 4px; background: var(--gray-50); color: var(--gray-500);
+        border: 1px solid var(--gray-200);
+    }
+    .q-card .q-content {
+        font-size: 15px; line-height: 1.8; color: var(--gray-800);
+        margin-bottom: 16px;
+    }
+    .q-card .q-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+
+    /* 选项 */
+    .q-options { margin-bottom: 16px; }
+    .q-option {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+        background: var(--gray-50); border: 1px solid var(--gray-100);
+        font-size: 14px; color: var(--gray-700);
+    }
+    .q-option .opt-key {
+        font-weight: 700; min-width: 22px; color: var(--gray-500);
+    }
+
+    /* 答案 & 解析 折叠 */
+    .q-answer-box {
+        border-top: 1px solid var(--gray-100); padding-top: 16px; margin-top: 8px;
+    }
+    .q-answer-toggle {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 14px; font-weight: 600; color: var(--blue-600);
+        cursor: pointer; background: none; border: none; font-family: inherit;
+        padding: 6px 0;
+    }
+    .q-answer-toggle:hover { color: var(--blue-700); }
+    .q-answer-toggle i { transition: transform 0.2s; }
+    .q-answer-toggle.open i { transform: rotate(180deg); }
+    .q-answer-content {
+        display: none; margin-top: 14px; padding: 16px 20px;
+        background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-100);
+        font-size: 14px; line-height: 1.8; color: var(--gray-700);
+    }
+    .q-answer-content.show { display: block; }
+    .q-correct {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #f0fdf4; color: #15803d; font-weight: 700;
+        padding: 4px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 14px;
+    }
+
+    /* 讨论区 */
+    .discuss-section {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); overflow: hidden;
+    }
+    .discuss-header {
+        padding: 18px 24px; border-bottom: 1px solid var(--gray-100);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .discuss-header h3 {
+        font-size: 16px; font-weight: 700; color: var(--gray-800);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .discuss-header h3 i { color: var(--blue-500); }
+    .discuss-header .d-count {
+        font-size: 13px; color: var(--gray-400); font-weight: 500;
+    }
+
+    /* 评论输入 */
+    .comment-form {
+        padding: 18px 24px; border-bottom: 1px solid var(--gray-100);
+        display: flex; gap: 12px; align-items: flex-start;
+    }
+    .comment-form .cf-avatar {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        flex-shrink: 0;
+    }
+    .comment-form .cf-right { flex: 1; }
+    .comment-form textarea {
+        width: 100%; min-height: 60px; max-height: 160px; padding: 10px 14px;
+        border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px;
+        font-family: inherit; resize: vertical; outline: none;
+        transition: border-color 0.2s;
+    }
+    .comment-form textarea:focus { border-color: var(--blue-500); }
+    .comment-form .cf-actions {
+        display: flex; justify-content: flex-end; margin-top: 8px;
+    }
+    .comment-form .cf-actions .btn { padding: 7px 18px; font-size: 13px; }
+
+    /* 未登录提示 */
+    .login-hint {
+        padding: 18px 24px; border-bottom: 1px solid var(--gray-100);
+        text-align: center; font-size: 14px; color: var(--gray-400);
+    }
+    .login-hint a { color: var(--blue-600); font-weight: 600; }
+
+    /* 评论列表 */
+    .comment-list { padding: 0; }
+    .comment-item {
+        padding: 16px 24px; border-bottom: 1px solid var(--gray-50);
+        transition: background 0.15s;
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-item:hover { background: var(--gray-50); }
+    .comment-item .ci-top {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .comment-item .ci-avatar {
+        width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    }
+    .comment-item .ci-name {
+        font-size: 13px; font-weight: 600; color: var(--gray-700);
+    }
+    .comment-item .ci-time {
+        font-size: 12px; color: var(--gray-400);
+    }
+    .comment-item .ci-body {
+        font-size: 14px; line-height: 1.7; color: var(--gray-700);
+        margin-left: 42px;
+    }
+    .comment-item .ci-actions {
+        display: flex; align-items: center; gap: 16px;
+        margin-left: 42px; margin-top: 8px;
+    }
+    .ci-action-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 12px; color: var(--gray-400); background: none; border: none;
+        cursor: pointer; font-family: inherit; padding: 4px 8px; border-radius: 4px;
+        transition: all 0.15s;
+    }
+    .ci-action-btn:hover { background: var(--gray-100); color: var(--gray-600); }
+    .ci-action-btn.liked { color: var(--blue-600); }
+    .ci-action-btn.liked:hover { background: var(--blue-50); }
+
+    /* 回复块 */
+    .reply-block {
+        margin-left: 42px; margin-top: 10px;
+        background: var(--gray-50); border-radius: 8px;
+        padding: 12px 16px;
+    }
+    .reply-item {
+        padding: 8px 0; border-bottom: 1px solid var(--gray-100);
+    }
+    .reply-item:last-child { border-bottom: none; }
+    .reply-item .ri-top {
+        display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .reply-item .ri-avatar {
+        width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+    }
+    .reply-item .ri-name { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+    .reply-item .ri-reply-to { font-size: 12px; color: var(--gray-400); }
+    .reply-item .ri-time { font-size: 11px; color: var(--gray-400); }
+    .reply-item .ri-body { font-size: 13px; color: var(--gray-700); line-height: 1.6; margin-left: 32px; }
+    .reply-item .ri-actions {
+        display: flex; gap: 12px; margin-left: 32px; margin-top: 4px;
+    }
+
+    /* 回复输入框（内联） */
+    .reply-form {
+        margin-left: 42px; margin-top: 8px;
+        display: none; gap: 8px; align-items: flex-start;
+    }
+    .reply-form.show { display: flex; }
+    .reply-form textarea {
+        flex: 1; min-height: 40px; max-height: 100px; padding: 8px 12px;
+        border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px;
+        font-family: inherit; resize: vertical; outline: none;
+    }
+    .reply-form textarea:focus { border-color: var(--blue-500); }
+    .reply-form .btn { padding: 6px 14px; font-size: 12px; }
+
+    /* 空讨论 */
+    .discuss-empty {
+        padding: 40px 20px; text-align: center; color: var(--gray-400);
+    }
+    .discuss-empty i { font-size: 36px; margin-bottom: 12px; }
+    .discuss-empty p { font-size: 14px; }
+
+    /* markdown 渲染 */
+    .md-content h1,.md-content h2,.md-content h3,.md-content h4 { margin: 12px 0 6px; font-weight: 700; }
+    .md-content h1 { font-size: 1.4em; } .md-content h2 { font-size: 1.2em; }
+    .md-content h3 { font-size: 1.1em; } .md-content h4 { font-size: 1em; }
+    .md-content p { margin: 6px 0; }
+    .md-content ul,.md-content ol { padding-left: 20px; margin: 6px 0; }
+    .md-content code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .md-content pre { background: var(--gray-100); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+    .md-content pre code { background: none; padding: 0; }
+    .md-content blockquote { border-left: 3px solid var(--blue-400); padding-left: 12px; color: var(--gray-500); margin: 8px 0; }
+
+    /* 返回 */
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 14px; color: var(--gray-500); margin-bottom: 16px;
+        text-decoration: none;
+    }
+    .back-link:hover { color: var(--blue-600); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="discuss-page">
+    <a href="javascript:history.back()" class="back-link"><i class="fa-solid fa-arrow-left"></i> 返回题库</a>
+
+    <!-- 题目卡片 -->
+    <div class="q-card">
+        <div class="q-meta">
+            <span class="qm"><i class="fa-solid fa-book"></i> {{ question.subject.name }}</span>
+            <span class="qm"><i class="fa-regular fa-calendar"></i> {{ question.year }}</span>
+            <span class="qm"><i class="fa-solid fa-building-columns"></i> {{ question.school.name }}</span>
+            <span class="qm"><i class="fa-solid fa-tag"></i> {{ question.question_type.name }}</span>
+            <span class="qm"><i class="fa-solid fa-signal"></i> {{ question.difficulty }}</span>
+            <span class="qm"><i class="fa-solid fa-lightbulb"></i> {{ question.knowledge_point }}</span>
+        </div>
+        <div class="q-content md-content" id="q-content" data-raw="{{ question.content|escape }}"></div>
+
+        {% if question.options %}
+        <div class="q-options">
+            {% for key, val in question.options.items %}
+            <div class="q-option"><span class="opt-key">{{ key }}.</span><span data-raw="{{ val|escape }}" class="opt-val"></span></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if question.image %}
+        <div style="margin-bottom:12px;">
+            <img src="{{ question.image.url }}" alt="题目配图" style="max-width:100%;border-radius:8px;">
+        </div>
+        {% endif %}
+
+        <div class="q-answer-box">
+            <button class="q-answer-toggle" onclick="toggleAnswer(this)">
+                <i class="fa-solid fa-chevron-down"></i> 查看答案与解析
+            </button>
+            <div class="q-answer-content" id="q-answer">
+                {% if question.correct_answer %}
+                <div class="q-correct"><i class="fa-solid fa-check-circle"></i> 正确答案：{{ question.correct_answer }}</div>
+                {% endif %}
+                <div class="md-content" id="q-explain" data-raw="{{ question.answer|escape }}"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 讨论区 -->
+    <div class="discuss-section">
+        <div class="discuss-header">
+            <h3><i class="fa-solid fa-comments"></i> 题目讨论</h3>
+            <span class="d-count">{{ comment_count }} 条评论</span>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="comment-form">
+            <img src="{{ user.avatar.url }}" class="cf-avatar" alt="">
+            <div class="cf-right">
+                <textarea id="commentInput" placeholder="发表你的看法、解题思路或疑问..."></textarea>
+                <div class="cf-actions">
+                    <button class="btn btn-primary" onclick="submitComment({{ question.id }}, null)">
+                        <i class="fa-solid fa-paper-plane"></i> 发布评论
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="login-hint">
+            请先 <a href="{% url 'user:login' %}?next={{ request.path }}">登录</a> 后参与讨论
+        </div>
+        {% endif %}
+
+        <div class="comment-list" id="commentList">
+            {% for comment in comments %}
+            <!-- 顶级评论 -->
+            <div class="comment-item" id="comment-{{ comment.id }}">
+                <div class="ci-top">
+                    <img src="{{ comment.user.avatar.url }}" class="ci-avatar" alt="">
+                    <span class="ci-name">{{ comment.user.username }}</span>
+                    <span class="ci-time">{{ comment.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="ci-body">{{ comment.content }}</div>
+                <div class="ci-actions">
+                    <button class="ci-action-btn {% if comment.id in liked_ids %}liked{% endif %}"
+                            onclick="toggleLike({{ comment.id }}, this)">
+                        <i class="fa-{% if comment.id in liked_ids %}solid{% else %}regular{% endif %} fa-thumbs-up"></i>
+                        <span>{{ comment.like_count }}</span>
+                    </button>
+                    {% if user.is_authenticated %}
+                    <button class="ci-action-btn" onclick="showReplyForm({{ comment.id }})">
+                        <i class="fa-regular fa-comment"></i> 回复
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- 回复表单 -->
+                {% if user.is_authenticated %}
+                <div class="reply-form" id="reply-form-{{ comment.id }}">
+                    <textarea placeholder="回复 {{ comment.user.username }}..." id="reply-input-{{ comment.id }}"></textarea>
+                    <button class="btn btn-primary" onclick="submitComment({{ question.id }}, {{ comment.id }})">回复</button>
+                </div>
+                {% endif %}
+
+                <!-- 回复列表 -->
+                {% for reply in comment.replies_list %}
+                <div class="reply-block">
+                    <div class="reply-item">
+                        <div class="ri-top">
+                            <img src="{{ reply.user.avatar.url }}" class="ri-avatar" alt="">
+                            <span class="ri-name">{{ reply.user.username }}</span>
+                            <span class="ri-reply-to">回复 @{{ comment.user.username }}</span>
+                            <span class="ri-time">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <div class="ri-body">{{ reply.content }}</div>
+                        <div class="ri-actions">
+                            <button class="ci-action-btn {% if reply.id in liked_ids %}liked{% endif %}"
+                                    onclick="toggleLike({{ reply.id }}, this)">
+                                <i class="fa-{% if reply.id in liked_ids %}solid{% else %}regular{% endif %} fa-thumbs-up"></i>
+                                <span>{{ reply.like_count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% empty %}
+            <div class="discuss-empty">
+                <i class="fa-regular fa-comment-dots"></i>
+                <p>暂无评论，来发表第一条吧！</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+const CSRF = "{{ csrf_token }}";
+
+// 答案折叠
+function toggleAnswer(btn) {
+    btn.classList.toggle('open');
+    document.getElementById('q-answer').classList.toggle('show');
+}
+
+// Markdown + LaTeX 渲染（与题库页一致，支持 $..$ / $$..$$ / \(..\) / \[..\]）
+const P={ADD_TAGS:['math','semantics','mrow','mi','mo','mn','msup','msub','msubsup','mfrac','msqrt','mroot','mover','munder','munderover','mtable','mtr','mtd','mtext','annotation','mpadded','mspace','menclose','mstyle'],ADD_ATTR:['xmlns','displaystyle','scriptlevel','mathvariant','stretchy','lspace','rspace','fence','separator','accent','columnalign','rowalign','columnlines','rowlines','frame','open','close','linethickness','notation','bevelled','largeop','movablelimits','symmetric','maxsize','minsize','separators','encoding','mathcolor','mathbackground','mathsize','scriptminsize','scriptsizemultiplier','infixlinebreakstyle','decimalpoint','accentunder','align','depth','height','width','voffset']};
+function renderMd(t){if(!t)return'';const m=[];let i=0;function h(c,d){const p='\x00LATEX'+i+'\x00';m.push({ph:p,content:c.trim(),display:d});i++;return p;}t=t.replace(/\$\$([\s\S]*?)\$\$/g,(_,c)=>h(c,true));t=t.replace(/\\\[([\s\S]*?)\\\]/g,(_,c)=>h(c,true));t=t.replace(/\\\(([\s\S]*?)\\\)/g,(_,c)=>h(c,false));t=t.replace(/\$([^\$\n]+?)\$/g,(_,c)=>h(c,false));let html=marked.parse(t);m.forEach(item=>{try{html=html.split(item.ph).join(katex.renderToString(item.content,{displayMode:item.display,throwOnError:false}));}catch(e){html=html.split(item.ph).join(item.content);}});return DOMPurify.sanitize(html,P);}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 渲染 data-raw 元素
+    document.querySelectorAll('[data-raw]').forEach(function(el) {
+        const raw = el.getAttribute('data-raw');
+        if (raw) el.innerHTML = renderMd(raw);
+    });
+});
+
+// 发布评论
+function submitComment(questionId, parentId) {
+    let inputEl, content;
+    if (parentId) {
+        inputEl = document.getElementById('reply-input-' + parentId);
+    } else {
+        inputEl = document.getElementById('commentInput');
+    }
+    content = inputEl.value.trim();
+    if (!content) return;
+
+    const body = new FormData();
+    body.append('content', content);
+    if (parentId) body.append('parent_id', parentId);
+
+    body.append('source', 'kaoyan');
+    fetch('/community/question/' + questionId + '/comment/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: body,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            inputEl.value = '';
+            // 刷新页面显示新评论
+            location.reload();
+        } else {
+            alert(data.msg || '发布失败');
+        }
+    })
+    .catch(() => alert('网络错误'));
+}
+
+// 切换点赞
+function toggleLike(commentId, btn) {
+    fetch('/community/like/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF,
+        },
+        body: JSON.stringify({comment_id: commentId}),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const icon = btn.querySelector('i');
+            const count = btn.querySelector('span');
+            if (data.liked) {
+                btn.classList.add('liked');
+                icon.className = 'fa-solid fa-thumbs-up';
+            } else {
+                btn.classList.remove('liked');
+                icon.className = 'fa-regular fa-thumbs-up';
+            }
+            count.textContent = data.like_count;
+        }
+    })
+    .catch(() => {});
+}
+
+// 显示回复表单
+function showReplyForm(commentId) {
+    const form = document.getElementById('reply-form-' + commentId);
+    if (form) {
+        form.classList.toggle('show');
+        if (form.classList.contains('show')) {
+            form.querySelector('textarea').focus();
+        }
+    }
+}
+</script>
+{% endblock %}

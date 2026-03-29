@@ -10,6 +10,7 @@ urlpatterns = [
     path("exam/", include("zu_juan.urls")),
     path("ai-test/", include("ai_test.urls")),
     path("resource/", include("res_center.urls")),
+    path("community/", include("community.urls")),
 ]
 
 if settings.DEBUG:

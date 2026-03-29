@@ -98,6 +98,67 @@ class PasswordResetRequestForm(forms.Form):
         return email
 
 
+class ProfileEditForm(forms.ModelForm):
+    """个人资料编辑"""
+    bio = forms.CharField(
+        label="个人简介",
+        required=False,
+        widget=forms.Textarea(attrs={
+            "class": "form-input",
+            "placeholder": "写点什么介绍一下自己吧（最多300字）",
+            "rows": 4,
+            "maxlength": "300",
+        }),
+    )
+    avatar = forms.ImageField(
+        label="更换头像",
+        required=False,
+        widget=forms.FileInput(attrs={
+            "class": "form-input",
+            "accept": "image/*",
+        }),
+    )
+    target_school = forms.ModelChoiceField(
+        label="目标院校",
+        required=False,
+        queryset=None,
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    kaoyan_session = forms.ChoiceField(
+        label="考研届次",
+        required=False,
+        choices=[("", "-- 请选择 --")] + User.KAOYAN_SESSION_CHOICES,
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    study_start_date = forms.DateField(
+        label="学习开始日期",
+        required=False,
+        widget=forms.DateInput(attrs={"class": "form-input", "type": "date"}),
+    )
+
+    class Meta:
+        model = User
+        fields = ("avatar", "bio", "target_school", "kaoyan_session", "study_start_date")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from kaoyan_app.models import School
+        self.fields["target_school"].queryset = School.objects.all()
+        self.fields["target_school"].empty_label = "-- 请选择 --"
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if avatar and hasattr(avatar, "content_type"):
+            # 限制 2MB
+            if avatar.size > 2 * 1024 * 1024:
+                raise forms.ValidationError("头像文件不能超过 2MB")
+            # 限制格式
+            allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+            if avatar.content_type not in allowed_types:
+                raise forms.ValidationError("仅支持 JPG、PNG、GIF、WebP 格式")
+        return avatar
+
+
 class PasswordResetConfirmForm(forms.Form):
     """密码重置 - 第二步：设置新密码"""
     new_password = forms.CharField(

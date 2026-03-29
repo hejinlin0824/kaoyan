@@ -1,0 +1,95 @@
+{% extends "user/base.html" %}
+
+{% block title %}消息通知 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .notif-page { max-width: 700px; margin: 0 auto; }
+    .notif-item {
+        display: flex; align-items: flex-start; gap: 14px;
+        padding: 18px 20px; border-bottom: 1px solid var(--gray-100);
+        transition: background 0.15s; text-decoration: none; color: inherit;
+    }
+    .notif-item:hover { background: var(--blue-50); }
+    .notif-item.unread { background: #f0f7ff; }
+    .notif-item.unread:hover { background: #e0efff; }
+    .notif-avatar {
+        width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-content {
+        font-size: 14px; color: var(--gray-700); line-height: 1.6;
+    }
+    .notif-content i { margin-right: 4px; }
+    .notif-time {
+        font-size: 12px; color: var(--gray-400); margin-top: 4px;
+    }
+    .notif-dot {
+        width: 10px; height: 10px; border-radius: 50%; background: var(--blue-500);
+        flex-shrink: 0; margin-top: 6px;
+    }
+    .notif-card {
+        background: var(--white); border: 1px solid var(--gray-200);
+        border-radius: var(--radius); overflow: hidden;
+    }
+    .notif-header {
+        padding: 18px 20px; border-bottom: 1px solid var(--gray-100);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .notif-header h3 {
+        font-size: 16px; font-weight: 700; color: var(--gray-800);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .notif-header h3 i { color: var(--blue-500); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-page">
+    <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <h1 class="page-title"><i class="fa-solid fa-bell"></i> 消息通知</h1>
+                <p class="page-subtitle">你的所有互动通知</p>
+            </div>
+            {% if notifications %}
+            <form method="post" action="{% url 'community:notification_mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline" style="font-size:13px;">
+                    <i class="fa-solid fa-check-double"></i> 全部标记已读
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if notifications %}
+    <div class="notif-card">
+        {% for n in notifications %}
+        <a href="{{ n.url }}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+            <img src="{{ n.sender.avatar.url }}" class="notif-avatar" alt="">
+            <div class="notif-body">
+                <div class="notif-content">
+                    {% if n.noti_type == 'like' %}
+                    <i class="fa-solid fa-thumbs-up" style="color:#3b82f6;"></i>
+                    {% else %}
+                    <i class="fa-solid fa-reply" style="color:#16a34a;"></i>
+                    {% endif %}
+                    {{ n.content }}
+                </div>
+                <div class="notif-time">{{ n.created_at|date:"Y-m-d H:i" }}</div>
+            </div>
+            {% if not n.is_read %}
+            <span class="notif-dot"></span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);">
+        <i class="fa-regular fa-bell-slash"></i>
+        <p>暂无通知</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

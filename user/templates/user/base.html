@@ -351,20 +351,37 @@
             {% endif %}
             {% if user.is_authenticated %}
                 <div class="nav-divider"></div>
+                {# ── 通知铃铛 ── #}
+                <div class="notif-dropdown" id="notifDropdown" style="position:relative;">
+                    <button onclick="toggleNotifPanel(event)" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;border-radius:var(--radius);transition:all 0.2s;font-size:18px;color:var(--gray-500);" onmouseover="this.style.background='var(--blue-50)';this.style.color='var(--blue-700)'" onmouseout="this.style.background='';this.style.color='var(--gray-500)'">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notifBadge" style="display:none;position:absolute;top:2px;right:2px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center;padding:0 5px;"></span>
+                    </button>
+                    <div id="notifPanel" style="display:none;position:absolute;right:0;top:42px;width:360px;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:300;overflow:hidden;">
+                        <div style="padding:14px 18px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-size:15px;font-weight:700;color:var(--gray-800);">消息通知</span>
+                            <button onclick="markAllRead()" style="font-size:12px;color:var(--blue-600);background:none;border:none;cursor:pointer;font-weight:600;">全部已读</button>
+                        </div>
+                        <div id="notifList" style="max-height:380px;overflow-y:auto;"></div>
+                        <div style="padding:10px;border-top:1px solid var(--gray-100);text-align:center;">
+                            <a href="{% url 'community:notification_list' %}" style="font-size:13px;font-weight:600;color:var(--blue-600);">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="{% url 'user:my_exams' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 12px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">
                     <i class="fa-solid fa-clipboard-list" style="color:var(--blue-600);"></i> 我的考试
                 </a>
                 <a href="{% url 'user:checkin_calendar' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 12px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">
                     <i class="fa-solid fa-calendar-check" style="color:#16a34a;"></i> 打卡
                 </a>
-                <div class="nav-user">
-                    <i class="fa-solid fa-circle-user"></i>
-                    {{ user.username }}
+                <a href="{% url 'user:profile' %}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--gray-600);padding:4px 8px;border-radius:var(--radius);transition:all 0.2s;" onmouseover="this.style.background='var(--blue-50)'" onmouseout="this.style.background='transparent'">
+                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--gray-200);">
+                    <span style="font-size:14px;font-weight:500;">{{ user.username }}</span>
                     {% if is_vip %}<span class="vip-tag">{{ vip_label }}</span>{% endif %}
-                    <span class="coin-tag" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;">
-                        <i class="fa-solid fa-coins" style="font-size:10px;"></i> {{ user_coins }}
+                    <span class="coin-tag" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;">
+                        <i class="fa-solid fa-coins" style="font-size:10px;"></i> {{ user.coins }}
                     </span>
-                </div>
+                </a>
                 <a href="{% url 'user:logout' %}" class="btn-ghost"><i class="fa-solid fa-right-from-bracket"></i></a>
             {% else %}
                 <a href="{% url 'user:login' %}" class="btn btn-outline">登录</a>
@@ -382,7 +399,84 @@
         document.querySelectorAll('.nav-dropdown.open').forEach(function(dd) {
             if (!dd.contains(e.target)) dd.classList.remove('open');
         });
+        // 关闭通知面板
+        var nd = document.getElementById('notifDropdown');
+        if (nd && !nd.contains(e.target)) {
+            document.getElementById('notifPanel').style.display = 'none';
+        }
     });
+
+    {% if user.is_authenticated %}
+    // ── 通知功能 ──
+    var notifPollTimer = null;
+
+    function toggleNotifPanel(e) {
+        e.stopPropagation();
+        var panel = document.getElementById('notifPanel');
+        var isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) loadNotifList();
+    }
+
+    function loadNotifList() {
+        fetch('/community/notifications/latest/').then(function(r){return r.json()}).then(function(data) {
+            var list = document.getElementById('notifList');
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--gray-400);font-size:14px;"><i class="fa-regular fa-bell-slash" style="font-size:28px;margin-bottom:8px;display:block;"></i>暂无通知</div>';
+                return;
+            }
+            var html = '';
+            data.notifications.forEach(function(n) {
+                var icon = n.type === 'like' ? 'fa-thumbs-up' : 'fa-reply';
+                var iconColor = n.type === 'like' ? '#3b82f6' : '#16a34a';
+                var bg = n.is_read ? '' : 'background:var(--blue-50);';
+                html += '<a href="' + n.url + '" onclick="markRead(' + n.id + ')" style="display:flex;align-items:flex-start;gap:10px;padding:12px 18px;border-bottom:1px solid var(--gray-50);' + bg + 'text-decoration:none;color:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'var(--blue-50)\'" onmouseout="this.style.background=\'' + (n.is_read ? '' : 'var(--blue-50)') + '\'">';
+                html += '<img src="' + n.sender_avatar + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
+                html += '<div style="flex:1;min-width:0;">';
+                html += '<div style="font-size:13px;color:var(--gray-700);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><i class="fa-solid ' + icon + '" style="color:' + iconColor + ';margin-right:4px;font-size:11px;"></i>' + n.content + '</div>';
+                html += '<div style="font-size:11px;color:var(--gray-400);margin-top:3px;">' + n.time + '</div>';
+                html += '</div>';
+                if (!n.is_read) html += '<span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;margin-top:6px;"></span>';
+                html += '</a>';
+            });
+            list.innerHTML = html;
+        });
+    }
+
+    function markRead(id) {
+        fetch('/community/notifications/mark-read/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ids: [id]})
+        });
+    }
+
+    function markAllRead() {
+        fetch('/community/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+        }).then(function() {
+            loadNotifList();
+            pollUnreadCount();
+        });
+    }
+
+    function pollUnreadCount() {
+        fetch('/community/notifications/unread/').then(function(r){return r.json()}).then(function(data) {
+            var badge = document.getElementById('notifBadge');
+            if (data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    }
+
+    // 初始加载 + 每30秒轮询
+    pollUnreadCount();
+    notifPollTimer = setInterval(pollUnreadCount, 30000);
+    {% endif %}
     </script>
 </body>
 </html>

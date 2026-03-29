@@ -1,0 +1,310 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} 的个人主页 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+        border-radius: var(--radius);
+        padding: 40px 32px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.3);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .profile-info { flex: 1; position: relative; z-index: 1; }
+    .profile-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .profile-info .profile-tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .profile-info .tag-vip {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #78350f; font-size: 11px; font-weight: 700;
+        padding: 2px 10px; border-radius: 4px;
+    }
+    .profile-info .tag-normal {
+        background: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600;
+        padding: 2px 10px; border-radius: 4px;
+    }
+    .profile-info .tag-coins {
+        background: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600;
+        padding: 2px 10px; border-radius: 4px;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .profile-bio {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
+    .profile-edit-btn {
+        position: relative; z-index: 1;
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        align-self: flex-start;
+    }
+    .profile-edit-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
+
+    /* 统计卡片 */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 20px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .stat-card .sc-icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    .stat-card .sc-value { font-size: 28px; font-weight: 700; color: var(--gray-800); }
+    .stat-card .sc-label { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+    /* 信息卡片区 */
+    .info-section {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    .info-section h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .info-section h3 i { color: var(--blue-500); }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-50);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .ir-label { font-size: 14px; color: var(--gray-500); }
+    .info-row .ir-value { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+
+    /* 成就徽章 */
+    .badge-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .achievement-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .achievement-badge.earned { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .achievement-badge.locked { background: var(--gray-50); color: var(--gray-400); border: 1px solid var(--gray-200); }
+    .achievement-badge i { font-size: 16px; }
+
+    @media (max-width: 640px) {
+        .profile-header { flex-direction: column; text-align: center; padding: 28px 20px; }
+        .profile-info .profile-tags { justify-content: center; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="fa-solid fa-user"></i> 个人主页</h1>
+</div>
+
+<!-- 头部信息 -->
+<div class="profile-header">
+    <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }}" class="profile-avatar">
+    <div class="profile-info">
+        <h2>{{ profile_user.username }}</h2>
+        {% if profile_user.bio %}
+        <div class="profile-bio">{{ profile_user.bio }}</div>
+        {% elif is_owner %}
+        <div class="profile-bio" style="opacity:0.6;">还没有写个人简介，点击右侧编辑按钮添加吧~</div>
+        {% endif %}
+        <div class="profile-tags">
+            {% if is_vip %}
+            <span class="tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+            {% else %}
+            <span class="tag-normal"><i class="fa-solid fa-user"></i> 普通用户</span>
+            {% endif %}
+            <span class="tag-coins"><i class="fa-solid fa-coins"></i> {{ profile_user.coins }} 点数</span>
+            {% if target_school_name %}
+            <span class="tag-coins"><i class="fa-solid fa-building-columns"></i> {{ target_school_name }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% if is_owner %}
+    <a href="{% url 'user:profile_edit' %}" class="profile-edit-btn">
+        <i class="fa-solid fa-pen-to-square"></i> 编辑资料
+    </a>
+    {% endif %}
+</div>
+
+<!-- 考研倒计时 + 学习天数 -->
+{% if kaoyan_countdown is not None or study_days > 0 %}
+<div class="countdown-study-bar" style="display:grid; grid-template-columns:{% if kaoyan_countdown is not None and study_days > 0 %}1fr 1fr{% elif kaoyan_countdown is not None %}1fr{% else %}1fr{% endif %}; gap:16px; margin-bottom:24px;">
+    {% if kaoyan_countdown is not None %}
+    <div style="background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:1px solid #fcd34d; border-radius:var(--radius); padding:24px 28px; display:flex; align-items:center; gap:20px;">
+        <div style="width:52px; height:52px; border-radius:14px; background:rgba(245,158,11,0.2); display:flex; align-items:center; justify-content:center; font-size:24px; color:#b45309;">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div>
+            <div style="font-size:13px; color:#92400e; font-weight:600;">{{ kaoyan_session_label }}倒计时</div>
+            <div style="font-size:32px; font-weight:800; color:#78350f; line-height:1.2;">约 {{ kaoyan_countdown }} <span style="font-size:16px; font-weight:600;">天</span></div>
+        </div>
+    </div>
+    {% endif %}
+    {% if study_days > 0 %}
+    <div style="background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border:1px solid #bbf7d0; border-radius:var(--radius); padding:24px 28px; display:flex; align-items:center; gap:20px;">
+        <div style="width:52px; height:52px; border-radius:14px; background:rgba(22,163,74,0.2); display:flex; align-items:center; justify-content:center; font-size:24px; color:#15803d;">
+            <i class="fa-solid fa-book-open"></i>
+        </div>
+        <div>
+            <div style="font-size:13px; color:#166534; font-weight:600;">您已经坚持学习</div>
+            <div style="font-size:32px; font-weight:800; color:#14532d; line-height:1.2;">{{ study_days }} <span style="font-size:16px; font-weight:600;">天</span></div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 统计卡片 -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="sc-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-fire"></i></div>
+        <div class="sc-value">{{ streak }}</div>
+        <div class="sc-label">连续打卡（天）</div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="sc-value">{{ total_checkins }}</div>
+        <div class="sc-label">累计打卡（天）</div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fa-solid fa-file-pen"></i></div>
+        <div class="sc-value">{{ total_exams }}</div>
+        <div class="sc-label">完成试卷（套）</div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon" style="background:#fffbeb;color:#d97706;"><i class="fa-solid fa-clock"></i></div>
+        <div class="sc-value">{{ days_since_join }}</div>
+        <div class="sc-label">注册天数</div>
+    </div>
+</div>
+
+<!-- 详细信息 -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div class="info-section">
+        <h3><i class="fa-solid fa-circle-info"></i> 基本信息</h3>
+        <div class="info-row">
+            <span class="ir-label">用户名</span>
+            <span class="ir-value">{{ profile_user.username }}</span>
+        </div>
+        <div class="info-row">
+            <span class="ir-label">邮箱</span>
+            <span class="ir-value">
+                {% if is_owner %}
+                    {{ profile_user.email }}
+                {% else %}
+                    {{ profile_user.email|truncatechars:5 }}***@***
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="ir-label">注册时间</span>
+            <span class="ir-value">{{ profile_user.date_joined|date:"Y-m-d" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="ir-label">VIP 状态</span>
+            <span class="ir-value">
+                {% if is_vip %}
+                    <span style="color:#d97706;"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+                {% else %}
+                    普通用户
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3>
+            <i class="fa-solid fa-trophy"></i> 学习成就
+            <span style="margin-left:auto; font-size:12px; font-weight:600; color:var(--gray-400);">
+                {{ earned_count }}/{{ total_achievement_count }}
+            </span>
+            {% if is_owner %}
+            <a href="{% url 'user:achievements' %}" style="font-size:12px;font-weight:600;color:var(--blue-500);text-decoration:none;margin-left:8px;" title="查看成就详情">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> 详情
+            </a>
+            {% endif %}
+        </h3>
+        <!-- 进度条 -->
+        <div style="background:var(--gray-100); border-radius:6px; height:8px; margin-bottom:16px; overflow:hidden;">
+            <div style="background:linear-gradient(90deg, #f59e0b, #d97706); height:100%; border-radius:6px; width:{% widthratio earned_count total_achievement_count 100 %}%; min-width:{% if earned_count > 0 %}2{% else %}0{% endif %}%;"></div>
+        </div>
+        <div class="badge-grid">
+            {% for code, name, icon, desc in all_achievements %}
+            {% if code in earned_codes %}
+            <div class="achievement-badge earned" title="{{ desc }}"><i class="fa-solid {{ icon }}"></i> {{ name }}</div>
+            {% else %}
+            <div class="achievement-badge locked" title="{{ desc }}"><i class="fa-solid {{ icon }}"></i> {{ name }}</div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}成就中心 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .ach-summary {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border: 1px solid #fbbf24;
+    }
+    .ach-summary-icon {
+        width: 64px; height: 64px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(251,191,36,0.3);
+    }
+    .ach-summary-icon i { font-size: 28px; color: #d97706; }
+    .ach-summary-info { flex: 1; }
+    .ach-summary-info h2 { font-size: 18px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+    .ach-summary-info p { font-size: 14px; color: #a16207; margin: 0; }
+    .ach-summary-stats {
+        display: flex; gap: 20px; flex-shrink: 0;
+    }
+    .ach-stat {
+        text-align: center;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.6);
+        border-radius: 12px;
+    }
+    .ach-stat-num { font-size: 22px; font-weight: 800; color: #d97706; }
+    .ach-stat-label { font-size: 12px; color: #a16207; }
+
+    .ach-category {
+        margin-bottom: 28px;
+    }
+    .ach-category-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--gray-700);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .ach-category-title .cat-count {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--gray-400);
+        background: var(--gray-100);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .ach-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+    }
+
+    .ach-card {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 18px;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .ach-card:hover { box-shadow: var(--shadow-md); border-color: var(--gray-300); }
+    .ach-card.earned {
+        border-color: #fbbf24;
+        background: linear-gradient(135deg, #fffbeb, #fff);
+    }
+    .ach-card.earned::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 0; height: 0;
+        border-top: 40px solid #fbbf24;
+        border-left: 40px solid transparent;
+    }
+    .ach-card.earned::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 3px; right: 4px;
+        font-size: 11px;
+        color: #fff;
+    }
+
+    .ach-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+    .ach-icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        background: var(--gray-100);
+    }
+    .ach-icon i { font-size: 18px; color: var(--gray-400); }
+    .ach-card.earned .ach-icon {
+        background: #fef3c7;
+    }
+    .ach-card.earned .ach-icon i { color: #d97706; }
+
+    .ach-card-info { flex: 1; min-width: 0; }
+    .ach-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--gray-800);
+        line-height: 1.3;
+    }
+    .ach-card.earned .ach-name { color: #92400e; }
+    .ach-desc {
+        font-size: 12px;
+        color: var(--gray-400);
+        margin-top: 2px;
+    }
+
+    .ach-progress-wrap {
+        margin-top: 4px;
+    }
+    .ach-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--gray-100);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .ach-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+        background: var(--gray-300);
+    }
+    .ach-card.earned .ach-progress-fill {
+        background: linear-gradient(90deg, #fbbf24, #d97706);
+    }
+    .ach-card:not(.earned) .ach-progress-fill {
+        background: linear-gradient(90deg, var(--blue-400), var(--blue-600));
+    }
+
+    .ach-progress-text {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--gray-400);
+    }
+    .ach-card.earned .ach-progress-text { color: #a16207; }
+    .ach-progress-text .ach-pct { font-weight: 600; }
+
+    /* 总进度条 */
+    .ach-total-progress {
+        margin-top: 12px;
+    }
+    .ach-total-bar {
+        width: 100%;
+        height: 10px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .ach-total-fill {
+        height: 100%;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #fbbf24, #d97706);
+        transition: width 0.5s ease;
+    }
+    .ach-total-text {
+        text-align: right;
+        font-size: 13px;
+        color: #92400e;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    @media (max-width: 640px) {
+        .ach-summary { flex-direction: column; text-align: center; }
+        .ach-summary-stats { justify-content: center; }
+        .ach-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-trophy"></i> 成就中心</h1>
+            <p class="page-subtitle">记录你的每一步成长</p>
+        </div>
+        <a href="{% url 'user:profile' %}" class="btn btn-outline">
+            <i class="fa-solid fa-user"></i> 个人主页
+        </a>
+    </div>
+</div>
+
+<!-- 总览 -->
+<div class="ach-summary">
+    <div class="ach-summary-icon">
+        <i class="fa-solid fa-trophy"></i>
+    </div>
+    <div class="ach-summary-info">
+        <h2>成就总览</h2>
+        <p>已解锁 {{ earned_count }} / {{ total_count }} 个成就，继续加油！</p>
+        <div class="ach-total-progress">
+            <div class="ach-total-bar">
+                <div class="ach-total-fill" style="width:{% widthratio earned_count total_count 100 %}%"></div>
+            </div>
+            <div class="ach-total-text">{{ earned_count }} / {{ total_count }}</div>
+        </div>
+    </div>
+    <div class="ach-summary-stats">
+        <div class="ach-stat">
+            <div class="ach-stat-num">{{ streak }}</div>
+            <div class="ach-stat-label">连续打卡</div>
+        </div>
+        <div class="ach-stat">
+            <div class="ach-stat-num">{{ total_checkins }}</div>
+            <div class="ach-stat-label">累计打卡</div>
+        </div>
+        <div class="ach-stat">
+            <div class="ach-stat-num">{{ total_exams }}</div>
+            <div class="ach-stat-label">完成试卷</div>
+        </div>
+        <div class="ach-stat">
+            <div class="ach-stat-num">{{ study_days }}</div>
+            <div class="ach-stat-label">学习天数</div>
+        </div>
+    </div>
+</div>
+
+<!-- 按分类展示 -->
+{% for cat_name, items in categories.items %}
+<div class="ach-category">
+    <div class="ach-category-title">
+        {% if cat_name == "打卡" %}
+            <i class="fa-solid fa-calendar-check" style="color:var(--blue-500)"></i>
+        {% elif cat_name == "考试" %}
+            <i class="fa-solid fa-file-pen" style="color:#7c3aed"></i>
+        {% elif cat_name == "资源" %}
+            <i class="fa-solid fa-bag-shopping" style="color:#059669"></i>
+        {% elif cat_name == "学习" %}
+            <i class="fa-solid fa-book-open" style="color:#dc2626"></i>
+        {% else %}
+            <i class="fa-solid fa-gem" style="color:#d97706"></i>
+        {% endif %}
+        {{ cat_name }}成就
+        <span class="cat-count">{{ items|length }}项</span>
+    </div>
+    <div class="ach-grid">
+        {% for item in items %}
+        <div class="ach-card {% if item.earned %}earned{% endif %}">
+            <div class="ach-card-header">
+                <div class="ach-icon">
+                    <i class="fa-solid {{ item.icon }}"></i>
+                </div>
+                <div class="ach-card-info">
+                    <div class="ach-name">{{ item.name }}</div>
+                    <div class="ach-desc">{{ item.description }}</div>
+                </div>
+            </div>
+            <div class="ach-progress-wrap">
+                <div class="ach-progress-bar">
+                    <div class="ach-progress-fill" style="width:{{ item.progress }}%"></div>
+                </div>
+                <div class="ach-progress-text">
+                    <span>{{ item.current }} / {{ item.target }}</span>
+                    <span class="ach-pct">{% if item.earned %}✅ 已达成{% else %}{{ item.progress }}%{% endif %}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

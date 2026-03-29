@@ -1,0 +1,186 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}编辑资料 - 厘米考研{% endblock %}
+
+{% block extra_style %}
+<style>
+    .edit-layout {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .avatar-preview {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 24px;
+        padding: 20px;
+        background: var(--gray-50);
+        border-radius: var(--radius);
+        border: 1px solid var(--gray-200);
+    }
+    .avatar-preview img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--white);
+        box-shadow: var(--shadow-sm);
+    }
+    .avatar-preview .ap-info h4 { font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
+    .avatar-preview .ap-info p { font-size: 12px; color: var(--gray-500); }
+    .avatar-upload-area {
+        position: relative;
+        display: inline-block;
+    }
+    .avatar-upload-area input[type="file"] {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .avatar-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: var(--white);
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .avatar-upload-btn:hover {
+        border-color: var(--blue-500);
+        color: var(--blue-600);
+        background: var(--blue-50);
+    }
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-layout">
+    <div class="page-header">
+        <h1 class="page-title"><i class="fa-solid fa-pen-to-square"></i> 编辑资料</h1>
+        <p class="page-subtitle">自定义你的个人主页</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="form-errors-all">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 头像预览 -->
+        <div class="avatar-preview">
+            <img id="avatar-preview-img" src="{{ form.instance.avatar.url }}" alt="头像">
+            <div class="ap-info">
+                <h4>我的头像</h4>
+                <p>支持 JPG / PNG / GIF / WebP，最大 2MB</p>
+                <div class="avatar-upload-area" style="margin-top:8px;">
+                    <div class="avatar-upload-btn">
+                        <i class="fa-solid fa-camera"></i> 选择图片
+                    </div>
+                    {{ form.avatar }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 个人简介 -->
+        <div class="form-group">
+            <label for="{{ form.bio.id_for_label }}">{{ form.bio.label }}</label>
+            {{ form.bio }}
+            <div style="font-size:12px; color:var(--gray-400); margin-top:4px;">
+                <span id="bio-count">{{ form.instance.bio|length }}</span>/300 字
+            </div>
+            {% for error in form.bio.errors %}
+            <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- 学习目标 -->
+        <div style="margin-top:24px; margin-bottom:8px; padding-bottom:8px; border-bottom:2px solid var(--gray-100);">
+            <h3 style="font-size:15px; font-weight:700; color:var(--gray-700); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-bullseye" style="color:var(--blue-500);"></i> 学习目标
+            </h3>
+            <p style="font-size:12px; color:var(--gray-400); margin-top:4px;">设置你的考研目标，系统会为你生成专属倒计时和学习统计</p>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.target_school.id_for_label }}">{{ form.target_school.label }}</label>
+            {{ form.target_school }}
+            {% for error in form.target_school.errors %}
+            <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.kaoyan_session.id_for_label }}">{{ form.kaoyan_session.label }}</label>
+            {{ form.kaoyan_session }}
+            {% for error in form.kaoyan_session.errors %}
+            <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.study_start_date.id_for_label }}">{{ form.study_start_date.label }}</label>
+            {{ form.study_start_date }}
+            <div style="font-size:12px; color:var(--gray-400); margin-top:4px;">设置你开始备考的日期，用于统计学习天数</div>
+            {% for error in form.study_start_date.errors %}
+            <div class="form-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-check"></i> 保存修改
+            </button>
+            <a href="{% url 'user:profile' %}" class="btn btn-outline">取消</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// 头像实时预览
+document.getElementById('id_avatar').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('avatar-preview-img').src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// 简介字数统计
+const bioField = document.getElementById('id_bio');
+const bioCount = document.getElementById('bio-count');
+if (bioField && bioCount) {
+    bioField.addEventListener('input', function() {
+        bioCount.textContent = this.value.length;
+        if (this.value.length > 300) {
+            bioCount.style.color = '#dc2626';
+        } else {
+            bioCount.style.color = '';
+        }
+    });
+}
+</script>
+{% endblock %}

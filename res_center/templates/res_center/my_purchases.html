@@ -49,7 +49,16 @@
     </div>
 </div>
 
-{% if page_obj.object_list %}
+{% if is_vip %}
+<div class="empty-state" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:var(--radius);border:1px solid #fde68a;">
+    <i class="fa-solid fa-crown" style="color:#d97706;"></i>
+    <p style="font-size:18px;font-weight:700;color:#d97706;">VIP期间全部资源畅享</p>
+    <p style="font-size:14px;color:#92400e;margin-top:4px;">所有资源均可免费获取，无需额外消耗点数</p>
+    <a href="{% url 'res_center:list' %}" class="btn btn-primary" style="margin-top:16px;background:#d97706;border-color:#d97706;">
+        <i class="fa-solid fa-store"></i> 浏览全部资源
+    </a>
+</div>
+{% elif page_obj.object_list %}
 {% for p in page_obj.object_list %}
 <div class="purchase-item">
     <div class="purchase-icon">

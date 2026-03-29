@@ -4,7 +4,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils import timezone
 
-from .models import User, CoinRecord, PendingRegistration
+from .models import User, CoinRecord, Achievement, PendingRegistration
 
 
 @admin.action(description="开通VIP 7天")
@@ -139,6 +139,8 @@ class UserAdmin(BaseUserAdmin):
         ("VIP 信息", {"fields": ("vip_level", "vip_start_date", "vip_expire_date")}),
         ("邮箱验证", {"fields": ("email_verified", "email_token")}),
         ("站内点数", {"fields": ("coins",)}),
+        ("个人主页", {"fields": ("avatar", "bio")}),
+        ("学习目标", {"fields": ("target_school", "kaoyan_session", "study_start_date")}),
     )
 
     @admin.display(boolean=True, description="VIP有效")
@@ -159,6 +161,13 @@ class CoinRecordAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         # 禁止手动添加记录，所有点数变动应通过 coin_utils 操作
         return False
+
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display = ("user", "code", "name", "earned_at")
+    list_filter = ("code",)
+    search_fields = ("user__username", "name")
 
 
 @admin.register(PendingRegistration)

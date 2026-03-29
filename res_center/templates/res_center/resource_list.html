@@ -224,15 +224,21 @@
                 {% endif %}
             </div>
             <div class="res-card-footer">
+                {% if is_vip %}
+                <span class="res-price" style="color:#d97706;"><i class="fa-solid fa-crown"></i> VIP期间畅享</span>
+                {% else %}
                 {% if res.price == 0 %}
                 <span class="res-price free"><i class="fa-solid fa-gift"></i> 免费</span>
                 {% else %}
                 <span class="res-price paid"><i class="fa-solid fa-coins"></i> {{ res.price }}</span>
                 {% endif %}
+                {% endif %}
+                {% if not is_vip %}
                 {% if res.id in purchased_ids %}
                 <span class="res-owned"><i class="fa-solid fa-check" style="font-size:10px;"></i> 已获取</span>
                 {% else %}
                 <span class="res-card-stat"><i class="fa-solid fa-download"></i> {{ res.download_count }}</span>
+                {% endif %}
                 {% endif %}
             </div>
         </div>

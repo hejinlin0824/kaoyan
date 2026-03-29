@@ -50,6 +50,8 @@ def resource_list(request):
     search_params.pop("page", None)
     search_str = search_params.urlencode()
 
+    is_vip = request.user.is_authenticated and request.user.is_vip()
+
     return render(request, "res_center/resource_list.html", {
         "page_obj": page_obj,
         "categories": categories,
@@ -57,6 +59,7 @@ def resource_list(request):
         "subjects": subjects,
         "purchased_ids": purchased_ids,
         "search_str": search_str,
+        "is_vip": is_vip,
         # 当前筛选值
         "current_category": category_id,
         "current_school": school_id,
@@ -204,6 +207,9 @@ def my_purchases(request):
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
+    is_vip = request.user.is_authenticated and request.user.is_vip()
+
     return render(request, "res_center/my_purchases.html", {
         "page_obj": page_obj,
+        "is_vip": is_vip,
     })

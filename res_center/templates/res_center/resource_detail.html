@@ -192,12 +192,17 @@
     <!-- Sidebar -->
     <div class="detail-sidebar">
         <div class="sidebar-card">
+            {% if is_vip %}
+            <div class="sidebar-price" style="color:#d97706;"><i class="fa-solid fa-crown"></i> VIP期间畅享</div>
+            <div class="sidebar-price-label">VIP会员专属</div>
+            {% else %}
             {% if resource.price == 0 %}
             <div class="sidebar-price free"><i class="fa-solid fa-gift"></i> 免费</div>
             {% else %}
             <div class="sidebar-price paid"><i class="fa-solid fa-coins"></i> {{ resource.price }}</div>
             {% endif %}
             <div class="sidebar-price-label">点数价格</div>
+            {% endif %}
 
             <div class="sidebar-info">
                 <div class="sidebar-info-item">

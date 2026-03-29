@@ -10,71 +10,100 @@
     .home-anim.gsap-ready{opacity:0;transform:translateY(20px);}
     .home-stagger.gsap-ready{opacity:0;transform:translateY(16px);}
 
-    /* 顶部欢迎条 */
-    .welcome-bar {
-        background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
-        color: #fff; border-radius: var(--radius); padding: 28px 32px;
-        display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    /* ===== 顶部大容器 ===== */
+    .home-panel {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        margin-bottom: 20px;
     }
-    .welcome-bar .welcome-left { display: flex; align-items: center; gap: 16px; }
-    .welcome-bar .avatar {
-        width: 52px; height: 52px; border-radius: 50%;
-        background: rgba(255,255,255,0.2); display: flex; align-items: center;
-        justify-content: center; font-size: 24px;
+
+    /* 欢迎行 */
+    .welcome-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--gray-100);
+        margin-bottom: 20px;
     }
-    .welcome-bar .welcome-info h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    .welcome-bar .welcome-info p { font-size: 13px; opacity: 0.85; }
-    .welcome-bar .welcome-tags { display: flex; gap: 8px; margin-top: 6px; }
-    .tag-vip {
-        background: linear-gradient(135deg, #fbbf24, #f59e0b);
-        color: #78350f; font-size: 11px; font-weight: 700;
-        padding: 2px 10px; border-radius: 4px;
+    .welcome-row .wr-left { display: flex; align-items: center; gap: 14px; }
+    .welcome-row .wr-avatar {
+        width: 46px; height: 46px; border-radius: 50%;
+        object-fit: cover; border: 2px solid var(--gray-100);
     }
-    .tag-coins {
-        background: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600;
-        padding: 2px 10px; border-radius: 4px;
+    .welcome-row .wr-info h2 { font-size: 17px; font-weight: 700; color: var(--gray-800); margin-bottom: 2px; }
+    .welcome-row .wr-info p { font-size: 13px; color: var(--gray-400); }
+    .welcome-row .wr-tags { display: flex; gap: 6px; margin-top: 6px; }
+    .wr-tag {
+        font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 4px;
         display: inline-flex; align-items: center; gap: 4px;
     }
-    .welcome-bar .welcome-right { display: flex; gap: 10px; }
-    .welcome-bar .welcome-right .btn-w {
-        background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);
-        padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-        text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    .wr-tag-vip { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .wr-tag-normal { background: var(--gray-50); color: var(--gray-500); border: 1px solid var(--gray-200); }
+    .wr-tag-coins { background: var(--gray-50); color: var(--gray-600); border: 1px solid var(--gray-200); }
+    .wr-tag-school { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .welcome-row .wr-right { display: flex; gap: 8px; }
+    .wr-btn {
+        padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+        text-decoration: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;
     }
-    .welcome-bar .welcome-right .btn-w:hover { background: rgba(255,255,255,0.25); }
+    .wr-btn-ghost { background: var(--gray-50); color: var(--gray-600); border: 1px solid var(--gray-200); }
+    .wr-btn-ghost:hover { background: var(--gray-100); }
+    .wr-btn-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .wr-btn-amber:hover { background: #fef3c7; }
 
-    /* 未登录欢迎 */
-    .welcome-ghost {
-        background: var(--white); border: 1px solid var(--gray-200);
-        border-radius: var(--radius); padding: 40px 32px; margin-bottom: 24px;
-        display: flex; align-items: center; justify-content: space-between;
+    /* 倒计时 + 学习天数 */
+    .highlight-row {
+        display: grid; gap: 12px; margin-bottom: 20px;
     }
-    .welcome-ghost .wg-left { display: flex; align-items: center; gap: 20px; }
-    .welcome-ghost .wg-left img { height: 56px; }
-    .welcome-ghost .wg-left h2 { font-size: 20px; font-weight: 700; color: var(--gray-800); }
-    .welcome-ghost .wg-left p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
-    .welcome-ghost .wg-right { display: flex; gap: 10px; }
-
-    /* 统计条 */
-    .stats-strip {
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 12px; margin-bottom: 24px;
-    }
-    .stats-strip .stat-item {
-        background: var(--white); border: 1px solid var(--gray-200);
-        border-radius: var(--radius); padding: 16px 20px;
+    .highlight-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .highlight-row.cols-1 { grid-template-columns: 1fr; }
+    .hl-item {
+        background: var(--gray-50); border: 1px solid var(--gray-100);
+        border-radius: 10px; padding: 16px 20px;
         display: flex; align-items: center; gap: 14px;
     }
-    .stats-strip .stat-icon {
+    .hl-item .hl-dot {
         width: 40px; height: 40px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center; font-size: 18px;
+        display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
     }
-    .stats-strip .stat-icon.blue { background: var(--blue-50); color: var(--blue-600); }
-    .stats-strip .stat-icon.green { background: #f0fdf4; color: #16a34a; }
-    .stats-strip .stat-icon.amber { background: #fffbeb; color: #d97706; }
-    .stats-strip .stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
-    .stats-strip .stat-text .sv { font-size: 22px; font-weight: 700; color: var(--gray-800); }
-    .stats-strip .stat-text .sl { font-size: 12px; color: var(--gray-500); }
+    .hl-item .hl-body .hl-label { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+    .hl-item .hl-body .hl-num { font-size: 24px; font-weight: 800; color: var(--gray-800); line-height: 1.2; }
+    .hl-item .hl-body .hl-unit { font-size: 13px; font-weight: 600; color: var(--gray-500); }
+
+    /* 数据统计 */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .stats-row .st-box {
+        background: var(--gray-50); border: 1px solid var(--gray-100);
+        border-radius: 10px; padding: 14px 16px;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .stats-row .st-icon {
+        width: 38px; height: 38px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+    }
+    .st-icon.ic-blue { background: #dbeafe; color: #2563eb; }
+    .st-icon.ic-green { background: #dcfce7; color: #16a34a; }
+    .st-icon.ic-amber { background: #fef3c7; color: #d97706; }
+    .st-icon.ic-purple { background: #ede9fe; color: #7c3aed; }
+    .stats-row .st-body .st-val { font-size: 20px; font-weight: 700; color: var(--gray-800); }
+    .stats-row .st-body .st-lbl { font-size: 12px; color: var(--gray-500); }
+
+    /* ===== 未登录面板 ===== */
+    .ghost-panel {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 32px 28px; margin-bottom: 20px;
+    }
+    .ghost-panel .gp-top { display: flex; align-items: center; justify-content: space-between; }
+    .ghost-panel .gp-left { display: flex; align-items: center; gap: 16px; }
+    .ghost-panel .gp-left img { height: 44px; }
+    .ghost-panel .gp-left h2 { font-size: 18px; font-weight: 700; color: var(--gray-800); }
+    .ghost-panel .gp-left p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+    .ghost-panel .gp-right { display: flex; gap: 10px; }
 
     /* Tab 切换 */
     .tab-container {
@@ -150,52 +179,87 @@
 <div class="home-anim" style="margin-bottom:0;">
 
     {% if user.is_authenticated %}
-    <!-- ========== 已登录：欢迎条 ========== -->
-    <div class="welcome-bar home-stagger">
-        <div class="welcome-left">
-            <div class="avatar"><i class="fa-solid fa-user"></i></div>
-            <div class="welcome-info">
-                <h2>{{ user.username }}，欢迎回来 👋</h2>
-                <p>今天也要坚持学习哦，每日打卡赢取点数！</p>
-                <div class="welcome-tags">
-                    {% if is_vip %}
-                    <span class="tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
-                    {% else %}
-                    <span class="tag-vip" style="background:rgba(255,255,255,0.15);color:#fff;"><i class="fa-solid fa-user"></i> 普通用户</span>
-                    {% endif %}
-                    <span class="tag-coins"><i class="fa-solid fa-coins"></i> {{ user_coins }} 点数</span>
+    <!-- ===== 顶部信息面板 ===== -->
+    <div class="home-panel home-stagger">
+        <!-- 欢迎行 -->
+        <div class="welcome-row">
+            <div class="wr-left">
+                <img src="{{ user.avatar.url }}" class="wr-avatar" alt="头像">
+                <div class="wr-info">
+                    <h2>{{ user.username }}，欢迎回来 👋</h2>
+                    <p>今天也要坚持学习哦，每日打卡赢取点数！</p>
+                    <div class="wr-tags">
+                        {% if is_vip %}
+                        <span class="wr-tag wr-tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+                        {% else %}
+                        <span class="wr-tag wr-tag-normal"><i class="fa-solid fa-user"></i> 普通用户</span>
+                        {% endif %}
+                        <span class="wr-tag wr-tag-coins"><i class="fa-solid fa-coins"></i> {{ user_coins }}</span>
+                        {% if target_school_name %}
+                        <span class="wr-tag wr-tag-school"><i class="fa-solid fa-building-columns"></i> {{ target_school_name }}</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+            <div class="wr-right">
+                <a href="{% url 'user:checkin_calendar' %}" class="wr-btn wr-btn-ghost"><i class="fa-solid fa-calendar-check"></i> 打卡</a>
+                {% if not is_vip %}
+                <a href="{% url 'user:vip' %}" class="wr-btn wr-btn-amber"><i class="fa-solid fa-crown"></i> 开通 VIP</a>
+                {% else %}
+                <a href="{% url 'user:vip' %}" class="wr-btn wr-btn-amber"><i class="fa-solid fa-crown"></i> 续费</a>
+                {% endif %}
+            </div>
         </div>
-        <div class="welcome-right">
-            <a href="{% url 'user:checkin_calendar' %}" class="btn-w"><i class="fa-solid fa-calendar-check"></i> 打卡日历</a>
-            {% if not is_vip %}
-            <a href="{% url 'user:vip' %}" class="btn-w" style="background:rgba(251,191,36,0.3);border-color:rgba(251,191,36,0.5);"><i class="fa-solid fa-crown"></i> 开通 VIP</a>
-            {% else %}
-            <a href="{% url 'user:vip' %}" class="btn-w"><i class="fa-solid fa-crown"></i> 续费 VIP</a>
+
+        <!-- 考研倒计时 + 学习天数 -->
+        {% if kaoyan_countdown is not None or study_days > 0 %}
+        <div class="highlight-row {% if kaoyan_countdown is not None and study_days > 0 %}cols-2{% else %}cols-1{% endif %}">
+            {% if kaoyan_countdown is not None %}
+            <div class="hl-item">
+                <div class="hl-dot" style="background:#fef3c7;color:#d97706;">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div class="hl-body">
+                    <div class="hl-label">{{ kaoyan_session_label }}倒计时</div>
+                    <div class="hl-num">约 {{ kaoyan_countdown }} <span class="hl-unit">天</span></div>
+                </div>
+            </div>
+            {% endif %}
+            {% if study_days > 0 %}
+            <div class="hl-item">
+                <div class="hl-dot" style="background:#dcfce7;color:#16a34a;">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div class="hl-body">
+                    <div class="hl-label">已坚持学习</div>
+                    <div class="hl-num">{{ study_days }} <span class="hl-unit">天</span></div>
+                </div>
+            </div>
             {% endif %}
         </div>
-    </div>
+        {% endif %}
 
-    <!-- 数据统计 -->
-    <div class="stats-strip home-stagger">
-        <div class="stat-item">
-            <div class="stat-icon blue"><i class="fa-solid fa-book-open"></i></div>
-            <div class="stat-text"><div class="sv">{{ total_questions }}</div><div class="sl">真题总量</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon green"><i class="fa-solid fa-building-columns"></i></div>
-            <div class="stat-text"><div class="sv">{{ total_schools }}</div><div class="sl">院校覆盖</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon amber"><i class="fa-solid fa-coins"></i></div>
-            <div class="stat-text"><div class="sv">{{ user_coins }}</div><div class="sl">我的点数</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon purple"><i class="fa-solid fa-fire"></i></div>
-            <div class="stat-text"><div class="sv">{{ streak }}</div><div class="sl">连续打卡</div></div>
+        <!-- 数据统计 -->
+        <div class="stats-row">
+            <div class="st-box">
+                <div class="st-icon ic-blue"><i class="fa-solid fa-book-open"></i></div>
+                <div class="st-body"><div class="st-val">{{ total_questions }}</div><div class="st-lbl">真题总量</div></div>
+            </div>
+            <div class="st-box">
+                <div class="st-icon ic-green"><i class="fa-solid fa-building-columns"></i></div>
+                <div class="st-body"><div class="st-val">{{ total_schools }}</div><div class="st-lbl">院校覆盖</div></div>
+            </div>
+            <div class="st-box">
+                <div class="st-icon ic-amber"><i class="fa-solid fa-coins"></i></div>
+                <div class="st-body"><div class="st-val">{{ user_coins }}</div><div class="st-lbl">我的点数</div></div>
+            </div>
+            <div class="st-box">
+                <div class="st-icon ic-purple"><i class="fa-solid fa-fire"></i></div>
+                <div class="st-body"><div class="st-val">{{ streak }}</div><div class="st-lbl">连续打卡</div></div>
+            </div>
         </div>
     </div>
+    <!-- ===== /顶部信息面板 ===== -->
 
     <!-- Tab 功能区 -->
     <div class="tab-container home-stagger">
@@ -324,37 +388,40 @@
     </div>
 
     {% else %}
-    <!-- ========== 未登录：欢迎 + 全部功能展示 ========== -->
-    <div class="welcome-ghost home-stagger">
-        <div class="wg-left">
-            <img src="{% static 'images/CM.png' %}" alt="厘米考研">
-            <div>
-                <h2>欢迎来到厘米考研 🎓</h2>
-                <p>你离上岸只差这一厘米，我们帮你！注册即可开始练习</p>
+    <!-- ===== 未登录面板 ===== -->
+    <div class="ghost-panel home-stagger">
+        <div class="gp-top">
+            <div class="gp-left">
+                <img src="{% static 'images/CM.png' %}" alt="厘米考研">
+                <div>
+                    <h2>欢迎来到厘米考研 🎓</h2>
+                    <p>你离上岸只差这一厘米，注册即可开始练习</p>
+                </div>
+            </div>
+            <div class="gp-right">
+                <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
+                <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 登录</a>
             </div>
         </div>
-        <div class="wg-right">
-            <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
-            <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 登录</a>
-        </div>
-    </div>
-
-    <div class="stats-strip home-stagger">
-        <div class="stat-item">
-            <div class="stat-icon blue"><i class="fa-solid fa-book-open"></i></div>
-            <div class="stat-text"><div class="sv">{{ total_questions }}</div><div class="sl">真题总量</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon green"><i class="fa-solid fa-building-columns"></i></div>
-            <div class="stat-text"><div class="sv">{{ total_schools }}</div><div class="sl">院校覆盖</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon amber"><i class="fa-solid fa-robot"></i></div>
-            <div class="stat-text"><div class="sv">AI</div><div class="sl">智能出题</div></div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon purple"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="stat-text"><div class="sv">智能</div><div class="sl">错题分析</div></div>
+        <div style="margin-top:20px;">
+            <div class="stats-row">
+                <div class="st-box">
+                    <div class="st-icon ic-blue"><i class="fa-solid fa-book-open"></i></div>
+                    <div class="st-body"><div class="st-val">{{ total_questions }}</div><div class="st-lbl">真题总量</div></div>
+                </div>
+                <div class="st-box">
+                    <div class="st-icon ic-green"><i class="fa-solid fa-building-columns"></i></div>
+                    <div class="st-body"><div class="st-val">{{ total_schools }}</div><div class="st-lbl">院校覆盖</div></div>
+                </div>
+                <div class="st-box">
+                    <div class="st-icon ic-amber"><i class="fa-solid fa-robot"></i></div>
+                    <div class="st-body"><div class="st-val">AI</div><div class="st-lbl">智能出题</div></div>
+                </div>
+                <div class="st-box">
+                    <div class="st-icon ic-purple"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="st-body"><div class="st-val">智能</div><div class="st-lbl">错题分析</div></div>
+                </div>
+            </div>
         </div>
     </div>
 

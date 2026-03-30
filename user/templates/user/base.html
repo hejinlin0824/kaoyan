@@ -392,6 +392,29 @@
     </nav>
 
     <div class="main-content">
+        {% if messages %}
+        <div id="django-messages" style="margin-bottom:20px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding:14px 20px;border-radius:8px;margin-bottom:10px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;
+                {% if message.tags == 'success' %}background:#f0fdf4;border:1px solid #86efac;color:#15803d;{% endif %}
+                {% if message.tags == 'warning' %}background:#fffbeb;border:1px solid #fde68a;color:#b45309;{% endif %}
+                {% if message.tags == 'error' %}background:#fef2f2;border:1px solid #fecaca;color:#dc2626;{% endif %}
+                {% if message.tags == 'info' %}background:var(--blue-50);border:1px solid var(--blue-200);color:var(--blue-700);{% endif %}
+                ">
+                {{ message }}
+                <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:16px;color:inherit;opacity:0.6;">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        <script>
+        // 5秒后自动淡出消息
+        setTimeout(function(){
+            var msgs = document.getElementById('django-messages');
+            if(msgs){ msgs.style.transition='opacity 0.5s'; msgs.style.opacity='0'; setTimeout(function(){ msgs.remove(); },500); }
+        }, 5000);
+        </script>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </div>
     <script>

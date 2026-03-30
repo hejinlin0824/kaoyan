@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -174,7 +175,11 @@ def ai_exam_submit(request, pk):
 
     total_q = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
     from user.coin_utils import try_daily_checkin
-    try_daily_checkin(request.user, question_count=total_q, objective_score=exam.score)
+    success, msg = try_daily_checkin(request.user, question_count=total_q, objective_score=exam.score)
+    if success:
+        messages.success(request, f"🎉 打卡成功！{msg}")
+    else:
+        messages.warning(request, f"⚠️ 打卡未完成：{msg}")
 
     return redirect("ai_test:ai_exam_result", exam.id)
 
@@ -397,7 +402,11 @@ def ai_practice_submit(request, pk):
     # ── 每日打卡检测 ──
     total_question_count = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
     from user.coin_utils import try_daily_checkin
-    try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
+    success, msg = try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
+    if success:
+        messages.success(request, f"🎉 打卡成功！{msg}")
+    else:
+        messages.warning(request, f"⚠️ 打卡未完成：{msg}")
 
     return redirect("ai_test:ai_practice_result", exam.id)
 

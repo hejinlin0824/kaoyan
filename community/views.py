@@ -537,7 +537,7 @@ def resource_submission_review(request, pk):
             sender=request.user,
             noti_type="resource_accepted",
             content=f"你投稿的资源「{submission.title}」已被采纳！奖励1天VIP + 100点数",
-            url=f"/res-center/{resource.pk}/",
+            url=f"/resource/{resource.pk}/",
         )
         return JsonResponse({"ok": True, "msg": "已采纳，已创建资源并奖励用户1天VIP + 100点数"})
 

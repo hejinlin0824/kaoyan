@@ -71,6 +71,43 @@ def set_coins(user, amount, description="管理员手动设置"):
     return True, f"点数已设置为 {amount}"
 
 
+def get_streak(user):
+    """
+    计算用户当前连续打卡天数。
+
+    规则：
+    - 如果今天已打卡，从今天开始往前数；
+    - 如果今天尚未打卡，从昨天开始往前数（streak 不断，给用户一天的缓冲）；
+    - 只有前天还没打卡才算真正断了。
+
+    :param user: User 实例
+    :return: int 连续天数
+    """
+    from .models import CoinRecord
+    from datetime import timedelta
+    from django.utils import timezone
+
+    streak = 0
+    check_date = timezone.now().date()
+
+    # 今天还没打卡，从昨天开始数
+    if not CoinRecord.objects.filter(
+        user=user, reason="daily_checkin", created_at__date=check_date
+    ).exists():
+        check_date -= timedelta(days=1)
+
+    while True:
+        if CoinRecord.objects.filter(
+            user=user, reason="daily_checkin", created_at__date=check_date
+        ).exists():
+            streak += 1
+            check_date -= timedelta(days=1)
+        else:
+            break
+
+    return streak
+
+
 def can_daily_checkin(user):
     """
     检查用户今日是否可以打卡（即今日尚未通过打卡获得点数）。

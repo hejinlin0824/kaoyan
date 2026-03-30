@@ -124,11 +124,12 @@ class ProfileEditForm(forms.ModelForm):
         queryset=None,
         widget=forms.Select(attrs={"class": "form-input"}),
     )
-    kaoyan_session = forms.ChoiceField(
+    kaoyan_session = forms.TypedChoiceField(
         label="考研届次",
         required=False,
         choices=[("", "-- 请选择 --")] + User.KAOYAN_SESSION_CHOICES,
         widget=forms.Select(attrs={"class": "form-input"}),
+        empty_value=None,
     )
     study_start_date = forms.DateField(
         label="学习开始日期",

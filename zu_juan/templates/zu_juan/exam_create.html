@@ -74,6 +74,9 @@
             <span class="summary-total">共 <span id="total-count">0</span> 道题</span>
             <span class="summary-score">客观题满分 <span id="total-score">0</span> 分</span>
         </div>
+        <div id="checkin-warning" style="display:none;margin-top:16px;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;font-weight:500;text-align:center;">
+            <i class="fa-solid fa-triangle-exclamation"></i> 当前组卷客观题满分不足20分，完成后将无法触发每日打卡，建议增加选择/填空题数量。
+        </div>
         <div style="margin-top:24px;text-align:center;">
             <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-shuffle"></i> 开始抽题</button>
         </div>
@@ -81,7 +84,7 @@
 </div>
 
 <script>
-function updateSummary(){const c=+document.getElementById('id_choice_count').value||0;const f=+document.getElementById('id_fill_count').value||0;const j=+document.getElementById('id_judge_count').value||0;const s=+document.getElementById('id_short_count').value||0;const a=+document.getElementById('id_calc_count').value||0;const d=+document.getElementById('id_draw_count').value||0;document.getElementById('total-count').textContent=c+f+j+s+a+d;document.getElementById('total-score').textContent=c*5+f*5+j*3;}
+function updateSummary(){const c=+document.getElementById('id_choice_count').value||0;const f=+document.getElementById('id_fill_count').value||0;const j=+document.getElementById('id_judge_count').value||0;const s=+document.getElementById('id_short_count').value||0;const a=+document.getElementById('id_calc_count').value||0;const d=+document.getElementById('id_draw_count').value||0;document.getElementById('total-count').textContent=c+f+j+s+a+d;const totalScore=c*5+f*5+j*3;document.getElementById('total-score').textContent=totalScore;const warning=document.getElementById('checkin-warning');if(warning){warning.style.display=totalScore<20?'block':'none';}}
 ['id_choice_count','id_fill_count','id_judge_count','id_short_count','id_calc_count','id_draw_count'].forEach(id=>{document.getElementById(id).addEventListener('input',updateSummary);});
 updateSummary();
 </script>

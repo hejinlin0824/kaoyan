@@ -5,121 +5,199 @@
 
 {% block extra_style %}
 <style>
-    .home-anim{opacity:1;transform:none;transition:opacity 0.3s;}
-    .home-stagger{opacity:1;transform:none;transition:opacity 0.3s;}
-    .home-anim.gsap-ready{opacity:0;transform:translateY(20px);}
-    .home-stagger.gsap-ready{opacity:0;transform:translateY(16px);}
+    /* ===== 基础动画 ===== */
+    .home-anim { opacity: 1; transform: none; transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .home-stagger { opacity: 1; transform: none; transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .home-anim.gsap-ready { opacity: 0; transform: translateY(20px); }
+    .home-stagger.gsap-ready { opacity: 0; transform: translateY(15px); }
 
-    /* ===== 顶部大容器 ===== */
-    .home-panel {
+    /* ===== 教育平台特色：沉浸式学习看板 (Logged In) ===== */
+    .study-board {
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+        border-radius: var(--radius-lg);
+        padding: 32px 40px;
+        margin-bottom: 24px;
+        color: var(--white);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+    /* 背景装饰 */
+    .study-board::after {
+        content: '\f02d'; /* book-open icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: -20px;
+        bottom: -40px;
+        font-size: 200px;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+        pointer-events: none;
+    }
+    
+    .sb-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        z-index: 1;
+    }
+    .sb-avatar {
+        width: 72px; height: 72px; border-radius: 50%;
+        object-fit: cover; border: 3px solid rgba(255,255,255,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .sb-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
+    .sb-info p { font-size: 14px; opacity: 0.8; margin-bottom: 12px; }
+    .sb-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sb-tag {
+        font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 20px;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .sb-tag-vip { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+    .sb-tag-normal { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .sb-tag-school { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+    .sb-right {
+        display: flex;
+        gap: 32px;
+        z-index: 1;
+    }
+    .sb-stat-item {
+        text-align: center;
+        position: relative;
+    }
+    .sb-stat-item:not(:last-child)::after {
+        content: ''; position: absolute;
+        right: -16px; top: 15%; height: 70%; width: 1px;
+        background: rgba(255,255,255,0.2);
+    }
+    .sb-stat-num { font-size: 28px; font-weight: 800; font-family: monospace; line-height: 1; margin-bottom: 6px; }
+    .sb-stat-num small { font-size: 14px; font-weight: 500; opacity: 0.8; }
+    .sb-stat-label { font-size: 13px; opacity: 0.85; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+    @media (max-width: 860px) {
+        .study-board { flex-direction: column; align-items: flex-start; gap: 24px; padding: 24px; }
+        .sb-right { width: 100%; justify-content: space-between; }
+        .sb-stat-item:not(:last-child)::after { display: none; }
+    }
+
+    /* ===== 快捷入口 (金刚区) ===== */
+    .quick-access-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 640px) {
+        .quick-access-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .qa-card {
         background: var(--white);
         border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 24px 20px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; text-decoration: none; transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+    }
+    .qa-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        border-color: var(--blue-200);
+    }
+    .qa-icon-wrap {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; margin-bottom: 12px; transition: transform 0.2s;
+    }
+    .qa-card:hover .qa-icon-wrap { transform: scale(1.1); }
+    .qa-blue { background: #eff6ff; color: #2563eb; }
+    .qa-amber { background: #fffbeb; color: #d97706; }
+    .qa-green { background: #f0fdf4; color: #16a34a; }
+    .qa-purple { background: #faf5ff; color: #7c3aed; }
+    .qa-title { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+    .qa-desc { font-size: 12px; color: var(--gray-500); }
+
+    /* ===== 未登录 Hero Banner (教育风) ===== */
+    .hero-classic {
+        background: linear-gradient(to right, var(--white) 0%, #eff6ff 100%);
+        border: 1px solid var(--blue-100);
         border-radius: var(--radius-lg);
-        padding: 28px;
-        margin-bottom: 20px;
+        padding: 50px 40px;
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 28px;
     }
+    .hc-left { max-width: 60%; }
+    .hc-left h1 { font-size: 32px; font-weight: 800; color: var(--gray-900); margin-bottom: 16px; letter-spacing: 1px; }
+    .hc-left h1 i { color: var(--blue-600); margin-right: 8px; }
+    .hc-left p { font-size: 16px; color: var(--gray-600); margin-bottom: 32px; line-height: 1.8; }
+    .hc-actions { display: flex; gap: 16px; }
+    .btn-hero-primary { background: var(--blue-600); color: #fff; padding: 12px 32px; font-size: 16px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 14px rgba(37,99,235,0.3); transition: all 0.2s;}
+    .btn-hero-primary:hover { background: var(--blue-700); transform: translateY(-2px); color: #fff; }
+    .btn-hero-outline { background: var(--white); color: var(--blue-700); border: 1px solid var(--blue-300); padding: 12px 32px; font-size: 16px; border-radius: 8px; font-weight: 600; transition: all 0.2s;}
+    .btn-hero-outline:hover { background: var(--blue-50); border-color: var(--blue-400); }
+    .hc-right { font-size: 120px; color: var(--blue-500); opacity: 0.1; }
 
-    /* 欢迎行 */
-    .welcome-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--gray-100);
-        margin-bottom: 20px;
+    @media (max-width: 768px) {
+        .hero-classic { flex-direction: column; text-align: center; padding: 30px 20px; }
+        .hc-left { max-width: 100%; }
+        .hc-actions { justify-content: center; }
+        .hc-right { display: none; }
     }
-    .welcome-row .wr-left { display: flex; align-items: center; gap: 14px; }
-    .welcome-row .wr-avatar {
-        width: 46px; height: 46px; border-radius: 50%;
-        object-fit: cover; border: 2px solid var(--gray-100);
-    }
-    .welcome-row .wr-info h2 { font-size: 17px; font-weight: 700; color: var(--gray-800); margin-bottom: 2px; }
-    .welcome-row .wr-info p { font-size: 13px; color: var(--gray-400); }
-    .welcome-row .wr-tags { display: flex; gap: 6px; margin-top: 6px; }
-    .wr-tag {
-        font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 4px;
-        display: inline-flex; align-items: center; gap: 4px;
-    }
-    .wr-tag-vip { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .wr-tag-normal { background: var(--gray-50); color: var(--gray-500); border: 1px solid var(--gray-200); }
-    .wr-tag-coins { background: var(--gray-50); color: var(--gray-600); border: 1px solid var(--gray-200); }
-    .wr-tag-school { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .welcome-row .wr-right { display: flex; gap: 8px; }
-    .wr-btn {
-        padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
-        text-decoration: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;
-    }
-    .wr-btn-ghost { background: var(--gray-50); color: var(--gray-600); border: 1px solid var(--gray-200); }
-    .wr-btn-ghost:hover { background: var(--gray-100); }
-    .wr-btn-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .wr-btn-amber:hover { background: #fef3c7; }
-
-    /* 倒计时 + 学习天数 */
-    .highlight-row {
-        display: grid; gap: 12px; margin-bottom: 20px;
-    }
-    .highlight-row.cols-2 { grid-template-columns: 1fr 1fr; }
-    .highlight-row.cols-1 { grid-template-columns: 1fr; }
-    .hl-item {
-        background: var(--gray-50); border: 1px solid var(--gray-100);
-        border-radius: 10px; padding: 16px 20px;
-        display: flex; align-items: center; gap: 14px;
-    }
-    .hl-item .hl-dot {
-        width: 40px; height: 40px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-    }
-    .hl-item .hl-body .hl-label { font-size: 12px; color: var(--gray-400); font-weight: 500; }
-    .hl-item .hl-body .hl-num { font-size: 24px; font-weight: 800; color: var(--gray-800); line-height: 1.2; }
-    .hl-item .hl-body .hl-unit { font-size: 13px; font-weight: 600; color: var(--gray-500); }
 
     /* 数据统计 */
-    .stats-row {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
     }
-    .stats-row .st-box {
-        background: var(--gray-50); border: 1px solid var(--gray-100);
-        border-radius: 10px; padding: 14px 16px;
-        display: flex; align-items: center; gap: 12px;
+    @media (max-width: 768px) { .dashboard-stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius);
+        padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
     }
-    .stats-row .st-icon {
-        width: 38px; height: 38px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-    }
-    .st-icon.ic-blue { background: #dbeafe; color: #2563eb; }
-    .st-icon.ic-green { background: #dcfce7; color: #16a34a; }
-    .st-icon.ic-amber { background: #fef3c7; color: #d97706; }
-    .st-icon.ic-purple { background: #ede9fe; color: #7c3aed; }
-    .stats-row .st-body .st-val { font-size: 20px; font-weight: 700; color: var(--gray-800); }
-    .stats-row .st-body .st-lbl { font-size: 12px; color: var(--gray-500); }
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-val { font-size: 24px; font-weight: 700; color: var(--gray-900); line-height: 1.2; }
+    .stat-lbl { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+    .stat-icon { font-size: 28px; opacity: 0.15; }
+    .stat-icon.ic-blue { color: var(--blue-600); }
+    .stat-icon.ic-green { color: #16a34a; }
+    .stat-icon.ic-amber { color: #d97706; }
+    .stat-icon.ic-purple { color: #7c3aed; }
 
-    /* ===== 未登录面板 ===== */
-    .ghost-panel {
-        background: var(--white);
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-lg);
-        padding: 32px 28px; margin-bottom: 20px;
+    /* 资料完善引导卡 */
+    .setup-banner {
+        background: #f0fdf4; border: 1px dashed #86efac; border-radius: var(--radius);
+        padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 24px; cursor: pointer; text-decoration: none; transition: all 0.2s;
     }
-    .ghost-panel .gp-top { display: flex; align-items: center; justify-content: space-between; }
-    .ghost-panel .gp-left { display: flex; align-items: center; gap: 16px; }
-    .ghost-panel .gp-left img { height: 44px; }
-    .ghost-panel .gp-left h2 { font-size: 18px; font-weight: 700; color: var(--gray-800); }
-    .ghost-panel .gp-left p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
-    .ghost-panel .gp-right { display: flex; gap: 10px; }
+    .setup-banner:hover { background: #dcfce7; border-color: #22c55e; }
+    .setup-left { display: flex; align-items: center; gap: 12px; }
+    .setup-icon { width: 36px; height: 36px; background: #dcfce7; color: #16a34a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .setup-text h4 { font-size: 15px; font-weight: 700; color: #166534; margin: 0 0 2px 0; }
+    .setup-text p { font-size: 13px; color: #15803d; margin: 0; }
+    .setup-right { font-size: 13px; font-weight: 600; color: #16a34a; }
 
-    /* Tab 切换 */
+    /* ===== Tab 功能区 (完美保留) ===== */
     .tab-container {
         background: var(--white); border: 1px solid var(--gray-200);
         border-radius: var(--radius); overflow: hidden;
     }
     .tab-nav {
-        display: flex; border-bottom: 2px solid var(--gray-100);
+        display: flex; border-bottom: 1px solid var(--gray-200);
         padding: 0; background: var(--gray-50);
     }
     .tab-btn {
-        flex: 1; padding: 14px 20px; border: none; background: transparent;
-        font-size: 14px; font-weight: 600; color: var(--gray-500);
+        flex: 1; padding: 16px 20px; border: none; background: transparent;
+        font-size: 15px; font-weight: 600; color: var(--gray-500);
         cursor: pointer; transition: all 0.2s; display: flex;
         align-items: center; justify-content: center; gap: 8px;
-        border-bottom: 2px solid transparent; margin-bottom: -2px;
+        border-bottom: 2px solid transparent; margin-bottom: -1px;
         font-family: inherit;
     }
     .tab-btn:hover { color: var(--gray-700); background: var(--white); }
@@ -127,102 +205,105 @@
         color: var(--blue-600); background: var(--white);
         border-bottom-color: var(--blue-600);
     }
-    .tab-btn .tab-icon { font-size: 15px; }
+    .tab-btn .tab-icon { font-size: 16px; }
     .tab-btn .tab-count {
-        font-size: 11px; font-weight: 600; padding: 1px 7px;
-        border-radius: 10px; background: var(--gray-200); color: var(--gray-600);
+        font-size: 11px; font-weight: 700; padding: 2px 8px;
+        border-radius: 12px; background: var(--gray-200); color: var(--gray-600);
     }
     .tab-btn.active .tab-count { background: var(--blue-50); color: var(--blue-700); }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* 功能列表 */
     .feature-list { list-style: none; padding: 0; margin: 0; }
     .feature-item {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 16px 24px; border-bottom: 1px solid var(--gray-50);
+        padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
         transition: background 0.15s; text-decoration: none; color: inherit;
     }
     .feature-item:last-child { border-bottom: none; }
-    .feature-item:hover { background: var(--blue-50); }
+    .feature-item:hover { background: var(--gray-50); }
     .feature-item .fi-left { display: flex; align-items: center; gap: 16px; }
     .feature-item .fi-icon {
-        width: 40px; height: 40px; border-radius: 10px;
+        width: 44px; height: 44px; border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 17px; flex-shrink: 0;
+        font-size: 18px; flex-shrink: 0; border: 1px solid var(--gray-200);
+        background: var(--white);
     }
-    .feature-item .fi-text h4 { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
-    .feature-item .fi-text p { font-size: 12px; color: var(--gray-500); }
-    .feature-item .fi-right { display: flex; align-items: center; gap: 10px; }
-    .feature-item .fi-tag {
-        font-size: 11px; font-weight: 600; padding: 3px 10px;
-        border-radius: 4px; white-space: nowrap;
-    }
-    .fi-tag-free { background: #f0fdf4; color: #15803d; }
-    .fi-tag-vip { background: #fffbeb; color: #b45309; }
-    .fi-tag-limit { background: #fef3c7; color: #92400e; }
-    .fi-tag-new { background: var(--blue-50); color: var(--blue-700); }
-    .fi-tag-soon { background: var(--gray-100); color: var(--gray-500); }
-    .fi-tag-login { background: #fef2f2; color: #dc2626; }
-    .feature-item .fi-arrow { color: var(--gray-400); font-size: 13px; }
-    .feature-item:hover .fi-arrow { color: var(--blue-500); }
+    .feature-item .fi-icon.ic-blue { color: var(--blue-600); border-color: var(--blue-200); background: var(--blue-50); }
+    .feature-item .fi-icon.ic-red { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+    .feature-item .fi-icon.ic-purple { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+    .feature-item .fi-icon.ic-green { color: #059669; border-color: #a7f3d0; background: #f0fdf4; }
+    .feature-item .fi-icon.ic-amber { color: #d97706; border-color: #fde68a; background: #fffbeb; }
 
-    /* 锁定项 */
-    .feature-item.locked { opacity: 0.7; }
-    .feature-item.locked:hover { opacity: 0.9; }
-    .feature-item.locked .fi-icon { filter: grayscale(0.3); }
+    .feature-item .fi-text h4 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+    .feature-item .fi-text p { font-size: 13px; color: var(--gray-500); margin: 0; }
+    .feature-item .fi-right { display: flex; align-items: center; gap: 12px; }
+    .feature-item .fi-tag {
+        font-size: 12px; font-weight: 600; padding: 4px 10px;
+        border-radius: 4px; white-space: nowrap; border: 1px solid transparent;
+    }
+    .fi-tag-free { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .fi-tag-vip { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .fi-tag-limit { background: var(--gray-50); color: var(--gray-600); border-color: var(--gray-200); }
+    .fi-tag-new { background: var(--blue-50); color: var(--blue-700); border-color: var(--blue-200); }
+    .fi-tag-login { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .feature-item .fi-arrow { color: var(--gray-400); font-size: 14px; transition: transform 0.2s; }
+    .feature-item:hover .fi-arrow { color: var(--gray-800); transform: translateX(2px); }
+    .feature-item.locked { opacity: 0.6; }
+    .feature-item.locked:hover { opacity: 0.8; }
+    .feature-item.locked .fi-icon { filter: grayscale(1); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-{# ── 公告弹窗 ── #}
+{# ── 公告弹窗 (无Emoji，全FA图标) ── #}
 <div id="announcementModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:var(--white);border-radius:16px;max-width:520px;width:90%;max-height:85vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.3s ease;">
-        <div style="background:linear-gradient(135deg,var(--blue-600),var(--blue-800));padding:24px 28px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="background:var(--white);border-radius:12px;max-width:520px;width:90%;max-height:85vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.3s ease;">
+        <div style="background:var(--gray-50); border-bottom:1px solid var(--gray-200); padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:10px;">
-                <i class="fa-solid fa-bullhorn" style="color:#fbbf24;font-size:20px;"></i>
-                <span style="color:var(--white);font-size:18px;font-weight:700;">公告</span>
+                <i class="fa-solid fa-bullhorn" style="color:var(--blue-600);font-size:18px;"></i>
+                <span style="color:var(--gray-900);font-size:16px;font-weight:700;">网站公告</span>
             </div>
-            <button onclick="closeAnnouncement()" style="background:rgba(255,255,255,0.2);border:none;color:var(--white);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <button onclick="closeAnnouncement()" style="background:none;border:none;color:var(--gray-500);cursor:pointer;font-size:18px;transition:color 0.15s;" onmouseover="this.style.color='var(--gray-800)'" onmouseout="this.style.color='var(--gray-500)'">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div style="padding:28px;overflow-y:auto;max-height:calc(85vh - 70px);">
-            <h3 style="font-size:20px;font-weight:700;color:var(--gray-800);text-align:center;margin-bottom:20px;">🎉 欢迎你，研究生</h3>
+        <div style="padding:24px;overflow-y:auto;max-height:calc(85vh - 70px);">
+            <h3 style="font-size:18px;font-weight:700;color:var(--gray-800);text-align:center;margin-bottom:20px;"><i class="fa-solid fa-fire" style="color:#ef4444;"></i> 欢迎你，准研究生</h3>
             <ul style="list-style:none;padding:0;margin:0;font-size:14px;color:var(--gray-700);line-height:2;">
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">1</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">1</span>
                     <span>本网站资源来自网络，侵删；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">2</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">2</span>
                     <span>本网站 AI 功能由于 API 价格高昂、服务器维护开销，特此提供 VIP 回血；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">3</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">3</span>
                     <span>大家每日学习，完成打卡任务可以获得相应天数 VIP；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">4</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">4</span>
                     <span>大家获得 Coin 点数后可以在资源中心兑换资源；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">5</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">5</span>
                     <span>大家也可以上传资源获得 VIP 和 Coin，纠错题目解析和答案也能获得；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">6</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">6</span>
                     <span>欢迎大家添加客服加群讨论；</span>
                 </li>
                 <li style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;">
-                    <span style="background:var(--blue-50);color:var(--blue-600);font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">7</span>
+                    <span style="background:var(--gray-100);color:var(--gray-600);font-weight:700;min-width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:4px;">7</span>
                     <span>商务合作请联系客服，备注商务；</span>
                 </li>
             </ul>
             <div style="text-align:center;margin-top:24px;">
-                <button onclick="closeAnnouncement()" style="padding:12px 48px;background:var(--blue-600);color:var(--white);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.15s;font-family:inherit;" onmouseover="this.style.background='var(--blue-700)'" onmouseout="this.style.background='var(--blue-600)'">
+                <button onclick="closeAnnouncement()" style="padding:10px 40px;background:var(--blue-600);color:var(--white);border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;font-family:inherit;">
                     我知道了
                 </button>
             </div>
@@ -231,19 +312,18 @@
 </div>
 <style>
     @keyframes modalIn {
-        from { transform: scale(0.9); opacity: 0; }
+        from { transform: scale(0.95); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
     }
 </style>
 <script>
 (function() {
-    // 每个session只显示一次公告
     if (!sessionStorage.getItem('announcement_closed')) {
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 var modal = document.getElementById('announcementModal');
                 if (modal) modal.style.display = 'flex';
-            }, 500);
+            }, 300);
         });
     }
     window.closeAnnouncement = function() {
@@ -257,89 +337,120 @@
 <div class="home-anim" style="margin-bottom:0;">
 
     {% if user.is_authenticated %}
-    <!-- ===== 顶部信息面板 ===== -->
-    <div class="home-panel home-stagger">
-        <!-- 欢迎行 -->
-        <div class="welcome-row">
-            <div class="wr-left">
-                <img src="{{ user.avatar.url }}" class="wr-avatar" alt="头像">
-                <div class="wr-info">
-                    <h2>{{ user.username }}，欢迎回来 👋</h2>
-                    <p>今天也要坚持学习哦，每日打卡赢取点数！</p>
-                    <div class="wr-tags">
+    <div class="dashboard-container home-stagger">
+        
+        <div class="study-board">
+            <div class="sb-left">
+                <img src="{{ user.avatar.url }}" class="sb-avatar" alt="头像">
+                <div class="sb-info">
+                    <h2>{{ user.username }}，学习辛苦了</h2>
+                    <p>在这里开启今天的刷题之旅，记录你的每一步成长。</p>
+                    <div class="sb-tags">
                         {% if is_vip %}
-                        <span class="wr-tag wr-tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+                        <span class="sb-tag sb-tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
                         {% else %}
-                        <span class="wr-tag wr-tag-normal"><i class="fa-solid fa-user"></i> 普通用户</span>
+                        <span class="sb-tag sb-tag-normal"><i class="fa-solid fa-user"></i> 普通用户</span>
                         {% endif %}
-                        <span class="wr-tag wr-tag-coins"><i class="fa-solid fa-coins"></i> {{ user_coins }}</span>
                         {% if target_school_name %}
-                        <span class="wr-tag wr-tag-school"><i class="fa-solid fa-building-columns"></i> {{ target_school_name }}</span>
+                        <span class="sb-tag sb-tag-school"><i class="fa-solid fa-building-columns"></i> {{ target_school_name }}</span>
                         {% endif %}
                     </div>
                 </div>
             </div>
-            <div class="wr-right">
-                <a href="{% url 'user:checkin_calendar' %}" class="wr-btn wr-btn-ghost"><i class="fa-solid fa-calendar-check"></i> 打卡</a>
-                {% if not is_vip %}
-                <a href="{% url 'user:vip' %}" class="wr-btn wr-btn-amber"><i class="fa-solid fa-crown"></i> 开通 VIP</a>
-                {% else %}
-                <a href="{% url 'user:vip' %}" class="wr-btn wr-btn-amber"><i class="fa-solid fa-crown"></i> 续费</a>
+            
+            <div class="sb-right">
+                {% if kaoyan_countdown is not None %}
+                <div class="sb-stat-item">
+                    <div class="sb-stat-num">{{ kaoyan_countdown }}<small> 天</small></div>
+                    <div class="sb-stat-label"><i class="fa-regular fa-clock"></i> 考研倒计时</div>
+                </div>
                 {% endif %}
+                <div class="sb-stat-item">
+                    <div class="sb-stat-num">{{ streak }}<small> 天</small></div>
+                    <div class="sb-stat-label"><i class="fa-solid fa-fire"></i> 连续打卡</div>
+                </div>
+                <div class="sb-stat-item">
+                    <div class="sb-stat-num" style="color:#fde047;">{{ user_coins }}<small> 点</small></div>
+                    <div class="sb-stat-label"><i class="fa-solid fa-coins" style="color:#fde047;"></i> 我的点数</div>
+                </div>
             </div>
         </div>
 
-        <!-- 考研倒计时 + 学习天数 -->
-        {% if kaoyan_countdown is not None or study_days > 0 %}
-        <div class="highlight-row {% if kaoyan_countdown is not None and study_days > 0 %}cols-2{% else %}cols-1{% endif %}">
-            {% if kaoyan_countdown is not None %}
-            <div class="hl-item">
-                <div class="hl-dot" style="background:#fef3c7;color:#d97706;">
-                    <i class="fa-solid fa-hourglass-half"></i>
-                </div>
-                <div class="hl-body">
-                    <div class="hl-label">{{ kaoyan_session_label }}倒计时</div>
-                    <div class="hl-num">约 {{ kaoyan_countdown }} <span class="hl-unit">天</span></div>
+        {% if not target_school_name or kaoyan_countdown is None or study_days == 0 %}
+        <a href="{% url 'user:profile_edit' %}" class="setup-banner home-stagger">
+            <div class="setup-left">
+                <div class="setup-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div class="setup-text">
+                    <h4>明确目标，事半功倍</h4>
+                    <p>{% if not target_school_name and kaoyan_countdown is None %}设置目标院校，开启你的专属考研倒计时{% elif study_days == 0 %}设置学习开始日期，记录坚持的每一天{% else %}补充个人资料，让学习更有仪式感{% endif %}</p>
                 </div>
             </div>
-            {% endif %}
-            {% if study_days > 0 %}
-            <div class="hl-item">
-                <div class="hl-dot" style="background:#dcfce7;color:#16a34a;">
-                    <i class="fa-solid fa-book-open"></i>
-                </div>
-                <div class="hl-body">
-                    <div class="hl-label">已坚持学习</div>
-                    <div class="hl-num">{{ study_days }} <span class="hl-unit">天</span></div>
-                </div>
+            <div class="setup-right">
+                前往设置 <i class="fa-solid fa-arrow-right"></i>
             </div>
-            {% endif %}
-        </div>
+        </a>
         {% endif %}
 
-        <!-- 数据统计 -->
-        <div class="stats-row">
-            <div class="st-box">
-                <div class="st-icon ic-blue"><i class="fa-solid fa-book-open"></i></div>
-                <div class="st-body"><div class="st-val">{{ total_questions }}</div><div class="st-lbl">真题总量</div></div>
-            </div>
-            <div class="st-box">
-                <div class="st-icon ic-green"><i class="fa-solid fa-building-columns"></i></div>
-                <div class="st-body"><div class="st-val">{{ total_schools }}</div><div class="st-lbl">院校覆盖</div></div>
-            </div>
-            <div class="st-box">
-                <div class="st-icon ic-amber"><i class="fa-solid fa-coins"></i></div>
-                <div class="st-body"><div class="st-val">{{ user_coins }}</div><div class="st-lbl">我的点数</div></div>
-            </div>
-            <div class="st-box">
-                <div class="st-icon ic-purple"><i class="fa-solid fa-fire"></i></div>
-                <div class="st-body"><div class="st-val">{{ streak }}</div><div class="st-lbl">连续打卡</div></div>
+        <div class="quick-access-grid home-stagger">
+            <a href="{% url 'zu_juan:exam_create' %}" class="qa-card">
+                <div class="qa-icon-wrap qa-blue"><i class="fa-solid fa-file-pen"></i></div>
+                <div class="qa-title">真题组卷</div>
+                <div class="qa-desc">海量题库 自动判卷</div>
+            </a>
+            <a href="{% if is_vip %}{% url 'ai_test:ai_exam_create' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="qa-card">
+                <div class="qa-icon-wrap qa-amber"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="qa-title">AI变式</div>
+                <div class="qa-desc">智能改写 举一反三</div>
+            </a>
+            <a href="{% url 'user:checkin_calendar' %}" class="qa-card">
+                <div class="qa-icon-wrap qa-green"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="qa-title">打卡日历</div>
+                <div class="qa-desc">每日坚持 赢取点数</div>
+            </a>
+            <a href="{% url 'res_center:list' %}" class="qa-card">
+                <div class="qa-icon-wrap qa-purple"><i class="fa-solid fa-store"></i></div>
+                <div class="qa-title">资源中心</div>
+                <div class="qa-desc">干货资料 点数兑换</div>
+            </a>
+        </div>
+
+    </div>
+
+    {% else %}
+    <div class="hero-classic home-stagger">
+        <div class="hc-left">
+            <h1><i class="fa-solid fa-graduation-cap"></i>厘米考研</h1>
+            <p>你离上岸只差这一厘米。海量真题智能组卷、DeepSeek 变式出题、自动记录错题本，全方位辅助你的考研备战之路，科学提高刷题效率。</p>
+            <div class="hc-actions">
+                <a href="{% url 'user:register' %}" class="btn-hero-primary"><i class="fa-solid fa-rocket" style="margin-right:4px;"></i> 免费注册</a>
+                <a href="{% url 'user:login' %}" class="btn-hero-outline">登录账号</a>
             </div>
         </div>
+        <div class="hc-right">
+            <i class="fa-solid fa-book-open-reader"></i>
+        </div>
     </div>
-    <!-- ===== /顶部信息面板 ===== -->
+    
+    <div class="dashboard-stats home-stagger" style="margin-bottom: 24px;">
+        <div class="stat-card">
+            <div class="stat-info"><span class="stat-val">{{ total_questions }}</span><span class="stat-lbl">真题总量</span></div>
+            <i class="fa-solid fa-layer-group stat-icon ic-blue"></i>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info"><span class="stat-val">{{ total_schools }}</span><span class="stat-lbl">院校覆盖</span></div>
+            <i class="fa-solid fa-building-columns stat-icon ic-green"></i>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info"><span class="stat-val" style="font-size:20px;">DeepSeek</span><span class="stat-lbl">AI 强力驱动</span></div>
+            <i class="fa-solid fa-wand-magic-sparkles stat-icon ic-amber"></i>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info"><span class="stat-val" style="font-size:20px;">Smart</span><span class="stat-lbl">智能错题分析</span></div>
+            <i class="fa-solid fa-chart-pie stat-icon ic-purple"></i>
+        </div>
+    </div>
+    {% endif %}
 
-    <!-- Tab 功能区 -->
     <div class="tab-container home-stagger">
         <div class="tab-nav">
             <button class="tab-btn active" onclick="switchTab('zt', this)">
@@ -351,112 +462,122 @@
                 <span class="tab-count">5</span>
             </button>
             <button class="tab-btn" onclick="switchTab('tool', this)">
-                <i class="tab-icon fa-solid fa-toolbox"></i> 学习工具
-                <span class="tab-count">4</span>
+                <i class="tab-icon fa-solid fa-toolbox"></i> 学习服务
+                <span class="tab-count">{% if user.is_authenticated %}4{% else %}3{% endif %}</span>
             </button>
         </div>
 
-        <!-- 真题练习 -->
         <div id="tab-zt" class="tab-panel active">
             <ul class="feature-list">
-                <a href="{% url 'kaoyan:question_list' %}" class="feature-item">
+                <a href="{% if user.is_authenticated %}{% url 'kaoyan:question_list' %}{% else %}{% url 'user:login' %}{% endif %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <div class="fi-icon ic-blue"><i class="fa-solid fa-magnifying-glass"></i></div>
                         <div class="fi-text"><h4>真题题库</h4><p>按年份、院校、题型筛选浏览历年真题</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-free">免费</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right">
+                        {% if user.is_authenticated %}<span class="fi-tag fi-tag-free">免费</span>{% else %}<span class="fi-tag fi-tag-login">登录即用</span>{% endif %}
+                        <i class="fa-solid fa-chevron-right fi-arrow"></i>
+                    </div>
                 </a>
-                <a href="{% url 'zu_juan:exam_create' %}" class="feature-item">
+                <a href="{% if user.is_authenticated %}{% url 'zu_juan:exam_create' %}{% else %}{% url 'user:login' %}{% endif %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-file-pen"></i></div>
+                        <div class="fi-icon ic-blue"><i class="fa-solid fa-file-pen"></i></div>
                         <div class="fi-text"><h4>真题组卷</h4><p>随机抽题组卷，在线作答，自动阅卷评分</p></div>
                     </div>
                     <div class="fi-right">
-                        {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">每日1套</span>{% endif %}
+                        {% if user.is_authenticated %}
+                            {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">每日1套</span>{% endif %}
+                        {% else %}
+                            <span class="fi-tag fi-tag-login">登录即用</span>
+                        {% endif %}
                         <i class="fa-solid fa-chevron-right fi-arrow"></i>
                     </div>
                 </a>
-                <a href="{% url 'zu_juan:wrong_book' %}" class="feature-item">
+                <a href="{% if user.is_authenticated %}{% url 'zu_juan:wrong_book' %}{% else %}{% url 'user:login' %}{% endif %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#fef2f2;color:#dc2626;"><i class="fa-solid fa-rotate-left"></i></div>
+                        <div class="fi-icon ic-red"><i class="fa-solid fa-rotate-left"></i></div>
                         <div class="fi-text"><h4>真题错题本</h4><p>自动收录错题，查漏补缺，支持导出打印</p></div>
                     </div>
                     <div class="fi-right">
-                        {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">限10题</span>{% endif %}
+                        {% if user.is_authenticated %}
+                            {% if is_vip %}<span class="fi-tag fi-tag-free">无限</span>{% else %}<span class="fi-tag fi-tag-limit">限10题</span>{% endif %}
+                        {% else %}
+                            <span class="fi-tag fi-tag-login">登录即用</span>
+                        {% endif %}
                         <i class="fa-solid fa-chevron-right fi-arrow"></i>
                     </div>
                 </a>
             </ul>
         </div>
 
-        <!-- AI 练习 -->
         <div id="tab-ai" class="tab-panel">
             <ul class="feature-list">
-                <a href="{% if is_vip %}{% url 'ai_test:ai_practice_create' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_practice_create' %}{% elif user.is_authenticated %}{% url 'user:vip' %}?from=home{% else %}{% url 'user:register' %}{% endif %}" class="feature-item {% if user.is_authenticated and not is_vip %}locked{% endif %}">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fa-solid fa-shuffle"></i></div>
-                        <div class="fi-text"><h4>AI 题库组卷 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>从 AI 生成题库中抽题组卷，自动阅卷，错题记录</p></div>
+                        <div class="fi-icon ic-purple"><i class="fa-solid fa-shuffle"></i></div>
+                        <div class="fi-text"><h4>AI 题库组卷 {% if user.is_authenticated and not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>从 AI 生成题库中抽题组卷，自动阅卷，错题记录</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_create' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_create' %}{% elif user.is_authenticated %}{% url 'user:vip' %}?from=home{% else %}{% url 'user:register' %}{% endif %}" class="feature-item {% if user.is_authenticated and not is_vip %}locked{% endif %}">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#f0fdf4;color:#059669;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                        <div class="fi-text"><h4>AI 变式出题 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>基于真题 AI 改写，同义改写、考法变式、思维拓展</p></div>
+                        <div class="fi-icon ic-green"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="fi-text"><h4>AI 变式出题 {% if user.is_authenticated and not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>基于真题 AI 改写，同义改写、考法变式、思维拓展</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% if is_vip %}{% url 'ai_test:ai_question_list' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_question_list' %}{% elif user.is_authenticated %}{% url 'user:vip' %}?from=home{% else %}{% url 'user:register' %}{% endif %}" class="feature-item {% if user.is_authenticated and not is_vip %}locked{% endif %}">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#fffbeb;color:#d97706;"><i class="fa-solid fa-robot"></i></div>
-                        <div class="fi-text"><h4>AI 题库浏览 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>浏览所有 AI 生成的变式题目，按科目分类</p></div>
+                        <div class="fi-icon ic-amber"><i class="fa-solid fa-robot"></i></div>
+                        <div class="fi-text"><h4>AI 题库浏览 {% if user.is_authenticated and not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>浏览所有 AI 生成的变式题目，按科目分类</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_list' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_exam_list' %}{% elif user.is_authenticated %}{% url 'user:vip' %}?from=home{% else %}{% url 'user:register' %}{% endif %}" class="feature-item {% if user.is_authenticated and not is_vip %}locked{% endif %}">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#fef3c7;color:#b45309;"><i class="fa-solid fa-list-check"></i></div>
-                        <div class="fi-text"><h4>我的 AI 试卷 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>查看 AI 变式出题任务进度与历史练习记录</p></div>
+                        <div class="fi-icon ic-amber" style="color:#b45309;border-color:#fde68a;background:#fffbeb;"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="fi-text"><h4>我的 AI 试卷 {% if user.is_authenticated and not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>查看 AI 变式出题任务进度与历史练习记录</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% if is_vip %}{% url 'ai_test:ai_wrong_book' %}{% else %}{% url 'user:vip' %}?from=home{% endif %}" class="feature-item {% if not is_vip %}locked{% endif %}">
+                <a href="{% if is_vip %}{% url 'ai_test:ai_wrong_book' %}{% elif user.is_authenticated %}{% url 'user:vip' %}?from=home{% else %}{% url 'user:register' %}{% endif %}" class="feature-item {% if user.is_authenticated and not is_vip %}locked{% endif %}">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#fff1f2;color:#e11d48;"><i class="fa-solid fa-circle-xmark"></i></div>
-                        <div class="fi-text"><h4>AI 错题本 {% if not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>AI 练习错题汇总，针对性复习薄弱知识点</p></div>
+                        <div class="fi-icon ic-red"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div class="fi-text"><h4>AI 错题本 {% if user.is_authenticated and not is_vip %}<i class="fa-solid fa-lock" style="font-size:11px;color:#d97706;"></i>{% endif %}</h4><p>AI 练习错题汇总，针对性复习薄弱知识点</p></div>
                     </div>
-                    <div class="fi-right"><span class="fi-tag {% if is_vip %}fi-tag-free{% else %}fi-tag-vip{% endif %}">{% if is_vip %}已解锁{% else %}VIP{% endif %}</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
+                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
             </ul>
         </div>
 
-        <!-- 学习工具 -->
         <div id="tab-tool" class="tab-panel">
             <ul class="feature-list">
+                {% if user.is_authenticated %}
                 <a href="{% url 'user:my_exams' %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <div class="fi-icon ic-blue"><i class="fa-solid fa-clipboard-list"></i></div>
                         <div class="fi-text"><h4>我的考试</h4><p>查看所有考试记录，中途退出可随时回来继续</p></div>
                     </div>
                     <div class="fi-right"><span class="fi-tag fi-tag-new">新功能</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% url 'user:checkin_calendar' %}" class="feature-item">
+                {% endif %}
+                <a href="{% if user.is_authenticated %}{% url 'user:checkin_calendar' %}{% else %}{% url 'user:register' %}{% endif %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-calendar-check"></i></div>
-                        <div class="fi-text"><h4>打卡日历</h4><p>查看打卡记录，坚持每日练习赢取点数</p></div>
+                        <div class="fi-icon ic-green"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="fi-text"><h4>打卡日历</h4><p>每日完成试卷打卡赢取点数，可视化打卡记录</p></div>
                     </div>
                     <div class="fi-right"><span class="fi-tag fi-tag-new">打卡+100</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
                 <a href="{% url 'res_center:list' %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#eff6ff;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
+                        <div class="fi-icon ic-blue"><i class="fa-solid fa-store"></i></div>
                         <div class="fi-text"><h4>资源中心</h4><p>用点数兑换学习资料、真题解析、笔记等</p></div>
                     </div>
                     <div class="fi-right"><span class="fi-tag fi-tag-new">已上线</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
                 </a>
-                <a href="{% url 'res_center:my_purchases' %}" class="feature-item">
+                <a href="{% if user.is_authenticated %}{% url 'res_center:my_purchases' %}{% else %}{% url 'user:register' %}{% endif %}" class="feature-item">
                     <div class="fi-left">
-                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <div class="fi-icon ic-green"><i class="fa-solid fa-bag-shopping"></i></div>
                         <div class="fi-text"><h4>我的资源</h4><p>查看已获取的资源，随时访问下载</p></div>
                     </div>
                     <div class="fi-right"><span class="fi-tag fi-tag-new">新功能</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
@@ -465,156 +586,12 @@
         </div>
     </div>
 
-    {% else %}
-    <!-- ===== 未登录面板 ===== -->
-    <div class="ghost-panel home-stagger">
-        <div class="gp-top">
-            <div class="gp-left">
-                <img src="{% static 'images/CM.png' %}" alt="厘米考研">
-                <div>
-                    <h2>欢迎来到厘米考研 🎓</h2>
-                    <p>你离上岸只差这一厘米，注册即可开始练习</p>
-                </div>
-            </div>
-            <div class="gp-right">
-                <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 立即注册</a>
-                <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 登录</a>
-            </div>
-        </div>
-        <div style="margin-top:20px;">
-            <div class="stats-row">
-                <div class="st-box">
-                    <div class="st-icon ic-blue"><i class="fa-solid fa-book-open"></i></div>
-                    <div class="st-body"><div class="st-val">{{ total_questions }}</div><div class="st-lbl">真题总量</div></div>
-                </div>
-                <div class="st-box">
-                    <div class="st-icon ic-green"><i class="fa-solid fa-building-columns"></i></div>
-                    <div class="st-body"><div class="st-val">{{ total_schools }}</div><div class="st-lbl">院校覆盖</div></div>
-                </div>
-                <div class="st-box">
-                    <div class="st-icon ic-amber"><i class="fa-solid fa-robot"></i></div>
-                    <div class="st-body"><div class="st-val">AI</div><div class="st-lbl">智能出题</div></div>
-                </div>
-                <div class="st-box">
-                    <div class="st-icon ic-purple"><i class="fa-solid fa-chart-line"></i></div>
-                    <div class="st-body"><div class="st-val">智能</div><div class="st-lbl">错题分析</div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab 功能区（未登录也能看到所有功能） -->
-    <div class="tab-container home-stagger">
-        <div class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab('zt', this)">
-                <i class="tab-icon fa-solid fa-book-open"></i> 真题练习
-                <span class="tab-count">3</span>
-            </button>
-            <button class="tab-btn" onclick="switchTab('ai', this)">
-                <i class="tab-icon fa-solid fa-wand-magic-sparkles"></i> AI 练习
-                <span class="tab-count">5</span>
-            </button>
-            <button class="tab-btn" onclick="switchTab('tool', this)">
-                <i class="tab-icon fa-solid fa-toolbox"></i> 学习工具
-                <span class="tab-count">3</span>
-            </button>
-        </div>
-
-        <!-- 真题练习 -->
-        <div id="tab-zt" class="tab-panel active">
-            <ul class="feature-list">
-                <a href="{% url 'user:login' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-magnifying-glass"></i></div>
-                        <div class="fi-text"><h4>真题题库</h4><p>按年份、院校、题型筛选浏览历年真题</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:login' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:var(--blue-50);color:var(--blue-600);"><i class="fa-solid fa-file-pen"></i></div>
-                        <div class="fi-text"><h4>真题组卷</h4><p>随机抽题组卷，在线作答，自动阅卷评分</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:login' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#fef2f2;color:#dc2626;"><i class="fa-solid fa-rotate-left"></i></div>
-                        <div class="fi-text"><h4>真题错题本</h4><p>自动收录错题，查漏补缺，支持导出打印</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-login">登录即用</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-            </ul>
-        </div>
-
-        <!-- AI 练习 -->
-        <div id="tab-ai" class="tab-panel">
-            <ul class="feature-list">
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fa-solid fa-shuffle"></i></div>
-                        <div class="fi-text"><h4>AI 题库组卷</h4><p>从 AI 生成题库中抽题组卷，自动阅卷，错题记录</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#f0fdf4;color:#059669;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                        <div class="fi-text"><h4>AI 变式出题</h4><p>基于真题 AI 改写，同义改写、考法变式、思维拓展</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#fffbeb;color:#d97706;"><i class="fa-solid fa-robot"></i></div>
-                        <div class="fi-text"><h4>AI 题库浏览</h4><p>浏览所有 AI 生成的变式题目，按科目分类</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#fef3c7;color:#b45309;"><i class="fa-solid fa-list-check"></i></div>
-                        <div class="fi-text"><h4>我的 AI 试卷</h4><p>查看 AI 变式出题任务进度与历史练习记录</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#fff1f2;color:#e11d48;"><i class="fa-solid fa-circle-xmark"></i></div>
-                        <div class="fi-text"><h4>AI 错题本</h4><p>AI 练习错题汇总，针对性复习薄弱知识点</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-vip">VIP</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-            </ul>
-        </div>
-
-        <!-- 学习工具 -->
-        <div id="tab-tool" class="tab-panel">
-            <ul class="feature-list">
-                <a href="{% url 'user:register' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa-solid fa-calendar-check"></i></div>
-                        <div class="fi-text"><h4>打卡日历</h4><p>每日完成试卷打卡赢取点数，可视化打卡记录</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-new">打卡+100</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-                <a href="{% url 'res_center:list' %}" class="feature-item">
-                    <div class="fi-left">
-                        <div class="fi-icon" style="background:#eff6ff;color:#2563eb;"><i class="fa-solid fa-store"></i></div>
-                        <div class="fi-text"><h4>资源中心</h4><p>用点数兑换学习资料、真题解析、笔记等</p></div>
-                    </div>
-                    <div class="fi-right"><span class="fi-tag fi-tag-new">已上线</span><i class="fa-solid fa-chevron-right fi-arrow"></i></div>
-                </a>
-            </ul>
-        </div>
-    </div>
-
-    <!-- 底部注册引导 -->
-    <div class="home-stagger" style="text-align:center; margin-top:28px; padding:24px; background:var(--blue-50); border:1px solid var(--blue-200); border-radius:var(--radius);">
-        <p style="font-size:15px; color:var(--gray-700); margin-bottom:16px;">💡 注册即可免费使用真题练习功能，每日打卡赢点数兑换资源，开通 VIP 解锁更多</p>
+    {% if not user.is_authenticated %}
+    <div class="home-stagger" style="text-align:center; margin-top:24px; padding:24px; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius);">
+        <p style="font-size:14px; color:var(--gray-600); margin-bottom:16px;"><i class="fa-regular fa-lightbulb" style="color:var(--blue-500);"></i> 注册即可免费使用真题练习功能，每日打卡赢点数兑换资源，开通 VIP 解锁更多</p>
         <div style="display:flex; gap:12px; justify-content:center;">
-            <a href="{% url 'user:register' %}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> 免费注册</a>
-            <a href="{% url 'user:login' %}" class="btn btn-outline"><i class="fa-solid fa-right-to-bracket"></i> 已有账号，去登录</a>
+            <a href="{% url 'user:register' %}" class="dw-btn dw-btn-primary" style="padding:8px 20px;"><i class="fa-solid fa-user-plus"></i> 免费注册</a>
+            <a href="{% url 'user:login' %}" class="dw-btn dw-btn-outline" style="padding:8px 20px;">已有账号，去登录</a>
         </div>
     </div>
     {% endif %}
@@ -636,8 +613,8 @@ function switchTab(tabId, btn) {
 // GSAP 入场动画
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof gsap !== 'undefined') {
-        gsap.to('.home-anim', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
-        gsap.to('.home-stagger', { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 0.15, ease: 'power2.out' });
+        gsap.to('.home-anim', { opacity: 1, y: 0, duration: 0.5, ease: 'power1.out' });
+        gsap.to('.home-stagger', { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, delay: 0.1, ease: 'power1.out' });
     }
 });
 </script>

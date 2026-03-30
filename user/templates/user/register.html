@@ -5,114 +5,298 @@
 
 {% block extra_style %}
 <style>
-    .register-wrapper{max-width:420px;margin:60px auto;position:relative;}
-    .register-card{position:relative;z-index:2;}
-    .float-shape{position:absolute;border-radius:50%;opacity:0;pointer-events:none;z-index:1;}
-    .float-shape.circle-1{width:18px;height:18px;background:var(--blue-400);top:-20px;left:-30px;}
-    .float-shape.circle-2{width:12px;height:12px;background:var(--blue-200);top:40px;right:-25px;}
-    .float-shape.circle-3{width:22px;height:22px;background:#bfdbfe;bottom:80px;left:-35px;}
-    .float-shape.circle-4{width:10px;height:10px;background:var(--blue-500);bottom:-15px;right:-20px;}
-    .float-shape.circle-5{width:14px;height:14px;background:#93c5fd;top:50%;left:-40px;}
-    .float-shape.star-1{width:16px;height:16px;top:-30px;right:40px;background:none;}
-    .float-shape.star-2{width:14px;height:14px;bottom:30px;right:-35px;background:none;}
-    .float-shape.star-3{width:12px;height:12px;top:20%;left:-45px;background:none;}
-    .float-shape.diamond-1{width:14px;height:14px;bottom:-25px;left:50px;background:#dbeafe;border-radius:3px;transform:rotate(45deg);}
-    .float-shape.diamond-2{width:10px;height:10px;top:60%;right:-30px;background:var(--blue-300);border-radius:2px;transform:rotate(45deg);}
+    /* ===== 页面底色微调，使卡片更突出 ===== */
+    body {
+        background: var(--gray-100);
+    }
+
+    /* ===== 大气分栏布局容器 ===== */
+    .auth-wrapper {
+        max-width: 900px;
+        margin: 60px auto;
+        padding: 0 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .auth-container {
+        display: flex;
+        background: var(--white);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.08), 0 1px 3px rgba(0,0,0,0.05);
+        min-height: 520px;
+    }
+
+    /* ===== 左侧：品牌与愿景墙 ===== */
+    .auth-left {
+        width: 45%;
+        background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+        padding: 48px 40px;
+        color: var(--white);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 背景教育水印 */
+    .auth-left::after {
+        content: '\f19d'; /* fa-graduation-cap */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: -30px;
+        bottom: -40px;
+        font-size: 240px;
+        opacity: 0.08;
+        transform: rotate(-15deg);
+        pointer-events: none;
+    }
+
+    .brand-slogan h2 {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.4;
+        margin-bottom: 16px;
+        letter-spacing: 1px;
+    }
+    .brand-slogan p {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.8;
+        margin-bottom: 32px;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .feature-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: rgba(255, 255, 255, 0.95);
+    }
+    .feature-list li i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    /* ===== 右侧：表单区 ===== */
+    .auth-right {
+        width: 55%;
+        padding: 56px 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .form-header {
+        margin-bottom: 28px;
+    }
+    .form-header img {
+        height: 48px;
+        margin-bottom: 20px;
+    }
+    .form-header h3 {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+    }
+    .form-header p {
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+    .form-input {
+        width: 100%;
+        height: 46px;
+        padding: 10px 16px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        font-size: 14px;
+        color: var(--gray-800);
+        transition: all 0.2s ease;
+        outline: none;
+    }
+    .form-input:focus {
+        background: var(--white);
+        border-color: var(--blue-500);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    .form-error { 
+        color: #dc2626; 
+        font-size: 12px; 
+        margin-top: 4px; 
+    }
+
+    .btn-auth {
+        width: 100%;
+        height: 48px;
+        background: var(--blue-600);
+        color: var(--white);
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s;
+        margin-top: 12px;
+    }
+    .btn-auth:hover {
+        background: var(--blue-700);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .switch-hint {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    .switch-hint a {
+        color: var(--blue-600);
+        font-weight: 700;
+        text-decoration: none;
+        margin-left: 4px;
+    }
+    .switch-hint a:hover {
+        text-decoration: underline;
+    }
+
+    /* ===== 响应式适配 ===== */
+    @media (max-width: 768px) {
+        .auth-wrapper { margin: 30px auto; padding: 0 16px; }
+        .auth-container { flex-direction: column; }
+        .auth-left { width: 100%; padding: 40px 30px; }
+        .auth-left::after { font-size: 160px; right: -20px; bottom: -20px; }
+        .brand-slogan h2 { font-size: 24px; }
+        .auth-right { width: 100%; padding: 40px 30px; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="register-wrapper" id="registerWrapper">
-    <div class="float-shape circle-1"></div>
-    <div class="float-shape circle-2"></div>
-    <div class="float-shape circle-3"></div>
-    <div class="float-shape circle-4"></div>
-    <div class="float-shape circle-5"></div>
-    <div class="float-shape star-1"><i class="fa-solid fa-star" style="color:var(--blue-300);font-size:16px;"></i></div>
-    <div class="float-shape star-2"><i class="fa-solid fa-sparkle" style="color:var(--blue-400);font-size:14px;"></i></div>
-    <div class="float-shape star-3"><i class="fa-regular fa-star" style="color:var(--blue-200);font-size:12px;"></i></div>
-    <div class="float-shape diamond-1"></div>
-    <div class="float-shape diamond-2"></div>
-
-    <div class="card register-card" id="registerCard">
-        <div class="text-center" style="margin-bottom: 32px;">
-            <img src="{% static 'images/CM.png' %}" alt="厘米考研" style="height:86px;width:auto;margin-bottom:12px;">
-            <p style="font-size: 14px; color: var(--gray-500); margin-top: 0;">你离上岸只差这一厘米，我们帮你！</p>
+<div class="auth-wrapper">
+    <div class="auth-container" id="authCard">
+        
+        <div class="auth-left">
+            <div class="brand-slogan">
+                <h2>开启你的<br>高效备考之旅</h2>
+                <p>加入厘米考研，每天坚持打卡练习。<br>用最科学的方法，做对每一道题。</p>
+            </div>
+            <ul class="feature-list">
+                <li><i class="fa-solid fa-layer-group"></i> 免费浏览海量真题与解析</li>
+                <li><i class="fa-solid fa-calendar-check"></i> 每日刷题打卡赢取奖励</li>
+                <li><i class="fa-solid fa-store"></i> 积分兑换独家考研干货</li>
+            </ul>
         </div>
 
-        {% if form.non_field_errors %}
-        <div class="form-errors-all">{{ form.non_field_errors }}</div>
-        {% endif %}
+        <div class="auth-right">
+            <div class="form-header">
+                <img src="{% static 'images/CM.png' %}" alt="厘米考研">
+                <h3>创建账号</h3>
+                <p>简单几步，加入厘米考研大家庭</p>
+            </div>
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <label><i class="fa-solid fa-user" style="margin-right: 6px; color: var(--gray-400);"></i>用户名</label>
-                {{ form.username }}
-                {% if form.username.errors %}<div class="form-error">{{ form.username.errors }}</div>{% endif %}
+            {% if form.non_field_errors %}
+            <div class="form-errors-all" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px;border-radius:8px;font-size:13px;margin-bottom:20px;">
+                {{ form.non_field_errors }}
             </div>
-            <div class="form-group">
-                <label><i class="fa-solid fa-envelope" style="margin-right: 6px; color: var(--gray-400);"></i>邮箱</label>
-                {{ form.email }}
-                {% if form.email.errors %}<div class="form-error">{{ form.email.errors }}</div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label><i class="fa-solid fa-lock" style="margin-right: 6px; color: var(--gray-400);"></i>密码</label>
-                {{ form.password1 }}
-                {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors }}</div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label><i class="fa-solid fa-lock" style="margin-right: 6px; color: var(--gray-400);"></i>确认密码</label>
-                {{ form.password2 }}
-                {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors }}</div>{% endif %}
-            </div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg mt-16">
-                <i class="fa-solid fa-user-plus"></i> 注册
-            </button>
-        </form>
+            {% endif %}
 
-        <div class="text-center mt-24">
-            <span style="font-size: 14px; color: var(--gray-500);">已有账号？</span>
-            <a href="{% url 'user:login' %}" style="font-size: 14px; font-weight: 600;">去登录</a>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user" style="color:var(--gray-400);margin-right:6px;"></i>用户名</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<div class="form-error">{{ form.username.errors }}</div>{% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope" style="color:var(--gray-400);margin-right:6px;"></i>邮箱</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="form-error">{{ form.email.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock" style="color:var(--gray-400);margin-right:6px;"></i>密码</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock" style="color:var(--gray-400);margin-right:6px;"></i>确认密码</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors }}</div>{% endif %}
+                </div>
+
+                <button type="submit" class="btn-auth">
+                    立即注册 <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="switch-hint">
+                已有账号？ <a href="{% url 'user:login' %}">去登录</a>
+            </div>
         </div>
+
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var card = document.getElementById('registerCard');
-    var shapes = document.querySelectorAll('.float-shape');
+    // 页面加载时的优雅入场动画
+    if (typeof gsap !== 'undefined') {
+        var card = document.getElementById('authCard');
+        gsap.fromTo(card, 
+            { opacity: 0, y: 40, scale: 0.98 }, 
+            { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }
+        );
 
-    gsap.fromTo(card, { opacity: 0, y: 30, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.4)' });
-
-    shapes.forEach(function(shape, i) {
-        var xRange = 8 + Math.random() * 12;
-        var yRange = 6 + Math.random() * 10;
-        var dur = 2.5 + Math.random() * 2;
-        gsap.to(shape, {
-            opacity: 0.7,
-            duration: 0.6,
-            delay: 0.3 + i * 0.08,
-            ease: 'power2.out'
-        });
-        gsap.to(shape, {
-            x: xRange,
-            y: yRange,
-            duration: dur,
-            delay: 0.5 + i * 0.08,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut'
-        });
-        gsap.to(shape, {
-            rotation: Math.random() > 0.5 ? 360 : -360,
-            duration: dur * 1.5,
-            delay: 0.5 + i * 0.08,
-            repeat: -1,
-            ease: 'none'
-        });
-    });
+        // 表单元素级联出现
+        gsap.fromTo(".auth-right > *", 
+            { opacity: 0, x: 20 }, 
+            { opacity: 1, x: 0, duration: 0.6, stagger: 0.08, delay: 0.3, ease: 'power2.out' }
+        );
+        
+        // 左侧文案级联出现
+        gsap.fromTo(".auth-left > *", 
+            { opacity: 0, x: -20 }, 
+            { opacity: 1, x: 0, duration: 0.6, stagger: 0.1, delay: 0.2, ease: 'power2.out' }
+        );
+    }
 });
 </script>
 {% endblock %}

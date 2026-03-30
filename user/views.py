@@ -47,14 +47,8 @@ def home(request):
         if user.study_start_date:
             study_days = (timezone.now().date() - user.study_start_date).days + 1
         # 连续打卡
-        check_date = timezone.now().date()
-        while True:
-            if CoinRecord.objects.filter(user=user, reason="daily_checkin", created_at__date=check_date).exists():
-                streak += 1
-                from datetime import timedelta
-                check_date -= timedelta(days=1)
-            else:
-                break
+        from .coin_utils import get_streak
+        streak = get_streak(user)
 
     return render(request, "user/home.html", {
         "user": user,
@@ -174,6 +168,8 @@ def login_view(request):
                     form.add_error(None, "账号尚未激活，请先查收邮件完成邮箱验证。")
                 else:
                     login(request, user)
+                    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                        return JsonResponse({"success": True}, status=200)
                     return redirect("user:home")
             else:
                 # 区分：用户名不存在 vs 密码错误 vs 账号未激活
@@ -193,6 +189,16 @@ def login_view(request):
                             form.add_error(None, "密码错误，请重试。")
                     except User.DoesNotExist:
                         form.add_error(None, "用户名或密码错误")
+
+        # 登录失败 — AJAX 请求返回 JSON
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            errors = {}
+            for field in form:
+                for err in field.errors:
+                    errors.setdefault(field.name, []).append(err)
+            for err in form.non_field_errors():
+                errors.setdefault("__all__", []).append(err)
+            return JsonResponse({"success": False, "errors": errors}, status=400)
     else:
         form = LoginForm()
     return render(request, "user/login.html", {"form": form})
@@ -324,19 +330,8 @@ def checkin_calendar(request):
     ).count()
 
     # 连续打卡天数
-    streak = 0
-    check_date = now.date()
-    while True:
-        if CoinRecord.objects.filter(
-            user=request.user,
-            reason="daily_checkin",
-            created_at__date=check_date,
-        ).exists():
-            streak += 1
-            from datetime import timedelta
-            check_date -= timedelta(days=1)
-        else:
-            break
+    from .coin_utils import get_streak
+    streak = get_streak(request.user)
 
     # 转盘状态
     from .coin_utils import can_daily_checkin
@@ -530,8 +525,9 @@ def my_exams(request):
     exams.sort(key=lambda x: x["created_at"], reverse=True)
 
     # 分类
-    in_progress = [e for e in exams if e["status"] in ("taking", "preview", "pending")]
-    completed = [e for e in exams if e["status"] in ("submitted", "completed")]
+    # 注意：AIExam 的 "completed" 表示"待练习"（题目已生成），应归为进行中
+    in_progress = [e for e in exams if e["status"] in ("taking", "preview", "pending", "completed")]
+    completed = [e for e in exams if e["status"] == "submitted"]
 
     return render(request, "user/my_exams.html", {
         "in_progress": in_progress,
@@ -553,17 +549,8 @@ def profile(request, pk=None):
 
     # 统计数据
     # 连续打卡天数
-    streak = 0
-    check_date = timezone.now().date()
-    while True:
-        if CoinRecord.objects.filter(
-            user=user, reason="daily_checkin", created_at__date=check_date,
-        ).exists():
-            streak += 1
-            from datetime import timedelta
-            check_date -= timedelta(days=1)
-        else:
-            break
+    from .coin_utils import get_streak
+    streak = get_streak(user)
 
     # 总打卡天数
     total_checkins = CoinRecord.objects.filter(user=user, reason="daily_checkin").count()
@@ -719,17 +706,8 @@ def achievements_page(request):
 
     # ── 统计数据 ──
     # 连续打卡天数
-    streak = 0
-    check_date = timezone.now().date()
-    while True:
-        if CoinRecord.objects.filter(
-            user=user, reason="daily_checkin", created_at__date=check_date,
-        ).exists():
-            streak += 1
-            from datetime import timedelta
-            check_date -= timedelta(days=1)
-        else:
-            break
+    from .coin_utils import get_streak
+    streak = get_streak(user)
 
     # 总打卡天数
     total_checkins = CoinRecord.objects.filter(user=user, reason="daily_checkin").count()

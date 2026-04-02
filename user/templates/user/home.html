@@ -56,9 +56,12 @@
     .sb-tag {
         font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 20px;
         display: inline-flex; align-items: center; gap: 5px;
+        transition: all 0.2s; cursor: pointer; text-decoration: none;
     }
     .sb-tag-vip { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+    .sb-tag-vip:hover { box-shadow: 0 4px 12px rgba(245,158,11,0.3); transform: scale(1.05); }
     .sb-tag-normal { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .sb-tag-normal:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
     .sb-tag-school { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 
     .sb-right {
@@ -253,6 +256,68 @@
     .feature-item.locked { opacity: 0.6; }
     .feature-item.locked:hover { opacity: 0.8; }
     .feature-item.locked .fi-icon { filter: grayscale(1); }
+
+    /* ===== 黑金主题覆盖 ===== */
+    [data-theme="dark-gold"] .study-board {
+        background: linear-gradient(135deg, #1a1400 0%, #2a2000 50%, #3d3000 100%);
+        box-shadow: 0 10px 30px rgba(212,168,83,0.1);
+    }
+    [data-theme="dark-gold"] .hero-classic {
+        background: linear-gradient(to right, #141414 0%, #1a1610 100%);
+        border-color: #2d2d2d;
+    }
+    [data-theme="dark-gold"] .hc-left h1 i { color: #d4a853; }
+    [data-theme="dark-gold"] .btn-hero-primary {
+        background: #d4a853; color: #0d0d0d;
+        box-shadow: 0 4px 14px rgba(212,168,83,0.3);
+    }
+    [data-theme="dark-gold"] .btn-hero-primary:hover { background: #e8c468; }
+    [data-theme="dark-gold"] .btn-hero-outline {
+        background: #1a1a1a; color: #d4a853; border-color: #3d3d3d;
+    }
+    [data-theme="dark-gold"] .btn-hero-outline:hover { background: #2a2318; border-color: #d4a853; }
+    [data-theme="dark-gold"] .hc-right { color: #d4a853; }
+    [data-theme="dark-gold"] .qa-blue { background: #2a2318; color: #d4a853; }
+    [data-theme="dark-gold"] .qa-amber { background: #2a2000; color: #e8c468; }
+    [data-theme="dark-gold"] .qa-green { background: #0d1a0d; color: #4ade80; }
+    [data-theme="dark-gold"] .qa-purple { background: #1a0d2a; color: #c084fc; }
+    [data-theme="dark-gold"] .qa-card { background: #1a1a1a; border-color: #2d2d2d; }
+    [data-theme="dark-gold"] .qa-card:hover { border-color: #3d3220; }
+    [data-theme="dark-gold"] .stat-card { background: #1a1a1a; border-color: #2d2d2d; }
+    [data-theme="dark-gold"] .setup-banner { background: #0d1a0d; border-color: #2d4a2d; }
+    [data-theme="dark-gold"] .setup-banner:hover { background: #142014; border-color: #3d6a3d; }
+    [data-theme="dark-gold"] .setup-icon { background: #1a2a1a; color: #4ade80; }
+    [data-theme="dark-gold"] .setup-text h4 { color: #4ade80; }
+    [data-theme="dark-gold"] .setup-text p { color: #6ee77a; }
+    [data-theme="dark-gold"] .setup-right { color: #4ade80; }
+    [data-theme="dark-gold"] .tab-container { background: #1a1a1a; border-color: #2d2d2d; }
+    [data-theme="dark-gold"] .tab-nav { background: #141414; border-bottom-color: #2d2d2d; }
+    [data-theme="dark-gold"] .tab-btn { color: #777; }
+    [data-theme="dark-gold"] .tab-btn:hover { color: #d4d4d4; background: #1a1a1a; }
+    [data-theme="dark-gold"] .tab-btn.active { color: #d4a853; background: #1a1a1a; border-bottom-color: #d4a853; }
+    [data-theme="dark-gold"] .tab-btn .tab-count { background: #2d2d2d; color: #999; }
+    [data-theme="dark-gold"] .tab-btn.active .tab-count { background: #2a2318; color: #e8c468; }
+    [data-theme="dark-gold"] .feature-item { border-bottom-color: #222; }
+    [data-theme="dark-gold"] .feature-item:hover { background: #1a1610; }
+    [data-theme="dark-gold"] .feature-item .fi-icon.ic-blue { background: #2a2318; border-color: #3d3220; color: #d4a853; }
+    [data-theme="dark-gold"] .feature-item .fi-icon.ic-red { background: #2a1010; border-color: #4a2020; color: #f87171; }
+    [data-theme="dark-gold"] .feature-item .fi-icon.ic-purple { background: #1a0d2a; border-color: #2d1d4a; color: #c084fc; }
+    [data-theme="dark-gold"] .feature-item .fi-icon.ic-green { background: #0d1a0d; border-color: #1d4a1d; color: #4ade80; }
+    [data-theme="dark-gold"] .feature-item .fi-icon.ic-amber { background: #2a2000; border-color: #4a3a00; color: #e8c468; }
+    [data-theme="dark-gold"] .fi-tag-free { background: #0d1a0d; color: #4ade80; border-color: #1d4a1d; }
+    [data-theme="dark-gold"] .fi-tag-vip { background: #2a2000; color: #e8c468; border-color: #4a3a00; }
+    [data-theme="dark-gold"] .fi-tag-new { background: #2a2318; color: #d4a853; border-color: #3d3220; }
+    [data-theme="dark-gold"] .fi-tag-login { background: #2a1010; color: #f87171; border-color: #4a2020; }
+    [data-theme="dark-gold"] .study-board { color: #fde047; }
+    [data-theme="dark-gold"] .sb-info h2 { color: #fde047; }
+    [data-theme="dark-gold"] .sb-info p { color: rgba(253,224,71,0.7); }
+    [data-theme="dark-gold"] .sb-stat-num { color: #fde047; }
+    [data-theme="dark-gold"] .sb-stat-label { color: rgba(253,224,71,0.8); }
+    [data-theme="dark-gold"] .hc-left h1 { color: #fde047; }
+    [data-theme="dark-gold"] .hc-left p { color: rgba(253,224,71,0.7); }
+    [data-theme="dark-gold"] .sb-tag-vip { background: linear-gradient(135deg, #d4a853, #e8c468); color: #1a1400; }
+    [data-theme="dark-gold"] .sb-tag-normal { background: rgba(212,168,83,0.15); color: #d4a853; border-color: rgba(212,168,83,0.3); }
+    [data-theme="dark-gold"] .sb-tag-school { background: rgba(212,168,83,0.15); color: #d4a853; border-color: rgba(212,168,83,0.3); }
 </style>
 {% endblock %}
 
@@ -347,9 +412,9 @@
                     <p>在这里开启今天的刷题之旅，记录你的每一步成长。</p>
                     <div class="sb-tags">
                         {% if is_vip %}
-                        <span class="sb-tag sb-tag-vip"><i class="fa-solid fa-crown"></i> {{ vip_label }}</span>
+                        <a href="{% url 'user:vip' %}" class="sb-tag sb-tag-vip" title="点击查看/续费 VIP"><i class="fa-solid fa-crown"></i> {{ vip_label }}</a>
                         {% else %}
-                        <span class="sb-tag sb-tag-normal"><i class="fa-solid fa-user"></i> 普通用户</span>
+                        <a href="{% url 'user:vip' %}" class="sb-tag sb-tag-normal" title="点击开通 VIP"><i class="fa-solid fa-user"></i> 普通用户 <i class="fa-solid fa-arrow-right" style="font-size:9px;opacity:0.6;"></i></a>
                         {% endif %}
                         {% if target_school_name %}
                         <span class="sb-tag sb-tag-school"><i class="fa-solid fa-building-columns"></i> {{ target_school_name }}</span>

@@ -193,6 +193,15 @@
     .reply-form textarea:focus { border-color: var(--blue-500); }
     .reply-form .btn { padding: 6px 14px; font-size: 12px; }
 
+    /* 回复折叠/展开按钮 */
+    .reply-expand-btn {
+        display: block; width: 100%; margin-left: 42px; margin-top: 8px;
+        padding: 8px 16px; background: var(--gray-50); border: 1px dashed var(--gray-300);
+        border-radius: 8px; font-size: 13px; color: var(--blue-600); font-weight: 500;
+        cursor: pointer; text-align: center; transition: all 0.2s;
+    }
+    .reply-expand-btn:hover { background: var(--blue-50); border-color: var(--blue-300); }
+
     /* 空讨论 */
     .discuss-empty {
         padding: 40px 20px; text-align: center; color: var(--gray-400);
@@ -337,33 +346,43 @@
                 </div>
                 {% endif %}
 
-                <!-- 回复列表 -->
+                <!-- 回复列表（前3条直接显示，之后每5条一批折叠） -->
                 {% for reply in comment.replies_list %}
-                <div class="reply-block">
-                    <div class="reply-item">
-                        <div class="ri-top">
-                            <img src="{{ reply.user.avatar.url }}" class="ri-avatar" alt="">
-                            <span class="ri-name">{{ reply.user.username }}</span>
-                            {% if reply.parent_id != comment.id %}
-                            <span class="ri-reply-to">回复 @{{ reply.parent.user.username }}</span>
-                            {% endif %}
-                            <span class="ri-time">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
-                        </div>
-                        <div class="ri-body">{{ reply.content }}</div>
-                        <div class="ri-actions">
-                            <button class="ci-action-btn {% if reply.id in liked_ids %}liked{% endif %}"
-                                    onclick="toggleLike({{ reply.id }}, this)">
-                                <i class="fa-{% if reply.id in liked_ids %}solid{% else %}regular{% endif %} fa-thumbs-up"></i>
-                                <span>{{ reply.like_count }}</span>
-                            </button>
-                            {% if user.is_authenticated %}
-                            <button class="ci-action-btn" onclick="showReplyForm({{ comment.id }}, {{ reply.id }}, '{{ reply.user.username }}')">
-                                <i class="fa-regular fa-comment"></i> 回复
-                            </button>
-                            {% endif %}
+                    {% if forloop.counter == 4 and comment.replies_list|length > 3 %}
+                    <button class="reply-expand-btn" data-comment-id="{{ comment.id }}" data-expanded="false" onclick="toggleReplies(this, {{ comment.id }})">
+                        <i class="fa-solid fa-chevron-down" style="font-size:11px;margin-right:4px;transition:transform 0.2s;"></i>
+                        展开更多回复（共 {{ comment.replies_list|length }} 条，还有 {{ comment.replies_list|length|add:"-3" }} 条）
+                    </button>
+                    <div class="reply-collapsed-group" id="replies-collapsed-{{ comment.id }}" style="display:none;">
+                    {% endif %}
+                    <div class="reply-block {% if forloop.counter > 3 %}reply-extra{% endif %}" {% if forloop.counter > 3 %}data-comment-id="{{ comment.id }}"{% endif %}>
+                        <div class="reply-item">
+                            <div class="ri-top">
+                                <img src="{{ reply.user.avatar.url }}" class="ri-avatar" alt="">
+                                <span class="ri-name">{{ reply.user.username }}</span>
+                                {% if reply.parent_id != comment.id %}
+                                <span class="ri-reply-to">回复 @{{ reply.parent.user.username }}</span>
+                                {% endif %}
+                                <span class="ri-time">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+                            </div>
+                            <div class="ri-body">{{ reply.content }}</div>
+                            <div class="ri-actions">
+                                <button class="ci-action-btn {% if reply.id in liked_ids %}liked{% endif %}"
+                                        onclick="toggleLike({{ reply.id }}, this)">
+                                    <i class="fa-{% if reply.id in liked_ids %}solid{% else %}regular{% endif %} fa-thumbs-up"></i>
+                                    <span>{{ reply.like_count }}</span>
+                                </button>
+                                {% if user.is_authenticated %}
+                                <button class="ci-action-btn" onclick="showReplyForm({{ comment.id }}, {{ reply.id }}, '{{ reply.user.username }}')">
+                                    <i class="fa-regular fa-comment"></i> 回复
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
+                    {% if forloop.last and comment.replies_list|length > 3 %}
+                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
             {% empty %}
@@ -514,6 +533,27 @@ function showReportModal() {
 function closeReportModal() {
     const modal = document.getElementById('reportModal');
     if (modal) modal.style.display = 'none';
+}
+
+// 展开/收起回复
+function toggleReplies(btn, commentId) {
+    const collapsedGroup = document.getElementById('replies-collapsed-' + commentId);
+    const icon = btn.querySelector('i');
+    const isExpanded = btn.dataset.expanded === 'true';
+
+    if (isExpanded) {
+        collapsedGroup.style.display = 'none';
+        btn.dataset.expanded = 'false';
+        icon.style.transform = 'rotate(0deg)';
+        const total = collapsedGroup.querySelectorAll('.reply-block').length;
+        btn.innerHTML = '<i class="fa-solid fa-chevron-down" style="font-size:11px;margin-right:4px;transition:transform 0.2s;"></i> 展开更多回复（' + total + ' 条）';
+    } else {
+        collapsedGroup.style.display = 'block';
+        btn.dataset.expanded = 'true';
+        icon.style.transform = 'rotate(180deg)';
+        const total = collapsedGroup.querySelectorAll('.reply-block').length;
+        btn.innerHTML = '<i class="fa-solid fa-chevron-up" style="font-size:11px;margin-right:4px;transition:transform 0.2s;"></i> 收起回复（' + total + ' 条）';
+    }
 }
 
 function submitReport(qId) {

@@ -173,13 +173,16 @@ def ai_exam_submit(request, pk):
         if not created:
             AIWrongQuestion.objects.filter(pk=obj.pk).update(error_count=F("error_count") + 1)
 
+    # ── 每日打卡检测 ──
+    # 只有今日尚未打卡时才显示打卡相关提示，已打卡则不提示
     total_q = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
-    from user.coin_utils import try_daily_checkin
-    success, msg = try_daily_checkin(request.user, question_count=total_q, objective_score=exam.score)
-    if success:
-        messages.success(request, f"🎉 打卡成功！{msg}")
-    else:
-        messages.warning(request, f"⚠️ 打卡未完成：{msg}")
+    from user.coin_utils import can_daily_checkin, try_daily_checkin
+    if can_daily_checkin(request.user):
+        success, msg = try_daily_checkin(request.user, question_count=total_q, objective_score=exam.score)
+        if success:
+            messages.success(request, f"🎉 打卡成功！{msg}")
+        else:
+            messages.warning(request, f"⚠️ 打卡未完成：{msg}")
 
     return redirect("ai_test:ai_exam_result", exam.id)
 
@@ -400,13 +403,15 @@ def ai_practice_submit(request, pk):
             AIWrongQuestion.objects.filter(pk=obj.pk).update(error_count=F("error_count") + 1)
 
     # ── 每日打卡检测 ──
+    # 只有今日尚未打卡时才显示打卡相关提示，已打卡则不提示
     total_question_count = exam.choice_count + exam.fill_count + exam.judge_count + exam.short_count + exam.calc_count + exam.draw_count
-    from user.coin_utils import try_daily_checkin
-    success, msg = try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
-    if success:
-        messages.success(request, f"🎉 打卡成功！{msg}")
-    else:
-        messages.warning(request, f"⚠️ 打卡未完成：{msg}")
+    from user.coin_utils import can_daily_checkin, try_daily_checkin
+    if can_daily_checkin(request.user):
+        success, msg = try_daily_checkin(request.user, question_count=total_question_count, objective_score=exam.score)
+        if success:
+            messages.success(request, f"🎉 打卡成功！{msg}")
+        else:
+            messages.warning(request, f"⚠️ 打卡未完成：{msg}")
 
     return redirect("ai_test:ai_practice_result", exam.id)
 

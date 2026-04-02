@@ -25,7 +25,16 @@ SECRET_KEY = 'django-insecure-i2!($#7kx6g)ugfyr193@v!3l6*d(95v+yj38w0l$8&ycw$yga
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["49.234.26.95", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["49.234.26.95", "localhost", "127.0.0.1", "cm.whatsyourname.top", "whatsyourname.top"]
+
+# HTTPS 反向代理：让 Django 识别 Nginx 传递的 SSL 头
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# 信任的 CSRF 来源（通过域名访问时必须配置，否则 POST 请求会被拒绝）
+CSRF_TRUSTED_ORIGINS = [
+    "https://cm.whatsyourname.top",
+    "http://cm.whatsyourname.top",
+]
 
 
 # Application definition

@@ -34,6 +34,58 @@
             --shadow: 0 2px 12px rgba(0,0,0,0.08);
             --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
         }
+
+        /* ===== 黑金主题 ===== */
+        [data-theme="dark-gold"] {
+            --blue-50: #1a1610;
+            --blue-100: #2a2318;
+            --blue-200: #3d3220;
+            --blue-400: #c9a034;
+            --blue-500: #d4a853;
+            --blue-600: #d4a853;
+            --blue-700: #e8c468;
+            --blue-800: #c9952a;
+            --blue-900: #a07820;
+            --gray-50: #0d0d0d;
+            --gray-100: #1a1a1a;
+            --gray-200: #2d2d2d;
+            --gray-300: #404040;
+            --gray-400: #777777;
+            --gray-500: #999999;
+            --gray-600: #b0b0b0;
+            --gray-700: #d4d4d4;
+            --gray-800: #e8e8e8;
+            --gray-900: #f5f5f5;
+            --white: #141414;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow: 0 2px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        [data-theme="dark-gold"] body { background: #0d0d0d; color: #e8e8e8; }
+        [data-theme="dark-gold"] .navbar { background: #141414; border-bottom-color: #2d2d2d; }
+        [data-theme="dark-gold"] .card { background: #1a1a1a; border-color: #2d2d2d; }
+        [data-theme="dark-gold"] .form-input { background: #1a1a1a; border-color: #3d3d3d; color: #e8e8e8; }
+        [data-theme="dark-gold"] .form-input:focus { border-color: #d4a853; box-shadow: 0 0 0 3px rgba(212,168,83,0.2); }
+        [data-theme="dark-gold"] table thead th { background: #1a1a1a; border-bottom-color: #2d2d2d; }
+        [data-theme="dark-gold"] table tbody td { border-bottom-color: #222; }
+        [data-theme="dark-gold"] table tbody tr:hover { background: #1f1c14; }
+        [data-theme="dark-gold"] .badge-blue { background: #2a2318; color: #e8c468; }
+        [data-theme="dark-gold"] .btn-outline { background: #1a1a1a; border-color: #3d3d3d; color: #d4d4d4; }
+        [data-theme="dark-gold"] .btn-outline:hover { border-color: #d4a853; color: #e8c468; background: #2a2318; }
+        [data-theme="dark-gold"] .btn-primary { background: #d4a853; color: #0d0d0d; }
+        [data-theme="dark-gold"] .btn-primary:hover { background: #e8c468; }
+        [data-theme="dark-gold"] .vip-tag { background: #d4a853; color: #0d0d0d; }
+        [data-theme="dark-gold"] .nav-dropdown-menu { background: #1a1a1a; border-color: #2d2d2d; }
+        [data-theme="dark-gold"] .nav-dropdown-menu a:hover { background: #2a2318; color: #e8c468; }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            background: none; border: none; cursor: pointer;
+            padding: 8px 10px; border-radius: var(--radius);
+            transition: all 0.2s; font-size: 17px; color: var(--gray-400);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .theme-toggle:hover { background: var(--blue-50); color: var(--blue-600); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -298,6 +350,13 @@
         .gap-16 { gap: 16px; }
     </style>
     {% block extra_style %}{% endblock %}
+    <script>
+    // 页面加载前立即应用主题，防止闪烁
+    (function(){
+        if(localStorage.getItem('theme')==='dark-gold')
+            document.documentElement.setAttribute('data-theme','dark-gold');
+    })();
+    </script>
 </head>
 <body>
     <nav class="navbar">
@@ -336,6 +395,16 @@
             <a href="{% url 'res_center:list' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 16px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:5px;">
                 <i class="fa-solid fa-store" style="color:var(--blue-500);"></i> 资源中心
             </a>
+
+            {# ── VIP 入口 ── #}
+            <a href="{% url 'user:vip' %}" style="color:var(--gray-600); text-decoration:none; font-size:14px; font-weight:500; padding:8px 16px; border-radius:var(--radius); transition:all 0.2s; display:inline-flex; align-items:center; gap:5px;" onmouseover="this.style.background='var(--blue-50)';this.style.color='var(--blue-700)'" onmouseout="this.style.background='';this.style.color='var(--gray-600)'">
+                <i class="fa-solid fa-crown" style="color:#f59e0b;"></i> VIP
+            </a>
+
+            {# ── 主题切换（所有人可见）── #}
+            <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" id="themeToggleBtn">
+                <i class="fa-solid fa-sun"></i>
+            </button>
 
             {# ── 管理员 下拉菜单（仅管理员可见）── #}
             {% if user.is_authenticated and user.is_staff %}
@@ -501,6 +570,38 @@
     pollUnreadCount();
     notifPollTimer = setInterval(pollUnreadCount, 30000);
     {% endif %}
+
+    // ── 主题切换 ──
+    (function() {
+        var saved = localStorage.getItem('theme');
+        if (saved === 'dark-gold') {
+            document.documentElement.setAttribute('data-theme', 'dark-gold');
+        }
+        updateThemeIcon();
+    })();
+
+    function toggleTheme() {
+        var html = document.documentElement;
+        var isDark = html.getAttribute('data-theme') === 'dark-gold';
+        if (isDark) {
+            html.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'default');
+        } else {
+            html.setAttribute('data-theme', 'dark-gold');
+            localStorage.setItem('theme', 'dark-gold');
+        }
+        updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+        var btn = document.getElementById('themeToggleBtn');
+        if (!btn) return;
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark-gold';
+        btn.innerHTML = isDark
+            ? '<i class="fa-solid fa-moon"></i>'
+            : '<i class="fa-solid fa-sun"></i>';
+        btn.title = isDark ? '切换到蓝白主题' : '切换到黑金主题';
+    }
     </script>
 </body>
 </html>

@@ -74,7 +74,7 @@ def exam_create(request, **kwargs):
         form = ExamCreateForm()
 
     # 获取今日已用次数，供模板展示
-    today = timezone.now().date()
+    today = timezone.localdate()
     daily_count = Exam.objects.filter(user=request.user, created_at__date=today).count()
 
     return render(request, "zu_juan/exam_create.html", {

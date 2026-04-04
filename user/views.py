@@ -40,12 +40,12 @@ def home(request):
             session_dates = {27: date(2026, 12, 26), 28: date(2027, 12, 25), 29: date(2028, 12, 24), 30: date(2029, 12, 23)}
             target_date = session_dates.get(user.kaoyan_session)
             if target_date:
-                delta = (target_date - timezone.now().date()).days
+                delta = (target_date - timezone.localdate()).days
                 kaoyan_countdown = max(delta, 0)
                 kaoyan_session_label = f"第{user.kaoyan_session}届考研"
         # 学习天数
         if user.study_start_date:
-            study_days = (timezone.now().date() - user.study_start_date).days + 1
+            study_days = (timezone.localdate() - user.study_start_date).days + 1
         # 连续打卡
         from .coin_utils import get_streak
         streak = get_streak(user)
@@ -337,7 +337,7 @@ def checkin_calendar(request):
     from .coin_utils import can_daily_checkin
     has_checked_in_today = not can_daily_checkin(request.user)
     has_spun_today = CoinRecord.objects.filter(
-        user=request.user, reason="wheel_spin", created_at__date=now.date(),
+        user=request.user, reason="wheel_spin", created_at__date=timezone.localdate(),
     ).exists()
     can_spin = has_checked_in_today and not has_spun_today
 
@@ -375,7 +375,7 @@ def spin_wheel(request):
         return JsonResponse({"ok": False, "msg": "请先完成今日打卡"}, status=400)
 
     # 检查今日是否已转过
-    today = timezone.now().date()
+    today = timezone.localdate()
     if CoinRecord.objects.filter(
         user=request.user,
         reason="wheel_spin",
@@ -570,12 +570,12 @@ def profile(request, pk=None):
 
     # 注册天数
     from datetime import timedelta
-    days_since_join = (timezone.now().date() - user.date_joined.date()).days + 1
+    days_since_join = (timezone.localdate() - user.date_joined.date()).days + 1
 
     # 学习天数（从学习开始日期算起）
     study_days = 0
     if user.study_start_date:
-        study_days = (timezone.now().date() - user.study_start_date).days + 1
+        study_days = (timezone.localdate() - user.study_start_date).days + 1
 
     # 考研倒计时
     kaoyan_countdown = None
@@ -585,7 +585,7 @@ def profile(request, pk=None):
         session_dates = {27: date(2026, 12, 26), 28: date(2027, 12, 25), 29: date(2028, 12, 24), 30: date(2029, 12, 23)}
         target_date = session_dates.get(user.kaoyan_session)
         if target_date:
-            delta = (target_date - timezone.now().date()).days
+            delta = (target_date - timezone.localdate()).days
             kaoyan_countdown = max(delta, 0)
             kaoyan_session_label = f"第{user.kaoyan_session}届考研"
 
@@ -728,7 +728,7 @@ def achievements_page(request):
     # 学习天数
     study_days = 0
     if user.study_start_date:
-        study_days = (timezone.now().date() - user.study_start_date).days + 1
+        study_days = (timezone.localdate() - user.study_start_date).days + 1
 
     # 已获得成就的 code 集合
     earned_codes = set(Achievement.objects.filter(user=user).values_list("code", flat=True))
@@ -800,11 +800,30 @@ def achievements_page(request):
 
 @login_required
 def profile_edit(request):
-    """编辑个人资料"""
+    """编辑个人资料（防御性保存：只更新用户实际修改的字段）"""
     if request.method == "POST":
         form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)
+            original = request.user.__class__.objects.get(pk=request.user.pk)
+
+            # 头像：没有上传新图片时保留原有头像
+            if not form.cleaned_data.get("avatar"):
+                user.avatar = original.avatar
+
+            # 目标院校：未选择时保留原有值
+            if not form.cleaned_data.get("target_school"):
+                user.target_school = original.target_school
+
+            # 考研届次：未选择时保留原有值
+            if form.cleaned_data.get("kaoyan_session") is None:
+                user.kaoyan_session = original.kaoyan_session
+
+            # 学习开始日期：未填写时保留原有值
+            if not form.cleaned_data.get("study_start_date"):
+                user.study_start_date = original.study_start_date
+
+            user.save()
             return redirect("user:profile")
     else:
         form = ProfileEditForm(instance=request.user)

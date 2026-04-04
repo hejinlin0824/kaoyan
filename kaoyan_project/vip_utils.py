@@ -52,7 +52,7 @@ def free_daily_limit(limit=1):
                 return view_func(request, *args, **kwargs)
 
             # 免费用户：统计今日已创建数量
-            today = timezone.now().date()
+            today = timezone.localdate()
             model = _guess_model(view_func)
             if model:
                 count = model.objects.filter(

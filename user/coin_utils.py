@@ -88,7 +88,7 @@ def get_streak(user):
     from django.utils import timezone
 
     streak = 0
-    check_date = timezone.now().date()
+    check_date = timezone.localdate()
 
     # 今天还没打卡，从昨天开始数
     if not CoinRecord.objects.filter(
@@ -117,7 +117,7 @@ def can_daily_checkin(user):
     """
     from .models import CoinRecord
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     return not CoinRecord.objects.filter(
         user=user,
         reason="daily_checkin",
